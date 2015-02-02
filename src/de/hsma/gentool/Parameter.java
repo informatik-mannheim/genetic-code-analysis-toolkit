@@ -113,7 +113,6 @@ public class Parameter {
 					}
 				});
 				((JComboBox<?>)component).setSelectedItem(value);
-				System.out.println(((JComboBox<?>)component).getSelectedIndex());
 				break;
 			} add(component, BorderLayout.CENTER);
 		}
