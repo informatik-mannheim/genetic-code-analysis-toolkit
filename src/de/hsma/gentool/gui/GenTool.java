@@ -1,112 +1,10 @@
 package de.hsma.gentool.gui;
 
-import static de.hsma.gentool.Utilities.*;
-import static de.hsma.gentool.batch.Action.TaskAttribute.*;
-import static de.hsma.gentool.gui.helper.Guitilities.*;
-import static de.hsma.gentool.nucleic.Acid.*;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Container;
-import java.awt.Cursor;
-import java.awt.Desktop;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Font;
-import java.awt.Frame;
-import java.awt.Graphics;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
-import java.awt.event.InputEvent;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.font.TextAttribute;
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.text.NumberFormat;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.concurrent.Executors;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
-import javax.swing.AbstractAction;
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.GroupLayout;
-import javax.swing.GroupLayout.Alignment;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JDialog;
-import javax.swing.JFileChooser;
-import javax.swing.JFormattedTextField;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JRadioButton;
-import javax.swing.JScrollPane;
-import javax.swing.JSpinner;
-import javax.swing.JSplitPane;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.JTextPane;
-import javax.swing.JToolBar;
-import javax.swing.KeyStroke;
-import javax.swing.ListCellRenderer;
-import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
-import javax.swing.border.Border;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.EtchedBorder;
-import javax.swing.event.CaretEvent;
-import javax.swing.event.CaretListener;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.event.EventListenerList;
-import javax.swing.filechooser.FileFilter;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.DefaultCaret;
-import javax.swing.text.Document;
-import javax.swing.text.NumberFormatter;
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.*;
 import de.hsma.gentool.Configurable;
 import de.hsma.gentool.Option;
 import de.hsma.gentool.Parameter;
-import de.hsma.gentool.Utilities.DefiniteFuture;
-import de.hsma.gentool.Utilities.RememberFileChooser;
+import de.hsma.gentool.Utilities.*;
 import de.hsma.gentool.batch.Action;
 import de.hsma.gentool.batch.Action.Task;
 import de.hsma.gentool.batch.Action.TaskAttribute;
@@ -126,6 +24,44 @@ import de.hsma.gentool.operation.analysis.Analysis.Result;
 import de.hsma.gentool.operation.split.Split;
 import de.hsma.gentool.operation.test.Test;
 import de.hsma.gentool.operation.transformation.Transformation;
+import net.gumbix.geneticcode.dich.*;
+import net.gumbix.geneticcode.dich.ct.ClassTable;
+import net.gumbix.geneticcode.dich.ui.JGeneticCodeTable;
+import scala.Tuple2;
+import scala.collection.immutable.Nil$;
+import scala.collection.mutable.ListBuffer;
+
+import javax.swing.*;
+import javax.swing.GroupLayout.Alignment;
+import javax.swing.border.Border;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.EtchedBorder;
+import javax.swing.event.*;
+import javax.swing.filechooser.FileFilter;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultCaret;
+import javax.swing.text.Document;
+import javax.swing.text.NumberFormatter;
+import java.awt.*;
+import java.awt.event.*;
+import java.awt.font.TextAttribute;
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.text.NumberFormat;
+import java.text.ParseException;
+import java.util.*;
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.concurrent.Executors;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
+
+import static de.hsma.gentool.Utilities.*;
+import static de.hsma.gentool.batch.Action.TaskAttribute.*;
+import static de.hsma.gentool.gui.helper.Guitilities.*;
+import static de.hsma.gentool.nucleic.Acid.*;
 
 public class GenTool extends JFrame implements ActionListener {
 	private static final long serialVersionUID = 1l;
@@ -320,7 +256,10 @@ public class GenTool extends JFrame implements ActionListener {
 		menubar.add(menu[2] = new JMenu("Window"));
 		menubar.add(menu[3] = new JMenu("Help"));
 		setJMenuBar(menubar);
-		
+
+        //TODO: Remove
+        menu[0].add(createMenuItem("Test BDA", "action_bda", this));
+
 		menu[0].add(createMenuItem("New", "document.png", KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_DOWN_MASK), ACTION_NEW, this));
 		menu[0].add(createMenuItem("Open...", "folder-horizontal-open.png", KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_DOWN_MASK), ACTION_OPEN, this));
 		menu[0].add(createMenuItem("Save", "disk.png", KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK), ACTION_SAVE, this));
@@ -523,7 +462,33 @@ public class GenTool extends JFrame implements ActionListener {
 		case ACTION_SHOW_BATCH: showBatch(); break;
 		case ACTION_ADD_TO_BATCH: addToBatch(); break;
 		case ACTION_PREFERENCES: showPreferences(); break;
-		case ACTION_ABOUT: showAbout(); break; 
+		case ACTION_ABOUT: showAbout(); break;
+        case "action_bda":
+            scala.collection.immutable.HashSet tuple =
+                    new scala.collection.immutable.HashSet<>().$plus(Adenine$.MODULE$).$plus(Uracil$.MODULE$);
+            List bdas = new ArrayList();
+            bdas.add(new BinaryDichotomicAlgorithm(0, 1,
+                    new Tuple2<Compound, Compound>(Adenine$.MODULE$, Uracil$.MODULE$),
+                    tuple
+                    ));
+
+            scala.collection.immutable.List bdasList = Nil$.MODULE$;
+
+            for(Object bda:bdas) {
+                bdasList = bdasList.$colon$colon(bda);
+            }
+
+            ClassTable ct = new ClassTable(bdasList, IUPAC.STANDARD(), IdStandardAminoAcidProperty$.MODULE$);
+            //ct.codon2class
+
+            JFrame frame = new JFrame("Class Table Viewer");
+            frame.getContentPane().add(new JGeneticCodeTable(ct), BorderLayout.CENTER);
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setPreferredSize(new Dimension(700, 500));
+            frame.pack();
+            frame.setVisible(true);
+
+            break;
 		default: System.err.println(String.format("Action %s not implemented.", action)); }
 	}
 

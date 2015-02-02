@@ -66,7 +66,7 @@ public class Action {
 		}
 	}
 	
-	public static final class TaskAttribute implements Serializable {
+	public static final class TaskAttribute { // implements Serializable {
 		private static final long serialVersionUID = -6267992889104134263L;
 
 		public static final TaskAttribute TEST_CRITERIA = new TaskAttribute("Test Creteria");
