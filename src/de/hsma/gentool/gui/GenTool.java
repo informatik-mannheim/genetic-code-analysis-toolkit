@@ -369,8 +369,8 @@ public class GenTool extends JFrame implements ActionListener {
 		toolbar[0].add(createToolbarButton("Exit", "control-power.png", ACTION_EXIT, this));
 		
 		toolbars = new JPanel(new FlowLayout(FlowLayout.LEADING));
-		for(JToolBar toolbar:toolbar)
-			toolbars.add(toolbar);
+		for(JToolBar tb:toolbar)
+			toolbars.add(tb);
 		add(toolbars,BorderLayout.NORTH);
 		
 		editor = new NucleicEditor();
@@ -845,7 +845,7 @@ public class GenTool extends JFrame implements ActionListener {
 		about.add(label=new JLabel("\u00A9 2014 Hochschule Mannheim - Version "+VERSION));
 		label.setBorder(gap); label.setAlignmentX(CENTER_ALIGNMENT);
 		label.setFont(label.getFont().deriveFont(Font.BOLD));
-		about.add(label=new JLabel("(Prof. Dr. Elena Fimmel, Prof. Dr. Lutz Strüngmann, Kristian Kralji\u0107)"));
+		about.add(label=new JLabel("(Prof. Dr. Elena Fimmel, Prof. Dr. Lutz Strï¿½ngmann, Kristian Kralji\u0107)"));
 		label.setBorder(gap);label.setAlignmentX(CENTER_ALIGNMENT);
 		about.add(label=new JLabel("http://am.informatik.hs-mannheim.de/GenTool/"));
 		label.setAlignmentX(CENTER_ALIGNMENT);

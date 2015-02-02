@@ -2,7 +2,7 @@ package de.hsma.gentool.legacy;
 
 public class Translations {
 
-//                  Gui Übersetzungen
+//                  Gui Ãœbersetzungen
 
 // Checkboxes GUI
 public static final String allTransformationsCheckbox = "all transformations";
@@ -79,7 +79,7 @@ public static final String C3NoCircularMessage = "Circularity is mandatory for t
 
 
 
-//                   GuiMethods Übersetzungen
+//                   GuiMethods ï¿½bersetzungen
 
 public static final String codeIsNotCommaFreeMessage = "The code is not comma-free since @codon is not valid";
 public static final String codonIsNotValidMessage = "The code is not comma-free since @codon is not allowed";
