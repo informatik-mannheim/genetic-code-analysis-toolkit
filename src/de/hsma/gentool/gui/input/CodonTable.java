@@ -20,7 +20,6 @@ import javax.swing.JButton;
 import javax.swing.JPanel;
 import de.hsma.gentool.gui.editor.NucleicEditor;
 import de.hsma.gentool.gui.editor.NucleicListener;
-import de.hsma.gentool.nucleic.Base;
 import de.hsma.gentool.nucleic.Tuple;
 
 public class CodonTable extends JPanel implements Input, NucleicListener {
@@ -36,7 +35,7 @@ public class CodonTable extends JPanel implements Input, NucleicListener {
 	public CodonTable() {
 		buttons = new HashMap<Tuple,TupleButton>();
 		
-		int bases = Base.RNA_BASES.size();
+		int bases = RNA.bases.length;
 		List<Tuple> tuples = Tuple.allTuples(RNA,3);
 		
 		setLayout(new GridLayout(bases, bases, 5, 5));

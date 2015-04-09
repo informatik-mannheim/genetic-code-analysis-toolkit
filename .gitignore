@@ -4,3 +4,4 @@
 bin
 out
 .idea
+/src/resources/dev.properties

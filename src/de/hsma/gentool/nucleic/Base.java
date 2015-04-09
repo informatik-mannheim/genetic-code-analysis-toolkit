@@ -1,19 +1,13 @@
 package de.hsma.gentool.nucleic;
 
 import static de.hsma.gentool.Utilities.*;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import static de.hsma.gentool.nucleic.Acid.*;
 import java.util.regex.Pattern;
+import scala.actors.threadpool.Arrays;
 import de.hsma.gentool.Utilities.Characters;
 
 public enum Base {
 	ADENINE('A'), GUANINE('G'), CYTOSINE('C'), THYMINE('T'), URACILE('U'), HYPOXANTHINE('H'), XANTHINE('X');
-	
-	public static final Set<Base>
-		DNA_BASES = Collections.unmodifiableSet(new LinkedHashSet<Base>(Arrays.asList(new Base[]{THYMINE,CYTOSINE,ADENINE,GUANINE}))),
-		RNA_BASES = Collections.unmodifiableSet(new LinkedHashSet<Base>(Arrays.asList(new Base[]{URACILE,CYTOSINE,ADENINE,GUANINE})));
 	
 	private static final Pattern PATTERN_NO_BASE;
 	static {
@@ -29,8 +23,8 @@ public enum Base {
 		this.letter = letter;
 	}
 	
-	public boolean inDNA() { return DNA_BASES.contains(this); }
-	public boolean inRNA() { return RNA_BASES.contains(this); }
+	public boolean inDNA() { return Arrays.asList(DNA.bases).contains(this); }
+	public boolean inRNA() { return Arrays.asList(RNA.bases).contains(this); }
 	
 	public static Base valueOf(char letter) {
 		switch(letter) {

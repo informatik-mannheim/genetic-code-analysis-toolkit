@@ -97,6 +97,17 @@ public final class Utilities {
 		return -1;
 	}
 	
+	public static void reverse(Object[] array) {
+		if(array==null) return;
+		Object temp; int indexA = 0, indexB = array.length-1;
+		while(indexB>indexA) {
+			temp = array[indexB];
+			array[indexB] = array[indexA];
+			array[indexA] = temp;
+			indexA++; indexB--;
+		}
+	}
+	 
 	public static String cropString(String text,int length) {
 		if(text.length()<=length)
 			return text;
