@@ -1,7 +1,6 @@
 package de.hsma.gentool.batch;
 
 import static de.hsma.gentool.batch.Action.TaskAttribute.*;
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -66,9 +65,7 @@ public class Action {
 		}
 	}
 	
-	public static final class TaskAttribute implements Serializable {
-		private static final long serialVersionUID = -6267992889104134263L;
-
+	public static final class TaskAttribute {
 		public static final TaskAttribute TEST_CRITERIA = new TaskAttribute("Test Creteria");
 		public static final Boolean
 			TEST_CRITERIA_NEVER_BREAK = null,

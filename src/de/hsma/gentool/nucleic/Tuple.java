@@ -2,10 +2,12 @@ package de.hsma.gentool.nucleic;
 
 import static de.hsma.gentool.Utilities.*;
 import static de.hsma.gentool.nucleic.Acid.*;
+import static de.hsma.gentool.nucleic.Base.*;
 import static de.hsma.gentool.nucleic.Compound.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -19,7 +21,7 @@ public class Tuple implements Comparable<Tuple> {
 	public Tuple(String string) {
 		this.bases = Base.parseBase(this.string=string.toUpperCase());
 	}
-	public Tuple(Base[] bases) {
+	public Tuple(Base... bases) {
 		this.string = Base.toString(this.bases=bases);
 	}
 	
@@ -27,6 +29,30 @@ public class Tuple implements Comparable<Tuple> {
 	public Compound getCompound() { return Compound.forTuple(this); }
 	
 	public int length() { return string.length(); }
+	
+	public Tuple toAcid(Acid acid) {
+		Base[] bases = new Base[this.bases.length];
+		for(int base=0;base<bases.length;base++)
+			switch(this.bases[base]) {
+			case THYMINE: case URACILE:
+				bases[base] = DNA.equals(acid)?THYMINE:URACILE; break;
+			default: bases[base] = this.bases[base]; }
+		return new Tuple(bases);
+	}
+	
+	public Tuple getComplement() { return getComplement(DNA); }
+	public Tuple getComplement(Acid acid) {
+		Base[] bases = new Base[this.bases.length];
+		for(int base=0;base<bases.length;base++)
+			switch(this.bases[base]) {
+			case ADENINE: bases[base] = DNA.equals(acid)?THYMINE:URACILE; break;
+			case THYMINE: case URACILE:
+				bases[base] = ADENINE; break;
+			case GUANINE: bases[base] = CYTOSINE; break;
+			case CYTOSINE: bases[base] = GUANINE; break;
+			default: bases[base] = this.bases[base]; }
+		reverse(bases); return new Tuple(bases);
+	}
 	
 	@Override public int compareTo(Tuple tuple) {
 		int base;
@@ -58,6 +84,14 @@ public class Tuple implements Comparable<Tuple> {
 			} else builder.append(compound);
 			return builder.append(')').toString();
 		} return string;
+	}
+	
+	public static List<Tuple> uniformAcid(List<Tuple> tuples) { return uniformAcid(tuples, DNA); }
+	public static List<Tuple> uniformAcid(List<Tuple> tuples, Acid acid) {
+		List<Tuple> uniformTuples = new ArrayList<>(tuples);
+		ListIterator<Tuple> tuple = uniformTuples.listIterator();
+		while(tuple.hasNext()) tuple.set(tuple.next().toAcid(acid));
+		return uniformTuples;
 	}
 	
 	public static List<Tuple> splitTuples(String string) {
@@ -101,8 +135,8 @@ public class Tuple implements Comparable<Tuple> {
 	public static List<Tuple> allTuples(int length) { return allTuples(RNA, length); }
 	public static List<Tuple> allTuples(Acid acid) { return allTuples(acid, 3); }
 	public static List<Tuple> allTuples(Acid acid, int length) {
-		List<Tuple> tuples = new ArrayList<>(pow(length,acid.getBases().size()));
-		allTuples(tuples, new Tuple(), acid.getBases().toArray(new Base[0]), length);
+		List<Tuple> tuples = new ArrayList<>(pow(length,acid.bases.length));
+		allTuples(tuples, new Tuple(), acid.bases, length);
 		return tuples;
 	}
 	protected static void allTuples(Collection<Tuple> tuples, Tuple tuple, Base[] bases, int length) {

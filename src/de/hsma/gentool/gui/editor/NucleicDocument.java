@@ -74,11 +74,16 @@ public class NucleicDocument extends DefaultStyledDocument {
 	public void setDefaultTupleLength(int defaultTupleLength) {
 		if(defaultTupleLength>0)
 			patternTupleLength = Pattern.compile(" ?(\\S{1,"+(this.defaultTupleLength=defaultTupleLength)+"}) *");
-		else { this.defaultTupleLength = 0; patternTupleLength = null; } 
+		else { this.defaultTupleLength = 0; patternTupleLength = null; }
 	}
 	
 	public Acid getDefaultAcid() { return defaultAcid; }
 	public void setDefaultAcid(Acid defaultAcid) {
 		this.defaultAcid = defaultAcid;
+	}
+	
+	public void adaptText() {
+		try { replace(0,getLength(),getText(0,getLength()).replace(SPACE,EMPTY),null); }
+		catch(BadLocationException e) { /* nothing to do here */ }
 	}
 }

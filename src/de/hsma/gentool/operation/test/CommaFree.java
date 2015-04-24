@@ -1,18 +1,27 @@
 package de.hsma.gentool.operation.test;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import de.hsma.gentool.log.Logger;
 import de.hsma.gentool.nucleic.Tuple;
 import de.hsma.gentool.operation.Cataloged;
 import de.hsma.gentool.operation.Named;
-import de.hsma.gentool.operation.transformation.ShiftTuples;
 import de.hsma.gentool.operation.transformation.ShiftSequence;
+import de.hsma.gentool.operation.transformation.Transformation;
 
 @Named(name="comma-free?") @Cataloged(group="Tests")
 public class CommaFree implements Test {
+	private static final Test
+		DUPLICATE_FREE = new DuplicateFree();
+	private static final Transformation
+		SHIFT = new ShiftSequence();
+	
 	@Override public boolean test(Collection<Tuple> tuples,Object... values) {
 		Logger logger = getLogger();
+		
+		if(tuples.isEmpty())
+			return true; //an empty set of tuples is comma-free
 		
 		int length = tuples.iterator().next().length();
 		for(Tuple tuple:tuples)
@@ -21,24 +30,18 @@ public class CommaFree implements Test {
 				return false; //tuples not all of same length
 			}
 		
-		if(!new DuplicateFree().test(tuples)) {
+		if(!DUPLICATE_FREE.test(tuples)) {
 			logger.log("Duplicate tuples in sequence, code not comma-free.");
 			return false; //duplicate tuples
 		}
 		
-		Collection<Tuple> shifted = tuples;
-		for(int shift=1;shift<length;shift++)
-			if(!Collections.disjoint(tuples,shifted = new ShiftSequence().transform(shifted))) {
-				logger.log("Shifted tuple is contained in sequence, code not comma-free.");
-				return false; //contains shifted tuple
-			}
-		
-		Collection<Tuple> rotated = tuples;
-		for(int rotate=1;rotate<length;rotate++)
-			if(!Collections.disjoint(tuples,rotated = new ShiftTuples().transform(rotated))) {
-				logger.log("Rotated tuple is contained in sequence, code not comma-free.");
-				return false; //contains rotated tuple
-			}
+		int shift; Collection<Tuple> shifted;
+		for(Tuple tupleA:tuples) for(Tuple tupleB:tuples)
+			if(tupleA!=tupleB) for(shift=1,shifted=Arrays.asList(tupleA,tupleB);shift<length;shift++)
+				if(!Collections.disjoint(tuples,shifted = SHIFT.transform(shifted))) {
+					logger.log("Shifted tuple created from "+tupleA+" and "+tupleB+" is contained in sequence, code not comma-free.");
+					return false; //contains shifted tuple
+				}
 		
 		return true;
 	}

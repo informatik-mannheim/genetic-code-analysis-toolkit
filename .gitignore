@@ -1,4 +1,9 @@
 /build.xml
 /genkey.xml
 *.iml
-/bin/
+/bin
+/out
+/.idea
+/src/resources/dev.properties
+/target
+/.cache

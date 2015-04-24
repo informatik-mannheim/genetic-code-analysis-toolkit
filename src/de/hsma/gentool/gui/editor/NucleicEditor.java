@@ -4,6 +4,8 @@ import static de.hsma.gentool.Utilities.*;
 import static de.hsma.gentool.gui.helper.Guitilities.*;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
@@ -15,24 +17,32 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.awt.geom.Rectangle2D;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.regex.Pattern;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRootPane;
 import javax.swing.JScrollPane;
+import javax.swing.JTabbedPane;
 import javax.swing.JTextPane;
 import javax.swing.border.Border;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.MatteBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.UndoableEditEvent;
+import javax.swing.plaf.basic.BasicTabbedPaneUI;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.Position;
@@ -42,8 +52,10 @@ import javax.swing.undo.CompoundEdit;
 import javax.swing.undo.UndoManager;
 import javax.swing.undo.UndoableEdit;
 import de.hsma.gentool.gui.editor.NucleicListener.NucleicEvent;
+import de.hsma.gentool.gui.editor.display.CompoundDisplay;
+import de.hsma.gentool.gui.editor.display.GraphDisplay;
 import de.hsma.gentool.gui.helper.AttachedScrollPane;
-import de.hsma.gentool.nucleic.Compound;
+import de.hsma.gentool.gui.helper.VerticalLabelUI;
 import de.hsma.gentool.nucleic.Tuple;
 
 public class NucleicEditor extends JRootPane {
@@ -56,10 +68,15 @@ public class NucleicEditor extends JRootPane {
 	protected UndoableEditListener edit;
 	
 	private JTextPane textPane;
-	private NumberDisplay numbers;
-	private CompoundDisplay compounds;
+	private NumberPanel numberPanel;
 	
-	protected NavigableMap<Position, Tuple> tuples;
+	private JTabbedPane displayPane;
+	private List<JRootPane> displayPanes;
+	private List<NucleicDisplay> displays;
+	private MouseAdapter displayResize;
+	private int displaySize = 300;
+	
+	private NavigableMap<Position,Tuple> tuples;
 	
 	private int cleanHash = EMPTY.hashCode();
 	
@@ -159,20 +176,110 @@ public class NucleicEditor extends JRootPane {
 		});
 		
 		AttachedScrollPane scroll = new AttachedScrollPane(textPane, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-		scroll.setRowHeaderView(numbers = new NumberDisplay());
-		scroll.setRowFooterView(compounds = new CompoundDisplay());
-		for(NucleicListener listener:new NucleicListener[]{numbers,compounds})
-			addNucleicListener(listener);
+		scroll.setRowHeaderView(numberPanel = new NumberPanel()); addNucleicListener(numberPanel);
+		scroll.setRowFooterView(displayPane = new JTabbedPane(JTabbedPane.RIGHT));
+		displayPane.setUI(new BasicTabbedPaneUI() {
+			@Override protected Insets getTabAreaInsets(int tabPlacement) {
+				int y = 20; if(scroll.getRowFooter().getViewPosition().y!=0)
+					y += scroll.getViewport().getViewPosition().y;
+				return new Insets(y,0,2,3);
+			}
+			@Override protected Insets getTabInsets(int tabPlacement,int tabIndex) { return new Insets(20,3,20,3); }
+			@Override protected Insets getContentBorderInsets(int tabPlacement) { return new Insets(0,0,0,super.getContentBorderInsets(tabPlacement).right); }			
+			
+			@Override protected void paintTabArea(Graphics g,int tabPlacement,int selectedIndex) {
+				((TabbedPaneLayout)displayPane.getLayout()).layoutContainer(null);
+				super.paintTabArea(g,tabPlacement,selectedIndex);
+			}
+			
+			// do only paint right border edge
+			@Override protected void paintContentBorderLeftEdge(Graphics g,int tabPlacement,int selectedIndex,int x,int y,int w,int h) {}
+			@Override protected void paintContentBorderBottomEdge(Graphics g,int tabPlacement,int selectedIndex,int x,int y,int w,int h) {}
+			@Override protected void paintContentBorderTopEdge(Graphics g,int tabPlacement,int selectedIndex,int x,int y,int w,int h) {}
+		});
+		displayPane.addChangeListener(new ChangeListener() {
+			private int currentTabIndex = -1,previousTabIndex;
+			@Override public void stateChanged(ChangeEvent event) {
+				previousTabIndex = currentTabIndex;
+        currentTabIndex = displayPane.getSelectedIndex();
+				if(previousTabIndex!=-1) displayPanes.get(previousTabIndex).getContentPane().removeAll();
+				displayPanes.get(currentTabIndex).getContentPane().add((Component)displays.get(currentTabIndex));
+			}
+		});
+		
+		displayResize = new MouseAdapter() {
+			private int dragX;
+			@Override public void mouseMoved(MouseEvent event) {
+				Component component = (Component)event.getSource();
+				if(event.getX()>2) {
+					if(component.getCursor().getType()!=Cursor.DEFAULT_CURSOR)
+						component.setCursor(Cursor.getDefaultCursor());
+				} else {
+					if(component.getCursor().getType()!=Cursor.W_RESIZE_CURSOR)
+						component.setCursor(Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR));
+				}
+			}
+			@Override public void mousePressed(MouseEvent event) {
+				dragX = event.getX()<=2?event.getX():-1;
+			}
+			@Override public void mouseReleased(MouseEvent event) {
+				if(dragX!=-1) {
+					displaySize = Math.max(100,displaySize+(dragX-event.getX()));
+					displayPane.revalidate(); //TODO: Resize display
+				}
+			}
+		};
+		
+		displayPanes = new ArrayList<>();
+		displays = new ArrayList<NucleicDisplay>();
+		for(NucleicDisplay display:new NucleicDisplay[]{new GraphDisplay(this),new CompoundDisplay(this)}) //TODO: Do with reflections
+			addDisplay(display);
 		this.addComponentListener(new ComponentAdapter() {			
 			@Override public void componentResized(ComponentEvent e) {
-				compounds.adaptWidth();
+				NucleicDisplay display = displays.get(displayPane.getSelectedIndex());
+				if(display.hasPreferredSize())
+					display.setPreferredSize();
 			}
 		});
 		
 		this.add(scroll, BorderLayout.CENTER);
 	}
 
+	public List<NucleicDisplay> getDisplays() { return Collections.unmodifiableList(displays); }
+	public void addDisplay(NucleicDisplay display) {
+		if(!(display instanceof Component))
+			throw new IllegalArgumentException();
+		
+		JLabel label = new JLabel(display.getLabel());
+		label.setUI(new VerticalLabelUI(true));
+		
+		JRootPane pane = new JRootPane() {
+			private static final long serialVersionUID = 1l;
+			@Override public Dimension getPreferredSize() {
+				if(displayPane.getSelectedComponent()==this) {
+					if(display.hasPreferredSize()) {
+						display.setPreferredSize();
+						return ((Component)display).getPreferredSize();
+					} else return new Dimension(displaySize,0);
+				} else return new Dimension();
+			}
+		};
+		pane.getContentPane().setLayout(new BorderLayout());
+		if(!display.hasPreferredSize()) {
+			Component glassPane = pane.getGlassPane();
+			glassPane.addMouseListener(displayResize);
+			glassPane.addMouseMotionListener(displayResize);
+			glassPane.setVisible(true);
+		}
+		
+		displays.add(display); displayPanes.add(pane);
+		displayPane.addTab(display.getLabel(),pane);
+		displayPane.setTabComponentAt(displayPane.getTabCount()-1,label);
+		addNucleicListener(display);
+	}
+	
 	public JTextPane getTextPane() { return textPane; }
+	public JPanel getNumberPanel() { return numberPanel; }
 	public NucleicDocument getDocument() { return document; }
 	
 	public String getText() { return textPane.getText(); }
@@ -181,6 +288,7 @@ public class NucleicEditor extends JRootPane {
 	public void setText(String text) { edit.startTransaction(); textPane.setText(text); edit.commitTransaction(); }
 	
 	public Collection<Tuple> getTuples() { return Collections.unmodifiableCollection(tuples.values()); }
+	public NavigableMap<Position,Tuple> getTupleMap() { return tuples; }
 	public void setTuples(Collection<Tuple> tuples) {
 		invokeAppropriate(new Runnable() {
 			@Override public void run() { edit.startTransaction(); textPane.setText(null); appendTuples(tuples); edit.commitTransaction(); }
@@ -251,13 +359,13 @@ public class NucleicEditor extends JRootPane {
   			((NucleicListener)listeners[index+1]).tuplesChanged(event!=null?event:(event=new NucleicEvent(NucleicEditor.this,getTuples())));
   }
 
-	class NumberDisplay extends JPanel implements NucleicListener {
+	class NumberPanel extends JPanel implements NucleicListener {
 		private static final long serialVersionUID = 1l;
 		
 		private int border,digits;
 
-		public NumberDisplay() { this(0); }
-		public NumberDisplay(int digits) {
+		public NumberPanel() { this(0); }
+		public NumberPanel(int digits) {
 			setFont(textPane.getFont());
 			setBorderSpacing(5);
 			if(digits>0)
@@ -270,7 +378,7 @@ public class NucleicEditor extends JRootPane {
 			this.border = borderSpading;
 			Border inner = new EmptyBorder(0,borderSpading,0,borderSpading);
 			setBorder(new CompoundBorder(new MatteBorder(0,0,0,2,Color.GRAY),inner));
-			adaptWidth();
+			setPreferredSize();
 		}
 
 		public int getDigits() { return digits; }
@@ -279,11 +387,11 @@ public class NucleicEditor extends JRootPane {
 			digits = Math.max(3,digits);
 			if(this.digits!=digits) {
 				this.digits = digits;
-				adaptWidth();
+				setPreferredSize();
 			}
 		}
 
-		private void adaptWidth() {
+		public void setPreferredSize() {
 			Insets insets = getInsets();
 			Dimension dimension = getPreferredSize();
 			dimension.setSize(insets.left+insets.right+(getFontMetrics(getFont()).charWidth('0')*(digits*2+1)), Integer.MAX_VALUE-Short.MAX_VALUE);
@@ -342,115 +450,6 @@ public class NucleicEditor extends JRootPane {
 		@Override public void tuplesInsert(NucleicEvent event) {
 			invokeAppropriate(new Runnable() {
 				public void run() { adaptDigits(); repaint(); }
-			});
-		}
-		@Override public void tuplesChanged(NucleicEvent event) { /* undoable change, nothing to do here */ }
-	}
-	
-	class CompoundDisplay extends JPanel implements NucleicListener {
-		private static final long serialVersionUID = 1l;
-
-		private final Color COLOR_NONPOLAR = new Color(255,231,95),
-                           COLOR_POLAR = new Color(179,222,192),
-                           COLOR_BASIC = new Color(187,191,224),
-                          COLOR_ACIDIC = new Color(248,183,211),
-                         COLOR_SPECIAL = new Color(176,176,176);
-		private final int defaultCharWidth;
-		
-		private int border;
-		
-		public CompoundDisplay() {
-			setBackground(Color.WHITE);
-			setFont(textPane.getFont());
-			FontMetrics metrics = getFontMetrics(getFont());
-			defaultCharWidth = metrics.charWidth('0');
-			setBorderSpacing(5);
-			adaptWidth();
-		}
-		
-		public int getBorderSpacing() { return border; }
-		public void setBorderSpacing(int borderSpading) {
-			this.border = borderSpading;
-			Border inner = new EmptyBorder(0,borderSpading,0,borderSpading);
-			setBorder(new CompoundBorder(new MatteBorder(0,1,0,0,Color.LIGHT_GRAY),inner));
-			adaptWidth();
-		}
-		public void adaptWidth() {
-			Insets insets = getInsets();
-			Dimension dimension = getPreferredSize();
-			dimension.setSize(insets.left+insets.right+(NucleicEditor.this.getWidth()-NucleicEditor.this.numbers.getWidth())/2, Integer.MAX_VALUE-Short.MAX_VALUE);
-			setPreferredSize(dimension);
-			setSize(dimension);
-		}
-
-		@Override public void paintComponent(Graphics graphics) {
-			super.paintComponent(graphics);
-			
-			Rectangle clip = graphics.getClipBounds();
-			FontMetrics metrics = textPane.getFontMetrics(textPane.getFont());
-			int startOffset = textPane.viewToModel(new Point(0,clip.y)), endOffset = textPane.viewToModel(new Point(0,clip.y+clip.height));
-			
-			try {
-				while(startOffset<=endOffset) {
-					graphics.setColor(getForeground());
-					drawCompounds(graphics, tuplesInRow(startOffset), getOffsetY(startOffset, metrics));
-					startOffset = javax.swing.text.Utilities.getRowEnd(textPane, startOffset)+1;
-				}
-			} catch(BadLocationException e) { /** nothing to do here */  }
-		}
-		
-		protected void drawCompounds(Graphics graphics, Tuple[] tuples, int y) {
-			int x = getInsets().left;
-			for(Tuple tuple:tuples) {
-				String text; Color color = COLOR_SPECIAL;
-				if(tuple!=null) {
-					Compound compound = tuple.getCompound();
-					if(compound!=null) {
-						text = compound.abbreviation;
-						switch(compound.property) {
-						case NONPOLAR: color = COLOR_NONPOLAR; break;
-						case POLAR: color = COLOR_POLAR; break;
-						case BASIC: color = COLOR_BASIC; break;
-						case ACIDIC: color = COLOR_ACIDIC; break; }
-					} else if(Compound.isStart(tuple)) text = "STA";
-						else if(Compound.isStop(tuple)) text = "STP";
-						else text = "UNK";
-				} else text = "ERR";
-				
-				// adapt text length to tuple length
-				int defaultTupleLength = document.getDefaultTupleLength();
-				if(defaultTupleLength>0&&defaultTupleLength<text.length())
-					text = text.substring(0,defaultTupleLength);
-				
-				drawString(graphics, text, x, y, color);
-				x += (text.length()+1)*defaultCharWidth;
-			}
-		}
-		protected void drawString(Graphics graphics, String string, int x, int y, Color color) {
-			FontMetrics metrics = graphics.getFontMetrics();
-      Rectangle2D rectangle = metrics.getStringBounds(string, graphics);
-      graphics.setColor(color);
-      graphics.fillRect(x, y - metrics.getAscent(), (int)rectangle.getWidth(), (int)rectangle.getHeight());
-      graphics.setColor(getForeground());
-			graphics.drawString(string, x, y);
-		}
-	
-		protected Tuple[] tuplesInRow(int offset) {
-			try {
-				int rowStartOffset = javax.swing.text.Utilities.getRowStart(textPane, offset), rowEndOffset = javax.swing.text.Utilities.getRowEnd(textPane, rowStartOffset);
-				//text version: return Tuple.toArray(textPane.getText(rowStartOffset, rowEndOffset-rowStartOffset));
-				return tuples.subMap(fixPosition(rowStartOffset), fixPosition(rowEndOffset+1)).values().toArray(new Tuple[0]);
-			}	catch(BadLocationException e) { return null; }
-		}
-		private int getOffsetY(int rowOffset,FontMetrics metrics) throws BadLocationException {
-			Rectangle rectangle = textPane.modelToView(rowOffset);
-			return (rectangle.y+rectangle.height)-metrics.getDescent();
-		}
-
-		@Override public void tuplesRemoved(NucleicEvent event) { tuplesInsert(event); }
-		@Override public void tuplesInsert(NucleicEvent event) {
-			invokeAppropriate(new Runnable() {
-				public void run() { repaint(); }
 			});
 		}
 		@Override public void tuplesChanged(NucleicEvent event) { /* undoable change, nothing to do here */ }
