@@ -25,6 +25,8 @@ import de.hsma.gentool.nucleic.Tuple;
 public class CompoundDisplay extends JPanel implements NucleicDisplay {
 	private static final long serialVersionUID = 1l;
 
+	public static final String LABEL = "Compound";
+	
 	private final Color COLOR_NONPOLAR = new Color(255,231,95),
                          COLOR_POLAR = new Color(179,222,192),
                          COLOR_BASIC = new Color(187,191,224),
@@ -47,13 +49,13 @@ public class CompoundDisplay extends JPanel implements NucleicDisplay {
 		setPreferredSize();
 	}
 
-	@Override public String getLabel() { return "Compound"; }
+	@Override public String getLabel() { return LABEL; }
 	
 	@Override public boolean hasPreferredSize() { return true; }
 	@Override public void setPreferredSize() {
 		Insets insets = getInsets();
 		Dimension dimension = getPreferredSize();
-		dimension.setSize(-insets.left-insets.right+(editor.getWidth()-editor.getNumberPanel().getWidth())/2, Integer.MAX_VALUE-Short.MAX_VALUE); //TODO
+		dimension.setSize(-insets.left-insets.right+(editor.getWidth()-editor.getNumberPanel().getWidth())/2, Integer.MAX_VALUE-Short.MAX_VALUE);
 		setPreferredSize(dimension);
 		setSize(dimension);
 	}

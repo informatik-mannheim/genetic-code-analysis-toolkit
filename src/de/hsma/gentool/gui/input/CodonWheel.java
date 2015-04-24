@@ -13,15 +13,15 @@ import java.awt.Graphics2D;
 import java.awt.Insets;
 import java.awt.Point;
 import java.awt.RenderingHints;
+import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
 import java.awt.font.TextAttribute;
 import java.util.Map;
 import javax.swing.border.EmptyBorder;
 import de.hsma.gentool.nucleic.Base;
 import de.hsma.gentool.nucleic.Tuple;
 
-public class CodonWheel extends DefaultInput implements ComponentListener {
+public class CodonWheel extends DefaultInput {
 	private static final long serialVersionUID = 1l;
 
 	private static final String NAME = "Codon Wheel";
@@ -33,7 +33,20 @@ public class CodonWheel extends DefaultInput implements ComponentListener {
 		setLayout(null);
 		setBorder(new EmptyBorder(10,10,10,10));
 		setPreferredSize(new Dimension(300,300));
-		addComponentListener(this);
+		addComponentListener(new ComponentAdapter() {
+			@Override public void componentResized(ComponentEvent event) {
+				Insets insets = getInsets();
+				int width = getWidth(),height = getHeight(),diameter = min(width-insets.left-insets.right,height-insets.top-insets.bottom),radius = round((float)diameter/2);
+				Point center = new Point(round((float)width/2),round((float)height/2));
+				
+				for(TupleButton button:buttons.values()) {
+					WheelButton wheelButton = (WheelButton)button;
+					FontMetrics metrics = wheelButton.getFontMetrics(wheelButton.getFont());
+					wheelButton.setLocation(center.x-(int)round(sin(wheelButton.angle)*radius*wheelButton.circle)-metrics.stringWidth(wheelButton.getText())/2,
+						center.y-(int)round(cos(wheelButton.angle)*radius*wheelButton.circle)-metrics.getHeight()/2);
+				}
+			}
+		});
 		
 		Base[] bases = RNA.bases;
 		float piFraction = (float)(PI/32), piFractionHalf = piFraction/2;
@@ -55,22 +68,6 @@ public class CodonWheel extends DefaultInput implements ComponentListener {
 		buttons.put(tuple,button);
 		return button;
 	}
-
-	@Override public void componentResized(ComponentEvent e) {
-		Insets insets = getInsets();
-		int width = getWidth(),height = getHeight(),diameter = min(width-insets.left-insets.right,height-insets.top-insets.bottom),radius = round((float)diameter/2);
-		Point center = new Point(round((float)width/2),round((float)height/2));
-		
-		for(TupleButton button:buttons.values()) {
-			WheelButton wheelButton = (WheelButton)button;
-			FontMetrics metrics = wheelButton.getFontMetrics(wheelButton.getFont());
-			wheelButton.setLocation(center.x-(int)round(sin(wheelButton.angle)*radius*wheelButton.circle)-metrics.stringWidth(wheelButton.getText())/2,
-				center.y-(int)round(cos(wheelButton.angle)*radius*wheelButton.circle)-metrics.getHeight()/2);
-		}
-	}
-	@Override public void componentMoved(ComponentEvent e) { /* nothing to do here */	}
-	@Override public void componentShown(ComponentEvent e) { /* nothing to do here */	}
-	@Override public void componentHidden(ComponentEvent e) { /* nothing to do here */	}
 	
 	@Override protected void paintComponent(Graphics graphics) {
 		super.paintComponent(graphics);

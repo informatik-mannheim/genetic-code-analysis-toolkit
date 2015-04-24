@@ -19,6 +19,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -51,8 +52,8 @@ import javax.swing.undo.CannotUndoException;
 import javax.swing.undo.CompoundEdit;
 import javax.swing.undo.UndoManager;
 import javax.swing.undo.UndoableEdit;
+import org.reflections.Reflections;
 import de.hsma.gentool.gui.editor.NucleicListener.NucleicEvent;
-import de.hsma.gentool.gui.editor.display.CompoundDisplay;
 import de.hsma.gentool.gui.editor.display.GraphDisplay;
 import de.hsma.gentool.gui.helper.AttachedScrollPane;
 import de.hsma.gentool.gui.helper.VerticalLabelUI;
@@ -225,15 +226,16 @@ public class NucleicEditor extends JRootPane {
 			@Override public void mouseReleased(MouseEvent event) {
 				if(dragX!=-1) {
 					displaySize = Math.max(100,displaySize+(dragX-event.getX()));
-					displayPane.revalidate(); //TODO: Resize display
+					displayPane.revalidate();
 				}
 			}
 		};
 		
 		displayPanes = new ArrayList<>();
 		displays = new ArrayList<NucleicDisplay>();
-		for(NucleicDisplay display:new NucleicDisplay[]{new GraphDisplay(this),new CompoundDisplay(this)}) //TODO: Do with reflections
-			addDisplay(display);
+		for(Class<? extends NucleicDisplay> displayClass:new Reflections(NucleicDisplay.class.getPackage().getName()).getSubTypesOf(NucleicDisplay.class))
+			try { addDisplay(displayClass.getConstructor(new Class[]{NucleicEditor.class}).newInstance(this)); }
+			catch(InstantiationException|IllegalAccessException|IllegalArgumentException|InvocationTargetException|NoSuchMethodException|SecurityException e) { /* nothing to do here */ }
 		this.addComponentListener(new ComponentAdapter() {			
 			@Override public void componentResized(ComponentEvent e) {
 				NucleicDisplay display = displays.get(displayPane.getSelectedIndex());
@@ -241,6 +243,7 @@ public class NucleicEditor extends JRootPane {
 					display.setPreferredSize();
 			}
 		});
+		displayPane.setSelectedIndex(displayPane.indexOfTab(GraphDisplay.LABEL));
 		
 		this.add(scroll, BorderLayout.CENTER);
 	}

@@ -1,8 +1,11 @@
 package de.hsma.gentool.gui.editor.display;
 
 import java.awt.Color;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -23,7 +26,9 @@ import de.hsma.gentool.nucleic.Tuple;
 
 public class GraphDisplay extends mxGraphComponent implements NucleicDisplay {
 	private static final long serialVersionUID = 1;
-
+	
+	public static final String LABEL = "Graph";
+	
 	private mxGraph graph;
 	private Object parent;
 	private mxIGraphModel model;
@@ -43,21 +48,27 @@ public class GraphDisplay extends mxGraphComponent implements NucleicDisplay {
 		
 		setBorder(new MatteBorder(0,2,0,0,Color.LIGHT_GRAY));
 		getViewport().setOpaque(true); getViewport().setBackground(Color.WHITE);
+		addComponentListener(new ComponentAdapter() {
+			@Override public void componentResized(ComponentEvent event) { layoutGraph(); }
+		});
 		setEnabled(false);
 	}
-
-	@Override public String getLabel() { return "Graph"; }
+	
+	@Override public String getLabel() { return LABEL; }
 	
 	@Override public boolean hasPreferredSize() { return false; }
 	@Override public void setPreferredSize() { /* nothing to do here */ }
 
-	@Override public void tuplesInsert(NucleicListener.NucleicEvent event) {
+	@Override public void tuplesInsert(NucleicListener.NucleicEvent event) { updateGraph(event.getTuples()); }
+	@Override public void tuplesRemoved(NucleicListener.NucleicEvent event) { this.tuplesInsert(event); }
+	@Override public void tuplesChanged(NucleicListener.NucleicEvent event) { /* nothing to do here */ }
+	
+	private void updateGraph(Collection<Tuple> tuples) {
 		HashSet<Tuple> vertices = new HashSet<Tuple>();
 		HashMultimap<Tuple, Tuple> edges = HashMultimap.create();
-		TreeMultimap<Integer,Tuple> verticesByLength = TreeMultimap.create(Comparator.reverseOrder(), Comparator.naturalOrder());
 
 		Tuple tupleFrom,tupleTo;
-		for(Tuple tuple:event.getTuples()) {
+		for(Tuple tuple:tuples) {
 			String string = tuple.toString();
 			if(string.length()<2) continue;
 
@@ -75,8 +86,6 @@ public class GraphDisplay extends mxGraphComponent implements NucleicDisplay {
 				edges.put(tupleFrom,tupleTo);
 			}
 		}
-		for(Tuple vertex:vertices)
-			verticesByLength.put(vertex.getBases().length,vertex);
 		
 		model.beginUpdate();
 		try {
@@ -87,16 +96,22 @@ public class GraphDisplay extends mxGraphComponent implements NucleicDisplay {
 			for(Entry<Tuple,Tuple> edge:new HashSet<Entry<Tuple,Tuple>>(this.edges.keySet()))
 				if(!edges.containsEntry(edge.getKey(),edge.getValue())) this.removeEdge(edge);
 		} finally { model.endUpdate(); }
-		if(vertices.isEmpty()) return;
+		
+		if(!vertices.isEmpty()) layoutGraph();
+	}
+	private void layoutGraph() {
+		TreeMultimap<Integer,Tuple> vertices = TreeMultimap.create(Comparator.reverseOrder(), Comparator.naturalOrder());
+		for(Tuple vertex:this.vertices.keySet())
+			vertices.put(vertex.getBases().length,vertex);
 		
 		model.beginUpdate();
 		try {
-			LinkedList<Integer> lengths = new LinkedList<Integer>(verticesByLength.keySet());
+			LinkedList<Integer> lengths = new LinkedList<Integer>(vertices.keySet());
 			int width = this.getWidth(),last = lengths.getLast(),columns = Math.max(2,lengths.size()*2-1),
 				columnGap = width/(columns+1),rowGap = 80,left = -columnGap/2+10, topInset = -50;
 			for(Integer length:lengths) {
 				int top;
-				ArrayList<Tuple> verticesWithLength = new ArrayList<Tuple>(verticesByLength.get(length));
+				ArrayList<Tuple> verticesWithLength = new ArrayList<Tuple>(vertices.get(length));
 				if(columns==2||length!=last) {
 					int half = (int)Math.ceil((double)verticesWithLength.size()/2.);
 					left += columnGap; top = topInset;
@@ -113,8 +128,6 @@ public class GraphDisplay extends mxGraphComponent implements NucleicDisplay {
 			}
 		} finally { model.endUpdate(); }
 	}
-	@Override public void tuplesRemoved(NucleicListener.NucleicEvent event) { this.tuplesInsert(event); }
-	@Override public void tuplesChanged(NucleicListener.NucleicEvent event) { /* nothing to do here */ }
 	
 	private Object insertVertex(Tuple tuple) {
 		Object vertex = vertices.get(tuple);
