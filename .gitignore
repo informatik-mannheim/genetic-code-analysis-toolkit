@@ -6,3 +6,4 @@ out
 .idea
 /src/resources/dev.properties
 /target/
+.cache
