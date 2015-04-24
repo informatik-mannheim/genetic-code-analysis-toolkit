@@ -34,7 +34,7 @@ public class FoldingPanel extends JPanel {
 	private JPanel collapse;
 	private Component child;
 	private JCheckBox expand;
-	private Box actions;
+	private Box info;
 	
 	public FoldingPanel(Component child) { this(child, Orientation.VERTICAL); }
 	public FoldingPanel(Component child, Orientation orientation) {
@@ -52,7 +52,7 @@ public class FoldingPanel extends JPanel {
 		Box header = horizontal ? Box.createVerticalBox() : Box.createHorizontalBox();
 		header.add(expand = new JCheckBox(title));
 		header.add(horizontal?Box.createVerticalGlue():Box.createHorizontalGlue());
-		header.add(actions = horizontal?Box.createVerticalBox():Box.createHorizontalBox());
+		header.add(info = horizontal?Box.createVerticalBox():Box.createHorizontalBox());
 		header.add(horizontal?Box.createVerticalStrut(6):Box.createHorizontalStrut(6));
 		
 		this.add(header, orientation == Orientation.HORIZONTAL ? BorderLayout.WEST : BorderLayout.NORTH);
@@ -106,13 +106,14 @@ public class FoldingPanel extends JPanel {
 		collapse.add(this.child = child, BorderLayout.CENTER);
 	}
 	
-	public void setActions(Action... actions) {
-		this.actions.removeAll();
+	public void clearInfo() { this.info.removeAll(); }
+	public void addInfo(Component component) { info.add(component); }
+	public void addInfo(Action... actions) {
 		for(Action action:actions) {
 			JButton button = new JButton(action);
 			button.setFocusable(false);	button.setBorderPainted(false);
 			button.setContentAreaFilled(false);	button.setBorder(EMPTY_BORDER);
-			this.actions.add(button);
+			addInfo(button);
 		}
 	}
 	

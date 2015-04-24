@@ -1,5 +1,6 @@
 package de.hsma.gentool;
 
+import static de.hsma.gentool.Utilities.*;
 import java.awt.BorderLayout;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemListener;
@@ -108,7 +109,7 @@ public class Parameter {
 						super.getListCellRendererComponent(list,value,index,isSelected,cellHasFocus);
 						if(index==-1) index = ((JComboBox<?>)component).getSelectedIndex();
 						if(index==-1) index = list.getSelectedIndex();
-						setText(labels[index]);
+						setText(!labels[index].isEmpty()?labels[index]:SPACE);
 						return this;
 					}
 				});

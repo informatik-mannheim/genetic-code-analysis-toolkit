@@ -53,6 +53,7 @@ import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.ImageIcon;
@@ -97,6 +98,7 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultCaret;
 import javax.swing.text.Document;
 import javax.swing.text.NumberFormatter;
+import org.reflections.Reflections;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -114,7 +116,7 @@ import de.hsma.gentool.gui.editor.NucleicDocument;
 import de.hsma.gentool.gui.editor.NucleicEditor;
 import de.hsma.gentool.gui.editor.NucleicListener;
 import de.hsma.gentool.gui.helper.FoldingPanel;
-import de.hsma.gentool.gui.input.CodonTable;
+import de.hsma.gentool.gui.input.CodonWheel;
 import de.hsma.gentool.gui.input.Input;
 import de.hsma.gentool.log.InjectionLogger;
 import de.hsma.gentool.log.Logger;
@@ -182,9 +184,9 @@ public class GenTool extends JFrame implements ActionListener {
 	private JLabel status;
 	private JButton cancel;
 	
-	private CatalogPanel catalog;
-	private FindDialog find;
-	private ConsolePane console;
+	private CatalogPanel catalogPanel;
+	private FindDialog findDialog;
+	private ConsolePane consolePane;
 	
 	private File currentFile;
 	
@@ -214,7 +216,7 @@ public class GenTool extends JFrame implements ActionListener {
 		attributes.put(TEST_CRITERIA,TEST_CRITERIA_BREAK_IF_FALSE);
 		attributes.put(ANALYSIS_HANDLER,new Analysis.Handler() {
 			@Override public void handle(Result result) {
-				console.log("Analysis \"%s\" result: %s",result.getAnalysis().getName(),result.toString());
+				consolePane.log("Analysis \"%s\" result: %s",result.getAnalysis().getName(),result.toString());
 			}
 		});
 		attributes.put(SPLIT_PICK,new Split.Pick() {
@@ -401,11 +403,11 @@ public class GenTool extends JFrame implements ActionListener {
 			}
 		});
 		
-		find = new FindDialog();
+		findDialog = new FindDialog();
 		
 		split = new JSplitPane[2];
-		split[0] = createSplitPane(JSplitPane.VERTICAL_SPLIT,false,false,0.725,editor,new JScrollPane(console=new ConsolePane()));
-		split[1] = createSplitPane(JSplitPane.HORIZONTAL_SPLIT,false,true,360,0.195,new JScrollPane(catalog=createCatalog()),split[0]);
+		split[0] = createSplitPane(JSplitPane.VERTICAL_SPLIT,false,false,0.725,editor,new JScrollPane(consolePane=new ConsolePane()));
+		split[1] = createSplitPane(JSplitPane.HORIZONTAL_SPLIT,false,true,360,0.195,new JScrollPane(catalogPanel=createCatalog()),split[0]);
 		add(split[1],BorderLayout.CENTER);
 		
 		add(bottom = new JPanel(new FlowLayout(FlowLayout.RIGHT)),BorderLayout.SOUTH);
@@ -435,13 +437,13 @@ public class GenTool extends JFrame implements ActionListener {
 	}
 	
 	protected CatalogPanel createCatalog() {
-		catalog = new CatalogPanel();
+		catalogPanel = new CatalogPanel();
 		
 		// Groups for operations
 		for(Entry<String,Collection<Class<? extends Operation>>> group:Operation.getGroups().asMap().entrySet())
-			catalog.addPage(createGroupPanel(group.getValue()),group.getKey(),false);
+			catalogPanel.addPage(createGroupPanel(group.getValue()),group.getKey(),false);
 		
-		return catalog;
+		return catalogPanel;
 	}
 	
 	private Component createGroupPanel(Collection<Class<? extends Operation>> operations) {
@@ -569,12 +571,12 @@ public class GenTool extends JFrame implements ActionListener {
 				if(Transformation.class.isAssignableFrom(operation)||Split.class.isAssignableFrom(operation))
 					editor.setTuples(tuples);
 				else if(Test.class.isAssignableFrom(operation))
-					console.log("Sequence does apply to test \"%s\"", name);
+					consolePane.log("Sequence does apply to test \"%s\"", name);
 			}
 			@Override public void onFailure(Throwable thrown) {
 				if(Test.class.isAssignableFrom(operation)&&thrown instanceof Test.Failed)
-					   console.log("Sequence does NOT apply to \"%s\"", name);
-				else console.log("Exception in operation \"%s\": %s", name, Optional.ofNullable(thrown.getMessage()).orElse("Unknown cause"));
+					   consolePane.log("Sequence does NOT apply to \"%s\"", name);
+				else consolePane.log("Exception in operation \"%s\": %s", name, Optional.ofNullable(thrown.getMessage()).orElse("Unknown cause"));
 			}
 		});
 		if(Transformation.class.isAssignableFrom(operation)||Split.class.isAssignableFrom(operation)) {
@@ -590,7 +592,7 @@ public class GenTool extends JFrame implements ActionListener {
 		return future;
 	}
 	protected ListenableFuture<Collection<Tuple>> submitTask(Task task) {
-		ListenableFuture<Collection<Tuple>> future = service.submit(InjectionLogger.injectLogger(console,task));
+		ListenableFuture<Collection<Tuple>> future = service.submit(InjectionLogger.injectLogger(consolePane,task));
 		futures.add(future); Futures.addCallback(future,new FutureCallback<Collection<Tuple>>() {
 			@Override public void onFailure(Throwable thrown) { onSuccess(null); }
 			@Override public void onSuccess(Collection<Tuple> tuples) {
@@ -699,29 +701,29 @@ public class GenTool extends JFrame implements ActionListener {
 		editor.requestFocus();
 	}
 	public void findText() {
-		if(!find.isVisible())
-			find.showFind();
+		if(!findDialog.isVisible())
+			findDialog.showFind();
 	}
 	public void replaceText() {
-		if(!find.isVisible())
-			find.showReplace();
+		if(!findDialog.isVisible())
+			findDialog.showReplace();
 	}
 	public void splitText() {
-		if(!find.isVisible())
-			find.showSplit();
+		if(!findDialog.isVisible())
+			findDialog.showSplit();
 	}
 	public void findNext() {
-		String term = find.getTerm();
+		String term = findDialog.getTerm();
 		if(!term.isEmpty()) {
 			JTextPane textPane = editor.getTextPane();
 			String text = textPane.getText();
-			int start = -1, end = 0, carret = find.searchDown()?textPane.getSelectionEnd():editor.getTextPane().getSelectionStart();
-			if(!find.regexSearch()) {
-				if(find.searchDown()) {
-					if((start=text.indexOf(term, carret))==-1&&find.wrapSearch())
+			int start = -1, end = 0, carret = findDialog.searchDown()?textPane.getSelectionEnd():editor.getTextPane().getSelectionStart();
+			if(!findDialog.regexSearch()) {
+				if(findDialog.searchDown()) {
+					if((start=text.indexOf(term, carret))==-1&&findDialog.wrapSearch())
 						start = text.indexOf(term);
 				} else {
-					if((carret==0||(start=text.lastIndexOf(term, carret-term.length()))==-1)&&find.wrapSearch())
+					if((carret==0||(start=text.lastIndexOf(term, carret-term.length()))==-1)&&findDialog.wrapSearch())
 						start = text.lastIndexOf(term);
 				}
 				if(start!=-1) end = start+term.length();
@@ -729,13 +731,13 @@ public class GenTool extends JFrame implements ActionListener {
 				Pattern pattern;
 				try { pattern = Pattern.compile(term, Pattern.CASE_INSENSITIVE); }
 				catch(PatternSyntaxException e) {
-					JOptionPane.showMessageDialog(find, e.getLocalizedMessage(), find.getTitle(), JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(findDialog, e.getLocalizedMessage(), findDialog.getTitle(), JOptionPane.ERROR_MESSAGE);
 					return;
 				}
 				
 				Matcher matcher = pattern.matcher(text);
-				if(find.searchDown()) {
-					if(matcher.find(carret)||(find.wrapSearch()&&matcher.find())) {
+				if(findDialog.searchDown()) {
+					if(matcher.find(carret)||(findDialog.wrapSearch()&&matcher.find())) {
 						start = matcher.start();
 						end = matcher.end();
 					}
@@ -745,7 +747,7 @@ public class GenTool extends JFrame implements ActionListener {
 					  if(matcher.end()<=carret) {
 					  	start = matcher.start();
 					  	end = matcher.end();
-					  } else if(start ==-1&&find.wrapSearch()) {
+					  } else if(start ==-1&&findDialog.wrapSearch()) {
 					  	wrapStart = matcher.start();
 					  	end = matcher.end();
 						} else break;
@@ -757,28 +759,28 @@ public class GenTool extends JFrame implements ActionListener {
 				textPane.setSelectionStart(start);
 				textPane.setSelectionEnd(end);
 				editor.requestFocus();
-			} else JOptionPane.showMessageDialog(find, String.format("Cannot find \"%s\"", term), find.getTitle(), JOptionPane.INFORMATION_MESSAGE);
+			} else JOptionPane.showMessageDialog(findDialog, String.format("Cannot find \"%s\"", term), findDialog.getTitle(), JOptionPane.INFORMATION_MESSAGE);
 		} else findText();
 	}
 	protected void replaceNext() {
 		JTextPane textPane = editor.getTextPane();
 		int start = textPane.getSelectionStart(), end = textPane.getSelectionEnd();
 		if(start!=end) {
-			String term = find.getTerm(), selected = textPane.getSelectedText(), replace = null;
-			if(!find.regexSearch()) {
+			String term = findDialog.getTerm(), selected = textPane.getSelectedText(), replace = null;
+			if(!findDialog.regexSearch()) {
 				if(selected.equalsIgnoreCase(term))
-					replace = find.getReplace();
+					replace = findDialog.getReplace();
 			} else {
 				Pattern pattern;
 				try { pattern = Pattern.compile(term, Pattern.CASE_INSENSITIVE); }
 				catch(PatternSyntaxException e) {
-					JOptionPane.showMessageDialog(find, e.getLocalizedMessage(), find.getTitle(), JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(findDialog, e.getLocalizedMessage(), findDialog.getTitle(), JOptionPane.ERROR_MESSAGE);
 					return;
 				}
 				
 				Matcher matcher = pattern.matcher(selected);
 				if(matcher.find())
-					replace = matcher.replaceAll(find.getReplace());
+					replace = matcher.replaceAll(findDialog.getReplace());
 			}
 			
 			if(replace!=null) try {
@@ -791,25 +793,25 @@ public class GenTool extends JFrame implements ActionListener {
 		} else findNext();
 	}
 	protected void replaceAll() {
-		Pattern pattern; String term = find.getTerm();
-		try { pattern = Pattern.compile(find.regexSearch()?term:Pattern.quote(term), Pattern.CASE_INSENSITIVE); }
+		Pattern pattern; String term = findDialog.getTerm();
+		try { pattern = Pattern.compile(findDialog.regexSearch()?term:Pattern.quote(term), Pattern.CASE_INSENSITIVE); }
 		catch(PatternSyntaxException e) {
-			JOptionPane.showMessageDialog(find, e.getLocalizedMessage(), find.getTitle(), JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(findDialog, e.getLocalizedMessage(), findDialog.getTitle(), JOptionPane.ERROR_MESSAGE);
 			return;
 		}
 		
-		editor.setText(pattern.matcher(editor.getText()).replaceAll(find.getReplace()));
+		editor.setText(pattern.matcher(editor.getText()).replaceAll(findDialog.getReplace()));
 	}
 	protected void splitAt() {
-		String term = find.getTerm();
-		if(find.regexSearch())
-			try { Pattern.compile(find.getTerm()); }
+		String term = findDialog.getTerm();
+		if(findDialog.regexSearch())
+			try { Pattern.compile(findDialog.getTerm()); }
 			catch(PatternSyntaxException e) {
-				JOptionPane.showMessageDialog(find, e.getLocalizedMessage(), find.getTitle(), JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(findDialog, e.getLocalizedMessage(), findDialog.getTitle(), JOptionPane.ERROR_MESSAGE);
 				return;
 			}
 		
-		submitOperation(Split.Expression.class, term, find.regexSearch(), find.removeDelimiter());
+		submitOperation(Split.Expression.class, term, findDialog.regexSearch(), findDialog.removeDelimiter());
 	}
 	
 	public void goToTuple() {
@@ -937,8 +939,11 @@ public class GenTool extends JFrame implements ActionListener {
 		
 		private final GridBagConstraints defaultConstraints;
 
-		protected List<FoldingPanel> pages = new ArrayList<>();
-		protected FoldingPanel input;
+		protected List<FoldingPanel> pagePanels = new ArrayList<>();
+		protected FoldingPanel inputPanel;
+		protected JComboBox<Input> inputCombo;
+		
+		protected List<Input> inputs;
 		
 		public CatalogPanel() {
 			super(new GridBagLayout());
@@ -953,12 +958,43 @@ public class GenTool extends JFrame implements ActionListener {
 			constraints.weighty = 1.;
 			add(trailer, constraints);
 			
-			input = addPage(new JPanel(new BorderLayout()),"Input",true);
-			input.add(createInputOptions(), BorderLayout.SOUTH);
-			setDefaultInput();
+			Input input,defaultInput=null; inputs = new ArrayList<>();
+			for(Class<? extends Input> inputClass:new Reflections(Input.class.getPackage().getName()).getSubTypesOf(Input.class))
+				try { inputs.add(input=inputClass.newInstance()); if(CodonWheel.class.equals(inputClass)) defaultInput = input; }
+				catch(InstantiationException|IllegalAccessException e) { /* nothing to do here */ }
+			inputPanel = addPage(new JPanel(new BorderLayout()),"Input",true);
+			inputPanel.add(createInputOptions(), BorderLayout.SOUTH);
+			
+			inputCombo = new JComboBox<Input>(inputs.toArray(new Input[0]));
+			inputCombo.setRenderer(new DefaultListCellRenderer() {
+				private static final long serialVersionUID = 1l;
+				@Override public java.awt.Component getListCellRendererComponent(JList<?> list,Object value,int index,boolean isSelected,boolean cellHasFocus) {
+					super.getListCellRendererComponent(list,value,index,isSelected,cellHasFocus);
+					setText(((Input)value).getName());
+					return this;
+				}
+			});			
+			inputCombo.setSelectedItem(defaultInput);
+			inputCombo.addActionListener(new ActionListener() {
+				@Override public void actionPerformed(ActionEvent event) {
+					setInput((Input)inputCombo.getSelectedItem()); }
+				}
+			);
+			
+			inputPanel.addInfo(inputCombo);
+			inputPanel.addInfo(new AbstractAction(null,new ImageIcon(getResource("cog.png"))) {
+				private static final long serialVersionUID = 1l;
+				@Override public void actionPerformed(ActionEvent event) {
+					Input input = (Input)inputCombo.getSelectedItem();
+					if(input instanceof Configurable) {
+						((Configurable)input).showPreferencesDialog(GenTool.this,"Input Preferences"); setInput(input); }
+				}
+			});
+			
+			setInput(defaultInput);
 		}
 		
-		public List<FoldingPanel> getPages() { return Collections.unmodifiableList(pages); }
+		public List<FoldingPanel> getPages() { return Collections.unmodifiableList(pagePanels); }
 		public FoldingPanel addPage(String title, boolean expanded) { return addPage(new JPanel(), title, expanded); }
 		public FoldingPanel addPage(Component child, String title, boolean expanded) {
 			FoldingPanel page = new FoldingPanel(child, title);
@@ -967,37 +1003,41 @@ public class GenTool extends JFrame implements ActionListener {
 			page.setForeground(UIManager.getColor(TITLE_FOREGROUND));
 			page.setExpanded(expanded);
 			add(page, defaultConstraints, getComponentCount()-1);
-			pages.add(page);
+			pagePanels.add(page);
 			return page;
 		}
 		
-		protected void setDefaultInput() { setInput(new CodonTable()); }
 		public void setInput(Class<? extends Input> input) throws InstantiationException, IllegalAccessException { setInput(input.newInstance()); }
 		public void setInput(final Input input) {
-			((JPanel)this.input.getChild()).add(input.getComponent(editor), BorderLayout.CENTER);
-			this.input.setActions((input instanceof Configurable)?new javax.swing.Action[]{new AbstractAction(null, new ImageIcon(getResource("cog.png"))) {
-				private static final long serialVersionUID = 1l;
-				@Override public void actionPerformed(ActionEvent event) {
-					((Configurable)input).showPreferencesDialog(GenTool.this,"Input Preferences");
-					setInput(input); /* re-set input, so preferences get loaded again */
+			SwingUtilities.invokeLater(new Runnable() {
+				@Override public void run() {
+					JPanel panel = (JPanel)inputPanel.getChild();
+					panel.removeAll(); panel.add(input.getComponent(editor), BorderLayout.CENTER);
+					inputPanel.revalidate(); inputPanel.repaint();
 				}
-			}}:new javax.swing.Action[0]);
+			});
 		}
 		
 		protected Component createInputOptions() {
 			JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 			addInputOption(panel,new Option("tupleLength", "Default Tuple Length", editor.getDocument().getDefaultTupleLength(), 0, 10, 1)).addChangeListener(new ChangeListener() {
 				@Override public void stateChanged(ChangeEvent event) {
-					((NucleicDocument)editor.getTextPane().getDocument()).setDefaultTupleLength((Integer)((JSpinner)event.getSource()).getValue());
+					NucleicDocument document = editor.getDocument();
+					document.setDefaultTupleLength((Integer)((JSpinner)event.getSource()).getValue());
+					document.adaptText();
 					editor.repaint();
 				}
 			});
 			addInputOption(panel,new Option("acid", "Default Acid", RNA,
 				new Acid[]{null,RNA,DNA},
-				EMPTY,DNA.name(),RNA.name())
+				EMPTY,RNA.name(),DNA.name())
 			).addItemListener(new ItemListener() {
 				@Override public void itemStateChanged(ItemEvent event) {
-					editor.getDocument().setDefaultAcid(event.getStateChange()==ItemEvent.SELECTED?valueOf((String)event.getItem()):null);
+					NucleicDocument document = editor.getDocument();
+					if(event.getStateChange()==ItemEvent.SELECTED) {
+						document.setDefaultAcid((Acid)event.getItem());
+						document.adaptText();
+					} else document.setDefaultAcid(null);
 				}
 			});
 			return panel;
@@ -1383,7 +1423,7 @@ public class GenTool extends JFrame implements ActionListener {
 			((DefaultCaret)this.getCaret()).setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 		}
 		public void resetText() { setText(null); }
-		public void insertText(String text) { console.insert(text,console.getText().length()); }
+		public void insertText(String text) { consolePane.insert(text,consolePane.getText().length()); }
 		public void appendText(String text) {
 			if(!getText().isEmpty())
 				insertText(NEW_LINE);

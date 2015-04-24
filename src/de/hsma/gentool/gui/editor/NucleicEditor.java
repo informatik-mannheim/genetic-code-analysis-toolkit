@@ -5,6 +5,7 @@ import static de.hsma.gentool.gui.helper.Guitilities.*;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
@@ -16,21 +17,14 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.awt.geom.Rectangle2D;
-import java.util.AbstractMap;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.NavigableMap;
-import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.regex.Pattern;
 import javax.swing.JLabel;
@@ -57,18 +51,11 @@ import javax.swing.undo.CannotUndoException;
 import javax.swing.undo.CompoundEdit;
 import javax.swing.undo.UndoManager;
 import javax.swing.undo.UndoableEdit;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.SortedSetMultimap;
-import com.google.common.collect.TreeMultimap;
-import com.mxgraph.model.mxIGraphModel;
-import com.mxgraph.swing.mxGraphComponent;
-import com.mxgraph.util.mxRectangle;
-import com.mxgraph.view.mxGraph;
 import de.hsma.gentool.gui.editor.NucleicListener.NucleicEvent;
+import de.hsma.gentool.gui.editor.display.CompoundDisplay;
+import de.hsma.gentool.gui.editor.display.GraphDisplay;
 import de.hsma.gentool.gui.helper.AttachedScrollPane;
 import de.hsma.gentool.gui.helper.VerticalLabelUI;
-import de.hsma.gentool.nucleic.Compound;
 import de.hsma.gentool.nucleic.Tuple;
 
 public class NucleicEditor extends JRootPane {
@@ -82,11 +69,14 @@ public class NucleicEditor extends JRootPane {
 	
 	private JTextPane textPane;
 	private NumberPanel numberPanel;
-	private JTabbedPane displayPane;
-	private List<JPanel> displayPanels;
-	private List<NucleicDisplay> displays;
 	
-	protected NavigableMap<Position, Tuple> tuples;
+	private JTabbedPane displayPane;
+	private List<JRootPane> displayPanes;
+	private List<NucleicDisplay> displays;
+	private MouseAdapter displayResize;
+	private int displaySize = 300;
+	
+	private NavigableMap<Position,Tuple> tuples;
 	
 	private int cleanHash = EMPTY.hashCode();
 	
@@ -212,14 +202,37 @@ public class NucleicEditor extends JRootPane {
 			@Override public void stateChanged(ChangeEvent event) {
 				previousTabIndex = currentTabIndex;
         currentTabIndex = displayPane.getSelectedIndex();
-				if(previousTabIndex!=-1) displayPanels.get(previousTabIndex).removeAll();
-				displayPanels.get(currentTabIndex).add((Component)displays.get(currentTabIndex));
+				if(previousTabIndex!=-1) displayPanes.get(previousTabIndex).getContentPane().removeAll();
+				displayPanes.get(currentTabIndex).getContentPane().add((Component)displays.get(currentTabIndex));
 			}
 		});
 		
-		displayPanels = new ArrayList<>();
+		displayResize = new MouseAdapter() {
+			private int dragX;
+			@Override public void mouseMoved(MouseEvent event) {
+				Component component = (Component)event.getSource();
+				if(event.getX()>2) {
+					if(component.getCursor().getType()!=Cursor.DEFAULT_CURSOR)
+						component.setCursor(Cursor.getDefaultCursor());
+				} else {
+					if(component.getCursor().getType()!=Cursor.W_RESIZE_CURSOR)
+						component.setCursor(Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR));
+				}
+			}
+			@Override public void mousePressed(MouseEvent event) {
+				dragX = event.getX()<=2?event.getX():-1;
+			}
+			@Override public void mouseReleased(MouseEvent event) {
+				if(dragX!=-1) {
+					displaySize = Math.max(100,displaySize+(dragX-event.getX()));
+					displayPane.revalidate(); //TODO: Resize display
+				}
+			}
+		};
+		
+		displayPanes = new ArrayList<>();
 		displays = new ArrayList<NucleicDisplay>();
-		for(NucleicDisplay display:new NucleicDisplay[]{new GraphDisplay(),new CompoundDisplay()})
+		for(NucleicDisplay display:new NucleicDisplay[]{new GraphDisplay(this),new CompoundDisplay(this)}) //TODO: Do with reflections
 			addDisplay(display);
 		this.addComponentListener(new ComponentAdapter() {			
 			@Override public void componentResized(ComponentEvent e) {
@@ -239,25 +252,34 @@ public class NucleicEditor extends JRootPane {
 		
 		JLabel label = new JLabel(display.getLabel());
 		label.setUI(new VerticalLabelUI(true));
-		JPanel panel = new JPanel(new BorderLayout()) {
+		
+		JRootPane pane = new JRootPane() {
 			private static final long serialVersionUID = 1l;
 			@Override public Dimension getPreferredSize() {
 				if(displayPane.getSelectedComponent()==this) {
 					if(display.hasPreferredSize()) {
 						display.setPreferredSize();
 						return ((Component)display).getPreferredSize();
-					} else return new Dimension(300,0);
+					} else return new Dimension(displaySize,0);
 				} else return new Dimension();
 			}
 		};
+		pane.getContentPane().setLayout(new BorderLayout());
+		if(!display.hasPreferredSize()) {
+			Component glassPane = pane.getGlassPane();
+			glassPane.addMouseListener(displayResize);
+			glassPane.addMouseMotionListener(displayResize);
+			glassPane.setVisible(true);
+		}
 		
-		displays.add(display); displayPanels.add(panel);
-		displayPane.addTab(display.getLabel(),panel);
+		displays.add(display); displayPanes.add(pane);
+		displayPane.addTab(display.getLabel(),pane);
 		displayPane.setTabComponentAt(displayPane.getTabCount()-1,label);
 		addNucleicListener(display);
 	}
 	
 	public JTextPane getTextPane() { return textPane; }
+	public JPanel getNumberPanel() { return numberPanel; }
 	public NucleicDocument getDocument() { return document; }
 	
 	public String getText() { return textPane.getText(); }
@@ -266,6 +288,7 @@ public class NucleicEditor extends JRootPane {
 	public void setText(String text) { edit.startTransaction(); textPane.setText(text); edit.commitTransaction(); }
 	
 	public Collection<Tuple> getTuples() { return Collections.unmodifiableCollection(tuples.values()); }
+	public NavigableMap<Position,Tuple> getTupleMap() { return tuples; }
 	public void setTuples(Collection<Tuple> tuples) {
 		invokeAppropriate(new Runnable() {
 			@Override public void run() { edit.startTransaction(); textPane.setText(null); appendTuples(tuples); edit.commitTransaction(); }
@@ -427,247 +450,6 @@ public class NucleicEditor extends JRootPane {
 		@Override public void tuplesInsert(NucleicEvent event) {
 			invokeAppropriate(new Runnable() {
 				public void run() { adaptDigits(); repaint(); }
-			});
-		}
-		@Override public void tuplesChanged(NucleicEvent event) { /* undoable change, nothing to do here */ }
-	}
-	
-
-	class GraphDisplay extends mxGraphComponent implements NucleicDisplay {
-		private static final long serialVersionUID = 1l;
-		
-		private mxGraph graph;
-		private Object parent;
-		private mxIGraphModel model;
-		
-		private Map<Tuple,Object> vertices;
-		private Map<Entry<Tuple,Tuple>,Object> edges;
-		
-		public GraphDisplay() {
-			super(new mxGraph());
-			graph = getGraph();
-			parent = graph.getDefaultParent();
-			model = graph.getModel();
-			
-			vertices = new HashMap<>();
-			edges = new HashMap<>();
-			
-			setBorder(new MatteBorder(0,2,0,0,Color.LIGHT_GRAY));
-			getViewport().setOpaque(true);
-			getViewport().setBackground(Color.WHITE);
-			setEnabled(false);
-		}
-		
-		@Override public String getLabel() { return "Graph"; }
-		
-		@Override public boolean hasPreferredSize() { return false; }
-		@Override public void setPreferredSize() {}
-		
-		@Override public void tuplesInsert(NucleicEvent event) {
-			String string;
-			Set<Tuple> vertices = new HashSet<>();
-			SortedSetMultimap<Integer,Tuple> verticesByLength = TreeMultimap.create(Comparator.reverseOrder(), Comparator.naturalOrder());
-			Multimap<Tuple,Tuple> edges = HashMultimap.create();
-			for(Tuple tuple:event.getTuples())
-				if((string=tuple.toString()).length()>=2) {
-					Tuple tupleFrom, tupleTo;
-					
-					vertices.add(tupleFrom=new Tuple(string.substring(0,1)));
-					vertices.add(tupleTo=new Tuple(string.substring(1)));
-					edges.put(tupleFrom,tupleTo);
-					
-					vertices.add(tupleFrom=new Tuple(string.substring(0,string.length()-1)));
-					vertices.add(tupleTo=new Tuple(string.substring(string.length()-1)));
-					edges.put(tupleFrom,tupleTo);
-				}
-			for(Tuple vertex:vertices)
-				verticesByLength.put(vertex.getBases().length,vertex);
-			
-			model.beginUpdate();
-			try {
-				for(Entry<Tuple,Tuple> edge:edges.entries())
-					addEdge(edge);
-				
-				for(Tuple vertex:new HashSet<>(this.vertices.keySet()))
-					if(!vertices.contains(vertex))
-						removeVertex(vertex);
-				for(Entry<Tuple,Tuple> edge:new HashSet<>(this.edges.keySet()))
-					if(!edges.containsEntry(edge.getKey(),edge.getValue()))
-						removeEdge(edge);
-			} finally{ model.endUpdate(); }
-			if(vertices.isEmpty()) return;
-			
-			model.beginUpdate();
-			try {
-				Deque<Integer> lengths = new LinkedList<>(verticesByLength.keySet());
-				int width = getWidth(), last = lengths.getLast(), columns = Math.max(2,(lengths.size()*2)-1),
-					columnGap = width/(columns+1), rowGap = 80, left = -columnGap/2+10, top, topInset = -50;
-				for(Integer length:lengths) {
-					List<Tuple> verticesWithLength = new ArrayList<>(verticesByLength.get(length));
-					if(columns==2||length!=last) {
-						left += columnGap; int half = (int)Math.ceil(((double)verticesWithLength.size())/2);
-						top = topInset; for(Tuple vertex:verticesWithLength.subList(0,half))
-							positionVertexAt(vertex, left, top+=rowGap);
-						top = topInset; for(Tuple vertex:verticesWithLength.subList(half,verticesWithLength.size()))
-							positionVertexAt(vertex, width-left, top+=rowGap);
-					} else {
-						left = width/2; top = topInset;
-						for(Tuple vertex:verticesWithLength)
-							positionVertexAt(vertex, left, top+=rowGap);
-					}
-				}
-			} finally{ model.endUpdate(); }
-		}
-		@Override public void tuplesRemoved(NucleicEvent event) { tuplesInsert(event); }
-		@Override public void tuplesChanged(NucleicEvent event) { /* undoable change, nothing to do here */ }
-		
-		private Object insertVertex(Tuple tuple) {
-			Object vertex = vertices.get(tuple);
-			if(vertex==null) {
-				vertex = graph.insertVertex(parent,null,tuple,0,0,0,0);
-				graph.updateCellSize(vertex);
-				vertices.put(tuple,vertex);
-			}	return vertex;
-		}
-		private Object removeVertex(Tuple tuple) {
-			Object vertex = vertices.get(tuple);
-			if(vertex!=null) {
-				vertices.remove(tuple);
-				edges.keySet().removeIf(edge->(edge.getKey().equals(tuple)||edge.getValue().equals(tuple)));
-				model.remove(vertex);
-			} return vertex;
-		}
-		@SuppressWarnings("unused") private Object addEdge(Tuple tupleFrom,Tuple tupleTo) { return addEdge(new AbstractMap.SimpleEntry<>(tupleFrom,tupleTo)); }
-		private Object addEdge(Entry<Tuple,Tuple> tupleEdge) {
-			Object edge = edges.get(tupleEdge); 
-			if(edge==null) {
-				edge = graph.insertEdge(parent, null, EMPTY, insertVertex(tupleEdge.getKey()), insertVertex(tupleEdge.getValue()));
-				edges.put(tupleEdge,edge);
-			} return edge;
-		}
-		@SuppressWarnings("unused") private Object removeEdge(Tuple tupleFrom,Tuple tupleTo) { return removeEdge(new AbstractMap.SimpleEntry<>(tupleFrom,tupleTo)); }
-		private Object removeEdge(Entry<Tuple,Tuple> tupleEdge) {
-			Object edge = edges.remove(tupleEdge);
-			if(edge!=null)
-				model.remove(edge);
-			return edge;
-		}
-		
-    private void positionVertexAt(Tuple tuple, int x, int y) {
-    	Object vertex = vertices.get(tuple);
-    	mxRectangle bounds = graph.getCellBounds(vertex);
-    	graph.resizeCell(vertex,new mxRectangle(x-bounds.getWidth()/2,y,bounds.getWidth(),bounds.getHeight()));
-    }
-	}
-	
-	class CompoundDisplay extends JPanel implements NucleicDisplay {
-		private static final long serialVersionUID = 1l;
-
-		private final Color COLOR_NONPOLAR = new Color(255,231,95),
-                           COLOR_POLAR = new Color(179,222,192),
-                           COLOR_BASIC = new Color(187,191,224),
-                          COLOR_ACIDIC = new Color(248,183,211),
-                         COLOR_SPECIAL = new Color(176,176,176);
-		private final int defaultCharWidth;
-		
-		private int border;
-		
-		public CompoundDisplay() {
-			setBackground(Color.WHITE);
-			setFont(textPane.getFont());
-			FontMetrics metrics = getFontMetrics(getFont());
-			defaultCharWidth = metrics.charWidth('0');
-			setBorderSpacing(5);
-			setPreferredSize();
-		}
-
-		@Override public String getLabel() { return "Compound"; }
-		
-		@Override public boolean hasPreferredSize() { return true; }
-		public void setPreferredSize() {
-			Insets insets = getInsets();
-			Dimension dimension = getPreferredSize();
-			dimension.setSize(-insets.left-insets.right+(NucleicEditor.this.getWidth()-NucleicEditor.this.numberPanel.getWidth())/2, Integer.MAX_VALUE-Short.MAX_VALUE);
-			setPreferredSize(dimension);
-			setSize(dimension);
-		}
-
-		public int getBorderSpacing() { return border; }
-		public void setBorderSpacing(int borderSpacing) {
-			this.border = borderSpacing;
-			Border inner = new EmptyBorder(0,borderSpacing,0,borderSpacing);
-			setBorder(new CompoundBorder(new MatteBorder(0,1,0,0,Color.LIGHT_GRAY),inner));
-			setPreferredSize();
-		}
-		
-		@Override public void paintComponent(Graphics graphics) {
-			super.paintComponent(graphics);
-			
-			Rectangle clip = graphics.getClipBounds();
-			FontMetrics metrics = textPane.getFontMetrics(textPane.getFont());
-			int startOffset = textPane.viewToModel(new Point(0,clip.y)), endOffset = textPane.viewToModel(new Point(0,clip.y+clip.height));
-			
-			try {
-				while(startOffset<=endOffset) {
-					graphics.setColor(getForeground());
-					drawCompounds(graphics, tuplesInRow(startOffset), getOffsetY(startOffset, metrics));
-					startOffset = javax.swing.text.Utilities.getRowEnd(textPane, startOffset)+1;
-				}
-			} catch(BadLocationException e) { /** nothing to do here */  }
-		}
-		
-		protected void drawCompounds(Graphics graphics, Tuple[] tuples, int y) {
-			int x = getInsets().left;
-			for(Tuple tuple:tuples) {
-				String text; Color color = COLOR_SPECIAL;
-				if(tuple!=null) {
-					Compound compound = tuple.getCompound();
-					if(compound!=null) {
-						text = compound.abbreviation;
-						switch(compound.property) {
-						case NONPOLAR: color = COLOR_NONPOLAR; break;
-						case POLAR: color = COLOR_POLAR; break;
-						case BASIC: color = COLOR_BASIC; break;
-						case ACIDIC: color = COLOR_ACIDIC; break; }
-					} else if(Compound.isStart(tuple)) text = "STA";
-						else if(Compound.isStop(tuple)) text = "STP";
-						else text = "UNK";
-				} else text = "ERR";
-				
-				// adapt text length to tuple length
-				int defaultTupleLength = document.getDefaultTupleLength();
-				if(defaultTupleLength>0&&defaultTupleLength<text.length())
-					text = text.substring(0,defaultTupleLength);
-				
-				drawString(graphics, text, x, y, color);
-				x += (text.length()+1)*defaultCharWidth;
-			}
-		}
-		protected void drawString(Graphics graphics, String string, int x, int y, Color color) {
-			FontMetrics metrics = graphics.getFontMetrics();
-      Rectangle2D rectangle = metrics.getStringBounds(string, graphics);
-      graphics.setColor(color);
-      graphics.fillRect(x, y - metrics.getAscent(), (int)rectangle.getWidth(), (int)rectangle.getHeight());
-      graphics.setColor(getForeground());
-			graphics.drawString(string, x, y);
-		}
-	
-		protected Tuple[] tuplesInRow(int offset) {
-			try {
-				int rowStartOffset = javax.swing.text.Utilities.getRowStart(textPane, offset), rowEndOffset = javax.swing.text.Utilities.getRowEnd(textPane, rowStartOffset);
-				//text version: return Tuple.toArray(textPane.getText(rowStartOffset, rowEndOffset-rowStartOffset));
-				return tuples.subMap(fixPosition(rowStartOffset), fixPosition(rowEndOffset+1)).values().toArray(new Tuple[0]);
-			}	catch(BadLocationException e) { return null; }
-		}
-		private int getOffsetY(int rowOffset,FontMetrics metrics) throws BadLocationException {
-			Rectangle rectangle = textPane.modelToView(rowOffset);
-			return (rectangle.y+rectangle.height)-metrics.getDescent();
-		}
-
-		@Override public void tuplesRemoved(NucleicEvent event) { tuplesInsert(event); }
-		@Override public void tuplesInsert(NucleicEvent event) {
-			invokeAppropriate(new Runnable() {
-				public void run() { repaint(); }
 			});
 		}
 		@Override public void tuplesChanged(NucleicEvent event) { /* undoable change, nothing to do here */ }
