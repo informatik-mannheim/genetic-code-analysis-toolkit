@@ -97,9 +97,11 @@ public class GraphDisplay extends mxGraphComponent implements NucleicDisplay {
 				if(!edges.containsEntry(edge.getKey(),edge.getValue())) this.removeEdge(edge);
 		} finally { model.endUpdate(); }
 		
-		if(!vertices.isEmpty()) layoutGraph();
+		layoutGraph();
 	}
 	private void layoutGraph() {
+		if(vertices.isEmpty()) return;
+		
 		TreeMultimap<Integer,Tuple> vertices = TreeMultimap.create(Comparator.reverseOrder(), Comparator.naturalOrder());
 		for(Tuple vertex:this.vertices.keySet())
 			vertices.put(vertex.getBases().length,vertex);
