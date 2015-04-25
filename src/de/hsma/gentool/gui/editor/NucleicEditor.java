@@ -56,6 +56,7 @@ import org.reflections.Reflections;
 import de.hsma.gentool.gui.editor.NucleicListener.NucleicEvent;
 import de.hsma.gentool.gui.editor.display.GraphDisplay;
 import de.hsma.gentool.gui.helper.AttachedScrollPane;
+import de.hsma.gentool.gui.helper.BetterGlassPane;
 import de.hsma.gentool.gui.helper.VerticalLabelUI;
 import de.hsma.gentool.nucleic.Tuple;
 
@@ -82,8 +83,9 @@ public class NucleicEditor extends JRootPane {
 	private int cleanHash = EMPTY.hashCode();
 	
 	public NucleicEditor() {
-		this.setLayout(new BorderLayout());
-		this.getGlassPane().setVisible(true);
+		setLayout(new BorderLayout());
+		new BetterGlassPane(this);
+		getGlassPane().setVisible(true);
 		
 		textPane = new JTextPane() {
 			private static final long serialVersionUID = 1l;
@@ -269,7 +271,7 @@ public class NucleicEditor extends JRootPane {
 		};
 		pane.getContentPane().setLayout(new BorderLayout());
 		if(!display.hasPreferredSize()) {
-			Component glassPane = pane.getGlassPane();
+			BetterGlassPane glassPane = new BetterGlassPane(pane);
 			glassPane.addMouseListener(displayResize);
 			glassPane.addMouseMotionListener(displayResize);
 			glassPane.setVisible(true);
