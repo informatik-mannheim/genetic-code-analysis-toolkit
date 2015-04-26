@@ -70,6 +70,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
@@ -118,6 +119,7 @@ import de.hsma.gentool.gui.editor.NucleicDocument;
 import de.hsma.gentool.gui.editor.NucleicEditor;
 import de.hsma.gentool.gui.editor.NucleicListener;
 import de.hsma.gentool.gui.helper.FoldingPanel;
+import de.hsma.gentool.gui.helper.PopupMouseAdapter;
 import de.hsma.gentool.gui.input.CodonWheel;
 import de.hsma.gentool.gui.input.Input;
 import de.hsma.gentool.log.InjectionLogger;
@@ -1429,6 +1431,14 @@ public class GenTool extends JFrame implements ActionListener {
 			success = addStyle("success",null); StyleConstants.setForeground(success,new Color(70,140,70));
 			failure = addStyle("failure",null); StyleConstants.setForeground(failure,new Color(200,50,50));
 			setEditable(false); setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));
+			addMouseListener(new PopupMouseAdapter(new JPopupMenu() {	private static final long serialVersionUID = 1l; {
+				add(new AbstractAction("Clear") {
+					private static final long serialVersionUID = 1l;
+					@Override public void actionPerformed(ActionEvent event) {
+						ConsolePane.this.clearText();
+					}
+				});
+			}}));
 		}
 		
 		public void insertText(String text) { insertText(text,null); }
@@ -1457,12 +1467,13 @@ public class GenTool extends JFrame implements ActionListener {
 		
 		private boolean isAtBottom() {
 			JScrollBar scrollBar = getScrollBar(); if(scrollBar==null) return true;
-			return scrollBar.getValue()+scrollBar.getVisibleAmount()==scrollBar.getMaximum();
+			return scrollBar.getValue()+scrollBar.getVisibleAmount()+scrollBar.getBlockIncrement()>scrollBar.getMaximum();
 		}
 		private void scrollToBottom() {
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
 					JScrollBar scrollBar = getScrollBar(); if(scrollBar==null) return;
+					setCaretPosition(getDocument().getLength());
 					scrollBar.setValue(scrollBar.getMaximum());
 				}
 			});

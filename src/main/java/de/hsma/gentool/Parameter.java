@@ -210,6 +210,7 @@ public class Parameter {
 			
 			chooser = new JFileChooser();
 			chooser.setDialogTitle("Open File");
+			chooser.setCurrentDirectory(new File(System.getProperty("user.home")));
 			
 			add(display = new JTextField());
 			display.setEditable(false);

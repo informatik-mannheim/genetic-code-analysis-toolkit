@@ -14,7 +14,7 @@ public enum Base {
 		StringBuilder bases = new StringBuilder();
 		for(Base base:Base.values())
 			bases.append(base.letter);
-		PATTERN_NO_BASE = Pattern.compile(bases.insert(0, "[^").append(" ]").toString());
+		PATTERN_NO_BASE = Pattern.compile(bases.insert(0,"[^").append(" ]").toString());
 	}
 	
 	public final char letter;
@@ -54,8 +54,7 @@ public enum Base {
 	}
 	
 	public static String baseString(String string) {
-		return PATTERN_NO_BASE.matcher(
-		  Characters.WHITESPACE.replace(string,SPACE).toUpperCase()
-		).replaceAll(EMPTY);
+		return Characters.WHITESPACE.condense(
+			PATTERN_NO_BASE.matcher(string.toUpperCase()).replaceAll(SPACE));
 	}
 }

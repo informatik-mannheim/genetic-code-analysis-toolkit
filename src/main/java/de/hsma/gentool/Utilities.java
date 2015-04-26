@@ -281,7 +281,7 @@ public final class Utilities {
 		
 		public final char character;
 		private final String string;
-		private Pattern match,start,end,last,split;
+		private Pattern match,start,end,last,condense,split;
 		
 		private Characters(char character,String pattern) {
 			string = String.valueOf(this.character = character);
@@ -289,6 +289,7 @@ public final class Utilities {
 			start = Pattern.compile("\\A"+pattern);
 			end = Pattern.compile(pattern+"\\z");
 			last = Pattern.compile(".*("+pattern+")",Pattern.DOTALL);
+			condense = Pattern.compile("(?:"+pattern+")+");
 			split = match;
 		}
 		private Characters(char character,String pattern,String split) {
@@ -302,6 +303,7 @@ public final class Utilities {
 		public int indexOf(String input) { Matcher matcher = match.matcher(input); return matcher.find()?matcher.start():-1; }
 		public int lastIndexOf(String input) { Matcher matcher = last.matcher(input); return matcher.find()?matcher.start(1):-1; }
 		public String replace(String input,String replacement) { return match.matcher(input).replaceAll(replacement); }
+		public String condense(String input) { return condense.matcher(input).replaceAll(string); }
 		public String[] split(String input) { return split.split(input); }
 		
 		@Override public String toString() { return string; }
