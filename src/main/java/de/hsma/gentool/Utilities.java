@@ -13,10 +13,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.lang.reflect.Array;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLDecoder;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
@@ -30,7 +32,7 @@ import de.hsma.gentool.gui.GenTool;
 
 public final class Utilities {
 	private static Properties configuration = new Properties();
-	public static final String EMPTY = "", SPACE = " ", NEW_LINE = "\n";
+	public static final String EMPTY = "", SPACE = " ", NEW_LINE = "\n", WHITESPACE = " \t\n\r\f";
 	public static final double TWO_PI = PI*2, HALF_PI = PI/2, QUARTER_PI = PI/4, EIGHTH_PI = PI/8, SIXTEENTH_PI = PI/16;
 	
   private static final int BUFFER_SIZE = 8192;
@@ -38,7 +40,7 @@ public final class Utilities {
 
   public static URL getResource(String name) {
   	if(!name.startsWith("/"))
-  		name = "/resources/de/hsma/gentool/"+name;
+  		name = "/de/hsma/gentool/"+name;
   	return Utilities.class.getResource(name);
   }
   
@@ -99,17 +101,25 @@ public final class Utilities {
 		return -1;
 	}
 	
-	public static void reverse(Object[] array) {
-		if(array==null) return;
-		Object temp; int indexA = 0, indexB = array.length-1;
+	public static <T> T[] reverse(T[] originalArray) {
+		T[] array = Arrays.copyOf(originalArray,originalArray.length);
+		int indexA = 0, indexB = array.length-1; T temp;
 		while(indexB>indexA) {
 			temp = array[indexB];
 			array[indexB] = array[indexA];
 			array[indexA] = temp;
 			indexA++; indexB--;
-		}
+		} return array;
 	}
-	 
+	
+	public static <T> T[] substitute(T[] originalArray,Map<T,T> substitution) {
+		@SuppressWarnings("unchecked") T[] array = (T[])Array.newInstance(originalArray.getClass().getComponentType(),originalArray.length);
+		for(int element=0;element<originalArray.length;element++)
+			array[element] = substitution.getOrDefault(
+				originalArray[element],originalArray[element]);
+		return array;
+	}
+	
 	public static String cropString(String text,int length) {
 		if(text.length()<=length)
 			return text;

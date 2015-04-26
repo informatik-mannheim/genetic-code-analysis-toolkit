@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- JNLP File for SwingSet2 Demo Application -->
 <jnlp spec="6.0+" codebase="http://am.informatik.hs-mannheim.de/GenTool/" href="gentool.jnlp">
   <information>
     <title>Genetic Code Tool (GenTool)</title>

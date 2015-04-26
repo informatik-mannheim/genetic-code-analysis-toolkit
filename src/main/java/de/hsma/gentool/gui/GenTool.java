@@ -71,10 +71,10 @@ import javax.swing.JMenuBar;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
+import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.JToolBar;
@@ -95,9 +95,11 @@ import javax.swing.event.DocumentListener;
 import javax.swing.event.EventListenerList;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.text.BadLocationException;
-import javax.swing.text.DefaultCaret;
 import javax.swing.text.Document;
 import javax.swing.text.NumberFormatter;
+import javax.swing.text.Style;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
 import org.reflections.Reflections;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -132,7 +134,7 @@ import de.hsma.gentool.operation.transformation.Transformation;
 public class GenTool extends JFrame implements ActionListener {
 	private static final long serialVersionUID = 1l;
 	
-	private static final String VERSION = "1.3";
+	private static final String VERSION = "1.4";
 	private static final String
 		ACTION_NEW = "new",
 		ACTION_OPEN = "open",
@@ -571,12 +573,12 @@ public class GenTool extends JFrame implements ActionListener {
 				if(Transformation.class.isAssignableFrom(operation)||Split.class.isAssignableFrom(operation))
 					editor.setTuples(tuples);
 				else if(Test.class.isAssignableFrom(operation))
-					consolePane.log("Sequence does apply to test \"%s\"", name);
+					consolePane.appendText(String.format("Sequence DOES apply to test \"%s\"", name),consolePane.success);
 			}
 			@Override public void onFailure(Throwable thrown) {
 				if(Test.class.isAssignableFrom(operation)&&thrown instanceof Test.Failed)
-					   consolePane.log("Sequence does NOT apply to \"%s\"", name);
-				else consolePane.log("Exception in operation \"%s\": %s", name, Optional.ofNullable(thrown.getMessage()).orElse("Unknown cause"));
+					   consolePane.appendText(String.format("Sequence does NOT apply to \"%s\"",name),consolePane.failure);
+				else consolePane.appendText(String.format("Exception in operation \"%s\": %s",name,Optional.ofNullable(thrown.getMessage()).orElse("Unknown cause")),consolePane.failure);
 			}
 		});
 		if(Transformation.class.isAssignableFrom(operation)||Split.class.isAssignableFrom(operation)) {
@@ -1416,25 +1418,61 @@ public class GenTool extends JFrame implements ActionListener {
 		public int getNumber() { return ((Number)number.getValue()).intValue(); }
 	}
 	
-	class ConsolePane extends JTextArea implements Logger {
+	class ConsolePane extends JTextPane implements Logger {
 		private static final long serialVersionUID = 1l;
+		
+		private StyledDocument document;
+		private final Style success,failure;
+		
 		public ConsolePane() {
-			this.setEditable(false);
-			((DefaultCaret)this.getCaret()).setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+			document = getStyledDocument();
+			success = addStyle("success",null); StyleConstants.setForeground(success,new Color(70,140,70));
+			failure = addStyle("failure",null); StyleConstants.setForeground(failure,new Color(200,50,50));
+			setEditable(false); setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));
 		}
-		public void resetText() { setText(null); }
-		public void insertText(String text) { consolePane.insert(text,consolePane.getText().length()); }
-		public void appendText(String text) {
-			if(!getText().isEmpty())
+		
+		public void insertText(String text) { insertText(text,null); }
+		public void insertText(String text,Style style) {			
+			try { document.insertString(document.getLength(),text,style); }
+			catch(BadLocationException e) { /* nothing to do here */ }
+		}
+		
+		public void appendText(String text) { appendText(text,null); }
+		public void appendText(String text,Style style) {
+			boolean atBottom = isAtBottom();
+			if(document.getLength()!=0)
 				insertText(NEW_LINE);
-			insertText(text);
+			insertText(text,style);
+			if(atBottom) scrollToBottom();
 		}
+		
+		public void clearText() { setText(null); }
 		
 		@Override public void log(String format,Object... arguments) {
 			appendText(String.format(format,arguments));
 		}
 		@Override public void log(String message,Throwable throwable) {
-			appendText(message); appendText(throwable.getMessage());
+			appendText(message,failure); appendText(throwable.getMessage(),failure);
+		}
+		
+		private boolean isAtBottom() {
+			JScrollBar scrollBar = getScrollBar(); if(scrollBar==null) return true;
+			return scrollBar.getValue()+scrollBar.getVisibleAmount()==scrollBar.getMaximum();
+		}
+		private void scrollToBottom() {
+			SwingUtilities.invokeLater(new Runnable() {
+				public void run() {
+					JScrollBar scrollBar = getScrollBar(); if(scrollBar==null) return;
+					scrollBar.setValue(scrollBar.getMaximum());
+				}
+			});
+		}
+		private JScrollBar getScrollBar() {
+			Component parent = this;
+			do if((parent=parent.getParent())==null)
+				return null;
+			while(!(parent instanceof JScrollPane));
+			return ((JScrollPane)parent).getVerticalScrollBar();
 		}
 	}
 	

@@ -2,8 +2,8 @@ package de.hsma.gentool.nucleic;
 
 import static de.hsma.gentool.Utilities.*;
 import static de.hsma.gentool.nucleic.Acid.*;
+import java.util.Arrays;
 import java.util.regex.Pattern;
-import scala.actors.threadpool.Arrays;
 import de.hsma.gentool.Utilities.Characters;
 
 public enum Base {

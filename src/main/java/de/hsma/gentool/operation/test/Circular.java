@@ -1,9 +1,7 @@
 package de.hsma.gentool.operation.test;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import org.paukov.combinatorics.Factory;
 import org.paukov.combinatorics.ICombinatoricsVector;
 import de.hsma.gentool.Parameter;
@@ -36,12 +34,12 @@ public class Circular implements Test {
 		int length = tuples.iterator().next().length();
 		for(Tuple tuple:tuples)
 			if(tuple.length()!=length) {
-				logger.log("Tuples of variable length, can't check for n-circular.");
+				logger.log("Tuples of variable length, can't check for "+n+"-circular.");
 				return false; //tuples not all of same length
 			}
 		
 		if(!DUPLICATE_FREE.test(tuples)) {
-			logger.log("Duplicate tuples in sequence, code not n-circular.");
+			logger.log("Duplicate tuples in sequence, code not "+n+"-circular.");
 			return false; //duplicate tuples
 		}
 		
@@ -51,20 +49,20 @@ public class Circular implements Test {
 			for(Tuple tuple:tuples) for(shift=1,shifted=tuple;shift<length;shift++)
 				if(tuples.contains(shifted = SHIFT.transform(Arrays.asList(tuple)).iterator().next())) {
 					logger.log((!tuple.equals(shifted)?"Tuples "+tuple+" and "+shifted+" belong to the same equivalence class":
-						"Tuple "+tuple+" is contained in sequence")+", code not n-circular.");
+						"Tuple "+tuple+" is contained in sequence")+", code not 1-circular.");
 					return false; //lemma 3.2, is 1-circular if and only if X contains at most one codon from each complete conjugacy class
 				}
 		} else {
 			if(!test(tuples,n-1))
 				return false; //lemma 3.2, if X is a n-circularcode, then X is also m-circular for all m<n
 			
-			int shift; Collection<Tuple> shifted;
+			Collection<Tuple> shifted;
 			for(ICombinatoricsVector<Tuple> combination:Factory.createSimpleCombinationGenerator(Factory.createVector(tuples),n))
 				for(ICombinatoricsVector<Tuple> permutation:Factory.createPermutationGenerator(combination))
-					for(shift = 1,shifted = new ArrayList<>(permutation.getVector());shift<length;shift++)
-						if(!Collections.disjoint(tuples,shifted = SHIFT.transform(shifted))) {
-							logger.log("At least one tuple from "+shifted+" created by shifiting tuples "+permutation.getVector()+" is contained in sequence, code not "+n+"-circular.");
-							return false; // contains shifted tuple
+					for(int shift=1;shift<length;shift++)
+						if(tuples.containsAll(shifted=SHIFT.transform(permutation.getVector(),shift))) {
+							logger.log("Partition "+permutation.getVector()+" and shifht "+shifted+" contained in sequence, code not "+n+"-circular.");
+							return false;
 						}
 		}
 

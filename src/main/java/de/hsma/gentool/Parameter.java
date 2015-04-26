@@ -1,19 +1,31 @@
 package de.hsma.gentool;
 
 import static de.hsma.gentool.Utilities.*;
+import static de.hsma.gentool.gui.helper.Guitilities.*;
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemListener;
+import java.io.File;
+import javax.swing.AbstractAction;
+import javax.swing.BoxLayout;
 import javax.swing.DefaultListCellRenderer;
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
+import javax.swing.JFileChooser;
 import javax.swing.JList;
+import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeListener;
 import javax.swing.text.NumberFormatter;
+import scala.actors.threadpool.Arrays;
+import com.google.common.base.Function;
+import com.google.common.collect.Iterables;
 
 public class Parameter {
 	public enum Type {
@@ -21,7 +33,8 @@ public class Parameter {
 		BOOLEAN(Boolean.class),
 		DECIMAL(Double.class),
 		NUMBER(Number.class),
-		LIST(Object.class);
+		LIST(Object.class),
+		FILE(File.class);
 		private Class<?> typeClass;
 		private Type(Class<?> typeClass) { this.typeClass = typeClass; }
 		public boolean checkType(Object object) {
@@ -29,7 +42,8 @@ public class Parameter {
 		}
 		public Object initialValue() {
 			try { return typeClass.newInstance(); } 
-			catch(InstantiationException | IllegalAccessException e) { return null; }
+			catch(InstantiationException | IllegalAccessException e) {
+				return null; /* e.g. for file */ }
 		}
 		public static Type forClass(Class<?> typeClass) {
 			for(Type type:Type.values())
@@ -56,10 +70,15 @@ public class Parameter {
 		this.value = type.checkType(value)?value:type.initialValue();
 		this.minimum = Short.MIN_VALUE; this.maximum = Short.MAX_VALUE; this.step = 1;
 	}
+	
+	public Parameter(String key, String label, int minimum, int maximum) { this(key,label,minimum,minimum,maximum); }
+	public Parameter(String key, String label, int value, int minimum, int maximum) { this(key,label,value,minimum,maximum,1); }
 	public Parameter(String key, String label, int value, int minimum, int maximum, int step) {
 		this.key = key; this.label = label; this.type = Type.NUMBER; this.options = this.labels = null;
 		this.value = value; this.minimum = minimum; this.maximum = maximum; this.step = step;
 	}
+	public Parameter(String key, String label, double minimum, double maximum) { this(key,label,minimum,minimum,maximum); }
+	public Parameter(String key, String label, double value, double minimum, double maximum) { this(key,label,value,minimum,maximum,.1); }
 	public Parameter(String key, String label, double value, double minimum, double maximum, double step) {
 		this.key = key; this.label = label; this.type = Type.DECIMAL; this.options = this.labels = null;
 		this.value = value; this.minimum = minimum; this.maximum = maximum; this.step = step;		
@@ -68,6 +87,13 @@ public class Parameter {
 		this.key = key; this.label = label; this.type = Type.BOOLEAN; this.options = this.labels = null;
 		this.value = value; this.minimum = this.maximum = this.step = null;
 	}
+	public Parameter(String key, String label, Object[] options) { this(key,label,options!=null&&options.length>0?options[0]:null,options); }
+	@SuppressWarnings("unchecked") public Parameter(String key, String label, Object value, Object[] options) {
+		this(key,label,value,options,(String[])Iterables.toArray(Iterables.transform(Arrays.asList(options),new Function<Object,String>() {
+			@Override public String apply(Object option) { return option!=null?option.toString():null; }
+		}),String.class)); 
+	}
+	public Parameter(String key, String label, Object[] options, String... labels) { this(key,label,options!=null&&options.length>0?options[0]:null,options,labels); }
 	public Parameter(String key, String label, Object value, Object[] options, String... labels) {
 		this.key = key; this.label = label; this.type = Type.LIST; this.options = options; this.labels = labels;
 		this.value = value; this.minimum = this.maximum = this.step = null;
@@ -77,9 +103,9 @@ public class Parameter {
 		private static final long serialVersionUID = 1l;
 		private java.awt.Component component;
 		public Component() { this(value); }
-		public Component(Object value) {
+		public Component(Object uncheckedValue) {
 			super(); setLayout(new BorderLayout());
-			value = type.checkType(value)?value:type.initialValue();
+			final Object value = type.checkType(uncheckedValue)?uncheckedValue:type.initialValue();
 			switch(type) {
 			case TEXT:
 				((JTextField)(component = new JTextField())).setText((String)value);
@@ -115,6 +141,9 @@ public class Parameter {
 				});
 				((JComboBox<?>)component).setSelectedItem(value);
 				break;
+			case FILE:
+				((FileComponent)(component = new FileComponent())).setFile((File)value);
+				break;
 			} add(component, BorderLayout.CENTER);
 		}
 
@@ -124,7 +153,8 @@ public class Parameter {
 			case NUMBER: case DECIMAL: return ((JSpinner)component).getValue();
 			case BOOLEAN: return ((JCheckBox)component).isSelected();					
 			case LIST: return ((JComboBox<?>)component).getSelectedItem();
-			default: return null; }
+			case FILE: return ((FileComponent)component).getFile(); }
+			return null;
 		}
 		
 		@SuppressWarnings("incomplete-switch") public void addChangeListener(ChangeListener listener) {
@@ -141,7 +171,8 @@ public class Parameter {
 			switch(type) {
 			case TEXT: ((JTextField)component).addActionListener(listener); break;
 			case BOOLEAN: ((JCheckBox)component).addActionListener(listener); break;	
-			case LIST: ((JComboBox<?>)component).addActionListener(listener); break; }
+			case LIST: ((JComboBox<?>)component).addActionListener(listener); break;
+			case FILE: ((FileComponent)component).addActionListener(listener); break; }
 		}
 	}
 	
@@ -166,5 +197,41 @@ public class Parameter {
 	}
 	@Override public int hashCode() {
 		return key.hashCode();
+	}
+	
+	private static class FileComponent extends JPanel {
+		private static final long serialVersionUID = 1l;
+		
+		private JTextField display;
+		private JFileChooser chooser;
+		
+		public FileComponent() {
+			setBoxLayout(this,BoxLayout.X_AXIS);
+			
+			chooser = new JFileChooser();
+			chooser.setDialogTitle("Open File");
+			
+			add(display = new JTextField());
+			display.setEditable(false);
+			display.setBackground(Color.WHITE);
+			
+			add(new JButton(new AbstractAction("Choose File") {
+				private static final long serialVersionUID = 1l;
+				@Override public void actionPerformed(ActionEvent e) {
+					if(chooser.showOpenDialog(FileComponent.this)==JFileChooser.APPROVE_OPTION)
+						setFile(chooser.getSelectedFile());
+				}
+			}));
+		}
+
+		public void addActionListener(ActionListener listener) { chooser.addActionListener(listener); }
+		@SuppressWarnings("unused") public void removeActionListener(ActionListener listener) { chooser.removeActionListener(listener); }
+		@SuppressWarnings("unused") public ActionListener[] getActionListeners() { return chooser.getActionListeners(); }
+  
+		public File getFile() { return chooser.getSelectedFile(); }
+		public void setFile(File file) {
+			display.setText(file!=null?file.getName():null);
+			chooser.setSelectedFile(file);
+		}
 	}
 }

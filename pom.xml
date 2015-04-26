@@ -1,8 +1,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>de.hsma</groupId>
+  <groupId>de.hsma.gentool</groupId>
   <artifactId>gentool</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>1.4-SNAPSHOT</version>
+  <packaging>jar</packaging>
   <name>Genetic Code Tool (GenTool)</name>
   <build>
     <sourceDirectory>src</sourceDirectory>
@@ -21,6 +22,37 @@
         <configuration>
           <source>1.8</source>
           <target>1.8</target>
+        </configuration>
+      </plugin>
+	    <plugin>
+	      <artifactId>maven-assembly-plugin</artifactId>
+	      <configuration>
+	        <archive>
+	          <manifest>
+	            <mainClass>de.hsma.gentool.gui.GenTool</mainClass>
+	          </manifest>
+	        </archive>
+	        <descriptorRefs>
+	          <descriptorRef>jar-with-dependencies</descriptorRef>
+	        </descriptorRefs>
+	      </configuration>
+	    </plugin>
+      <plugin>
+        <artifactId>maven-jarsigner-plugin</artifactId>
+        <version>1.4</version>
+        <executions>
+          <execution>
+            <id>sign</id>
+            <goals>
+              <goal>sign</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <keystore>.keystore</keystore>
+          <alias>gentool</alias>
+          <storepass>gentool</storepass>
+          <keypass>gentool</keypass>
         </configuration>
       </plugin>
     </plugins>
@@ -70,6 +102,27 @@
   		<groupId>com.googlecode.combinatoricslib</groupId>
   		<artifactId>combinatoricslib</artifactId>
   		<version>2.1</version>
+  	</dependency>
+  	<dependency>
+  		<groupId>org.scala-lang</groupId>
+  		<artifactId>scala-library</artifactId>
+  		<version>2.11.5</version>
+  	</dependency>
+  	<dependency>
+  		<groupId>org.scala-lang</groupId>
+  		<artifactId>scala-reflect</artifactId>
+  		<version>2.11.5</version>
+  	</dependency>
+  	<dependency>
+  		<groupId>org.scala-lang</groupId>
+  		<artifactId>scala-actors</artifactId>
+  		<version>2.11.5</version>
+  	</dependency>
+  	<dependency>
+  		<groupId>junit</groupId>
+  		<artifactId>junit</artifactId>
+  		<version>4.4</version>
+  		<scope>test</scope>
   	</dependency>
   </dependencies>
   <repositories>
