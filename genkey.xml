@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="genkey" name="Create Singed Runnable Jar for Project GeneticCodeTool">
+	<property name="sign.key.store" value="${basedir}/.keystore"/>
+	<property name="sign.key.storepass" value="gentool"/>
+	<property name="sign.key.keypass" value="gentool"/>
+	<property name="sign.key.alias" value="gentool"/>
+
+	<target name="genkey">
+		<genkey alias="${sign.key.alias}" verbose="true"
+			storepass="${sign.key.storepass}" keypass="${sign.key.keypass}"
+			validity="365" keystore="${sign.key.store}">
+			<dname>
+				<param name="CN" value="Hochschule Mannheim"/>
+				<param name="OU" value="GenTool"/>
+				<param name="O" value="GenTool"/>
+				<param name="C" value="DE"/>
+			</dname>
+		</genkey>
+	</target>
+</project>

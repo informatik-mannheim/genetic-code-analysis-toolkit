@@ -1,9 +1,2 @@
-bin/
-target/
-out/
-.cache
-.idea
-build.xml
-genkey.xml
-*.iml
-src/resources/dev.properties
+/target/
+/.cache
