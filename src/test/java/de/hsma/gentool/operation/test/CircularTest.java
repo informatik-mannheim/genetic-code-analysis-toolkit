@@ -25,6 +25,7 @@ public class CircularTest {
 		tuples = Tuple.splitTuples("TGG, GTG");
 		assertTrue(tuples+" is 0-circular",CIRCULAR.test(tuples,0));
 		assertFalse(tuples+" isn't 1-circular",CIRCULAR.test(tuples,1));
+		assertFalse(tuples+" isn't 2-circular",CIRCULAR.test(tuples,2));
 		
 		tuples = Tuple.splitTuples("TGG, CTG, GGC, TGT");
 		assertTrue(tuples+" is 1-circular",CIRCULAR.test(tuples,1));
