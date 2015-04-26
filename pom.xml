@@ -24,7 +24,7 @@
 				</configuration>
 			</plugin>
 
-			<!-- <plugin>
+			<plugin>
 				<artifactId>maven-assembly-plugin</artifactId>
 				<configuration>
 					<archive>
@@ -45,7 +45,7 @@
 						</goals>
 					</execution>
 				</executions>
-			</plugin> -->
+			</plugin>
 
 			<plugin>
 				<artifactId>maven-jarsigner-plugin</artifactId>
@@ -77,6 +77,15 @@
 						</goals>
 						<configuration>
 							<target>
+								<echo>preparing scp(/ant-jsch) for deployment</echo>
+								<available property="ant-jsch.present" file="${ant.home}/lib/ant-jsch.jar"/>
+								<fail if="ant-jsch.present" message="Please remove ant-jsch.jar from ANT_HOME/lib see [http://ant.apache.org/faq.html#delegating-classloader]"/>
+								<path id="jsch.class.path">
+									<pathelement location="ant-lib/ant-jsch.jar" />
+									<pathelement location="ant-lib/jsch-0.1.52.jar" />
+								</path>								
+								<taskdef name="scp" classname="org.apache.tools.ant.taskdefs.optional.ssh.Scp" classpathref="jsch.class.path" />
+								
 								<echo>deploying to server: ${deployment.directory}</echo>
 								<copy todir="${project.build.directory}/webapp">
 							    <fileset dir="${basedir}/src/main/webapp"/>
