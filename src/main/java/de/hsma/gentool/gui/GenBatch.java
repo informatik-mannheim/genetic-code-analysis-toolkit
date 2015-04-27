@@ -85,7 +85,6 @@ import de.hsma.gentool.batch.Batch.Result;
 import de.hsma.gentool.gui.helper.AttachedScrollPane;
 import de.hsma.gentool.gui.helper.CollectionListModel;
 import de.hsma.gentool.gui.helper.Guitilities;
-import de.hsma.gentool.nucleic.Base;
 import de.hsma.gentool.nucleic.Tuple;
 import de.hsma.gentool.operation.Operation;
 import de.hsma.gentool.operation.analysis.Analysis;
@@ -327,7 +326,7 @@ public class GenBatch extends JFrame implements ActionListener, ListDataListener
 			String line;
 			reader = new BufferedReader(new FileReader(chooser.getSelectedFile()));
 			while((line=reader.readLine())!=null)
-				addSequence(Tuple.splitTuples(Base.baseString(line)));
+				addSequence(Tuple.splitTuples(Tuple.tupleString(line)));
 		}	catch(IOException e) {
 			e.printStackTrace();
 		} finally {

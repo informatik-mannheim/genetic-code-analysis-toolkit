@@ -13,7 +13,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Array;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLDecoder;
@@ -27,6 +30,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.JFileChooser;
 import javax.swing.text.Position;
+import sun.reflect.ConstructorAccessor;
+import sun.reflect.ReflectionFactory;
 import com.google.common.util.concurrent.ListenableFuture;
 import de.hsma.gentool.gui.GenTool;
 
@@ -282,15 +287,11 @@ public final class Utilities {
 		public final char character;
 		private final String string;
 		private Pattern match,start,end,last,condense,split;
-		
+
+		private Characters(char character) { this(character,Character.toString(character)); }
 		private Characters(char character,String pattern) {
 			string = String.valueOf(this.character = character);
-			match = Pattern.compile(pattern);
-			start = Pattern.compile("\\A"+pattern);
-			end = Pattern.compile(pattern+"\\z");
-			last = Pattern.compile(".*("+pattern+")",Pattern.DOTALL);
-			condense = Pattern.compile("(?:"+pattern+")+");
-			split = match;
+			split = match = Pattern.compile(pattern);
 		}
 		private Characters(char character,String pattern,String split) {
 			this(character,pattern); this.split = Pattern.compile(split);
@@ -298,15 +299,127 @@ public final class Utilities {
 		
 		public boolean equals(String input) { return match.matcher(input).matches(); }
 		public boolean contains(String input) { return match.matcher(input).find(); }
-		public boolean startsWith(String input) { return start.matcher(input).find(); }
-		public boolean endsWith(String input) { return end.matcher(input).find(); }
+		public boolean startsWith(String input) { return (start!=null?start:(start=Pattern.compile("\\A"+match.pattern()))).matcher(input).find(); }
+		public boolean endsWith(String input) { return (end!=null?end:(end=Pattern.compile(match.pattern()+"\\z"))).matcher(input).find(); }
 		public int indexOf(String input) { Matcher matcher = match.matcher(input); return matcher.find()?matcher.start():-1; }
-		public int lastIndexOf(String input) { Matcher matcher = last.matcher(input); return matcher.find()?matcher.start(1):-1; }
+		public int lastIndexOf(String input) { Matcher matcher = (last!=null?last:(last=Pattern.compile(".*("+match.pattern()+")",Pattern.DOTALL))).matcher(input); return matcher.find()?matcher.start(1):-1; }
 		public String replace(String input,String replacement) { return match.matcher(input).replaceAll(replacement); }
-		public String condense(String input) { return condense.matcher(input).replaceAll(string); }
+		public String condense(String input) { return (condense!=null?condense:(condense=Pattern.compile("(?:"+match.pattern()+")+"))).matcher(input).replaceAll(string); }
 		public String[] split(String input) { return split.split(input); }
 		
 		@Override public String toString() { return string; }
+		
+		public static Characters valueOf(char character) {
+			String string = Character.toString(character);
+			try { return Characters.valueOf(string); }
+			catch(IllegalArgumentException e) {
+				return Enums.addEnum(Characters.class,string,
+					new Class<?>[]{char.class},new Object[]{character});
+			}
+		}
+	}
+	
+	public static class Enums {
+		private static ReflectionFactory reflectionFactory = ReflectionFactory.getReflectionFactory();
+
+		private static void setFailsafeFieldValue(Field field, Object target, Object value) throws NoSuchFieldException,IllegalAccessException {
+			field.setAccessible(true);
+
+			// change the modifier in the Field instance to
+			// not be final anymore, thus tricking reflection into
+			// letting us modify the static final field
+			Field modifiersField = Field.class.getDeclaredField("modifiers");
+			modifiersField.setAccessible(true);
+			int modifiers = modifiersField.getInt(field);
+
+			// blank out the final bit in the modifiers int
+			modifiers &= ~Modifier.FINAL;
+			modifiersField.setInt(field, modifiers);
+
+			reflectionFactory.newFieldAccessor(field, false).set(target, value);
+		}
+
+		private static void blankField(Class<?> enumClass, String fieldName) throws NoSuchFieldException,IllegalAccessException {
+			for(Field field : Class.class.getDeclaredFields()) {
+				if(field.getName().contains(fieldName)) {
+					AccessibleObject.setAccessible(new Field[] { field }, true);
+					setFailsafeFieldValue(field, enumClass, null);
+					break;
+				}
+			}
+		}
+
+		private static void cleanEnumCache(Class<?> enumClass) throws NoSuchFieldException, IllegalAccessException {
+			blankField(enumClass, "enumConstantDirectory"); // Sun (Oracle?!?) JDK 1.5/6
+			blankField(enumClass, "enumConstants"); // IBM JDK
+		}
+
+		private static ConstructorAccessor getConstructorAccessor(Class<?> enumClass, Class<?>[] additionalParameterTypes) throws NoSuchMethodException {
+			Class<?>[] parameterTypes = new Class[additionalParameterTypes.length + 2];
+			parameterTypes[0] = String.class;
+			parameterTypes[1] = int.class;
+			System.arraycopy(additionalParameterTypes, 0, parameterTypes, 2, additionalParameterTypes.length);
+			return reflectionFactory.newConstructorAccessor(enumClass.getDeclaredConstructor(parameterTypes));
+		}
+
+		private static Object makeEnum(Class<?> enumClass, String value, int ordinal, Class<?>[] additionalTypes,
+				Object[] additionalValues) throws Exception {
+			Object[] parms = new Object[additionalValues.length + 2];
+			parms[0] = value;
+			parms[1] = Integer.valueOf(ordinal);
+			System.arraycopy(additionalValues, 0, parms, 2, additionalValues.length);
+			return enumClass.cast(getConstructorAccessor(enumClass, additionalTypes).newInstance(parms));
+		}
+
+		
+		public static <T extends Enum<?>> void addEnum(Class<T> enumType, String enumName) {
+			addEnum(enumType, enumName, new Class<?>[] {}, new Object[] {});
+		}
+		
+		/**
+		 * Add an enum instance to the enum class given as argument
+		 *
+		 * @param <T> the type of the enum (implicit)
+		 * @param enumType the class of the enum to be modified
+		 * @param enumName the name of the new enum instance to be added to the class.
+		 * @return 
+		 */
+		@SuppressWarnings("unchecked")
+		public static <T extends Enum<?>> T addEnum(Class<T> enumType, String enumName, Class<?>[] additionalTypes, Object[] additionalValues) {
+			// 0. Sanity checks
+			if(!Enum.class.isAssignableFrom(enumType))
+				throw new RuntimeException("class "+enumType+" is not an instance of Enum");
+			
+			// 1. Lookup "$VALUES" holder in enum class and get previous enum instances
+			Field valuesField = null, fields[] = enumType.getDeclaredFields();
+			for(Field field:fields)
+				if(field.getName().contains("$VALUES")) {
+					valuesField = field;
+					break;
+				}
+			AccessibleObject.setAccessible(new Field[]{valuesField},true);
+
+			try {
+				// 2. Copy it
+				T[] previousValues = (T[])valuesField.get(enumType),
+					newValues = Arrays.copyOf(previousValues,previousValues.length+1);
+				
+				// 3. build new enum
+				newValues[previousValues.length] = (T) makeEnum(enumType, // The target enum class
+					enumName, // THE NEW ENUM INSTANCE TO BE DYNAMICALLY ADDED
+					previousValues.length,
+					additionalTypes, // could be used to pass values to the enum constuctor if needed
+					additionalValues); // could be used to pass values to the enum constuctor if needed
+				
+				// 5. Set new values field
+				setFailsafeFieldValue(valuesField, null, newValues);
+
+				// 6. Clean enum cache
+				cleanEnumCache(enumType);
+				
+				return newValues[previousValues.length];
+			} catch (Exception e) { throw new RuntimeException(e.getMessage(), e); }
+		}
 	}
 	
 	public static class Range {

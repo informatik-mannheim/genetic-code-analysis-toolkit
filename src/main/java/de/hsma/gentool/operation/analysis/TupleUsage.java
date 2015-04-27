@@ -9,7 +9,6 @@ import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 import de.hsma.gentool.Parameter;
 import de.hsma.gentool.Parameter.Type;
-import de.hsma.gentool.nucleic.Base;
 import de.hsma.gentool.nucleic.Tuple;
 import de.hsma.gentool.operation.Cataloged;
 import de.hsma.gentool.operation.Named;
@@ -31,7 +30,7 @@ public class TupleUsage implements Analysis {
 		Multiset<Tuple> tupleCount = HashMultiset.create();
 		try(BufferedReader reader = new BufferedReader(new FileReader(file))) {
 			String line; while((line=reader.readLine())!=null)
-				tupleCount.addAll(Tuple.splitTuples(Base.baseString(line)));
+				tupleCount.addAll(Tuple.splitTuples(Tuple.tupleString(line)));
 		} catch(IOException e) { return new SimpleResult(this,"Error while reading file."); }
 		
 		StringBuilder builder = new StringBuilder();

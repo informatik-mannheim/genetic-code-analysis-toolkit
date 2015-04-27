@@ -20,6 +20,13 @@ public class Tuple implements Comparable<Tuple> {
 		ADENINE,URACILE, URACILE,ADENINE, THYMINE,ADENINE, GUANINE,CYTOSINE, CYTOSINE,GUANINE);
 	private static final Map<Acid,Map<Base,Base>> ACID_SUBSTITUTIONS = ImmutableMap.of(
 		RNA,ImmutableMap.of(THYMINE,URACILE), DNA,ImmutableMap.of(URACILE,THYMINE));
+	private static final Pattern PATTERN_NO_BASE;
+	static {
+		StringBuilder bases = new StringBuilder();
+		for(Base base:Base.values())
+			bases.append(base.letter);
+		PATTERN_NO_BASE = Pattern.compile(bases.insert(0,"[^").append(" ]").toString());
+	}
 	
 	private Base[] bases;
 	private String string;
@@ -76,6 +83,11 @@ public class Tuple implements Comparable<Tuple> {
 			} else builder.append(compound);
 			return builder.append(')').toString();
 		} return string;
+	}
+	
+	public static String tupleString(String string) {
+		return Characters.WHITESPACE.condense(
+			PATTERN_NO_BASE.matcher(string.trim().toUpperCase()).replaceAll(SPACE));
 	}
 	
 	public static List<Tuple> uniformAcid(List<Tuple> tuples) { return uniformAcid(tuples,DNA); }

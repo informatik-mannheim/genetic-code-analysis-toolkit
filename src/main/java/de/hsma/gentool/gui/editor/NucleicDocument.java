@@ -9,6 +9,7 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultStyledDocument;
 import de.hsma.gentool.nucleic.Acid;
 import de.hsma.gentool.nucleic.Base;
+import de.hsma.gentool.nucleic.Tuple;
 
 public class NucleicDocument extends DefaultStyledDocument {
 	private static final long serialVersionUID = 1l;
@@ -20,7 +21,7 @@ public class NucleicDocument extends DefaultStyledDocument {
 	
 	@Override public void insertString(int offset, String text, AttributeSet attributes) throws BadLocationException {
 		// only allow input of bases & with maximum one whitespace
-		if((text=Base.baseString(text)).isEmpty())
+		if((text=Tuple.tupleString(text)).isEmpty())
 			return;
 		
 		// simplify input if only DNA or RNA input is chosen

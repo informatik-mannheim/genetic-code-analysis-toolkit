@@ -1,21 +1,10 @@
 package de.hsma.gentool.nucleic;
 
-import static de.hsma.gentool.Utilities.*;
 import static de.hsma.gentool.nucleic.Acid.*;
 import java.util.Arrays;
-import java.util.regex.Pattern;
-import de.hsma.gentool.Utilities.Characters;
 
 public enum Base {
 	ADENINE('A'), GUANINE('G'), CYTOSINE('C'), THYMINE('T'), URACILE('U'), HYPOXANTHINE('H'), XANTHINE('X');
-	
-	private static final Pattern PATTERN_NO_BASE;
-	static {
-		StringBuilder bases = new StringBuilder();
-		for(Base base:Base.values())
-			bases.append(base.letter);
-		PATTERN_NO_BASE = Pattern.compile(bases.insert(0,"[^").append(" ]").toString());
-	}
 	
 	public final char letter;
 	
@@ -51,10 +40,5 @@ public enum Base {
 		for(int letter=0;letter<letters.length;letter++)
 			bases[letter] = valueOf(letters[letter]);
 		return bases;
-	}
-	
-	public static String baseString(String string) {
-		return Characters.WHITESPACE.condense(
-			PATTERN_NO_BASE.matcher(string.toUpperCase()).replaceAll(SPACE));
 	}
 }
