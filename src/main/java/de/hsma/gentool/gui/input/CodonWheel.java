@@ -2,7 +2,6 @@ package de.hsma.gentool.gui.input;
 
 import static de.hsma.gentool.Utilities.*;
 import static de.hsma.gentool.gui.helper.Guitilities.*;
-import static de.hsma.gentool.nucleic.Acid.*;
 import static java.lang.Math.*;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -50,7 +49,7 @@ public class CodonWheel extends DefaultInput {
 			}
 		});
 		
-		Base[] bases = RNA.bases;
+		Base[] bases = DEFAULT_ACID.bases;
 		float piFraction = (float)(PI/32), piFractionHalf = piFraction/2;
 		for(int baseA=0;baseA<4;baseA++) { //inner circle
 			float angleBaseA = (float)(-HALF_PI-HALF_PI*baseA+QUARTER_PI);
@@ -80,7 +79,7 @@ public class CodonWheel extends DefaultInput {
 		int width = getWidth(),height = getHeight(),diameter = min(width-insets.left-insets.right,height-insets.top-insets.bottom);
 		float radius = (float)diameter/2; Point2D.Float center = new Point2D.Float((float)width/2,(float)height/2);
 		
-		Base[] bases = RNA.bases;
+		Base[] bases = DEFAULT_ACID.bases;
 		for(int circle=0;circle<CIRCLES.length;circle++) {
 			int sections = (int)Math.pow(4,CIRCLES.length-circle);
 			float angle = 360f/sections, size = diameter*CIRCLES[circle];

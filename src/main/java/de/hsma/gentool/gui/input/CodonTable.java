@@ -1,6 +1,5 @@
 package de.hsma.gentool.gui.input;
 
-import static de.hsma.gentool.nucleic.Acid.*;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
@@ -21,18 +20,18 @@ public class CodonTable extends DefaultInput {
 	@Override public String getName() { return NAME; }
 
 	public CodonTable() {
-		Base bases[] = RNA.bases;
-		List<Tuple> tuples = Tuple.allTuples(RNA,3);
+		Base bases[] = DEFAULT_ACID.bases; int basesLength = bases.length;
+		List<Tuple> tuples = Tuple.allTuples(DEFAULT_ACID,3);
 		
-		setLayout(new GridLayout(bases.length, bases.length, 5, 5));
-		for(int panelOffset=0;panelOffset<tuples.size();panelOffset+=bases.length) {
-			add(createTuplePanel(tuples, panelOffset, bases.length));
+		setLayout(new GridLayout(basesLength, basesLength, 5, 5));
+		for(int panelOffset=0;panelOffset<tuples.size();panelOffset+=basesLength) {
+			add(createTuplePanel(tuples, panelOffset, basesLength));
 		}
 	}
 	
 	private JPanel createTuplePanel(List<Tuple> tuples, int panelOffset, int size) {
 		JPanel panel = new JPanel(new GridLayout(size,1));
-		panel.setBackground(BASE_COLORS.get(RNA.bases[panelOffset/16]));
+		panel.setBackground(BASE_COLORS.get(DEFAULT_ACID.bases[panelOffset/16]));
 		for(int offset=0;offset<size;offset++)
 			panel.add(createTupleButton(tuples.get(panelOffset+offset)));
 		return panel;

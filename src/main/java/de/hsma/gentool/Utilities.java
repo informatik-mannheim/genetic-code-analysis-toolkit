@@ -125,6 +125,32 @@ public final class Utilities {
 		return array;
 	}
 	
+	public static <T> boolean contains(T[] array, T search) {
+		for(T element:array)
+			if (element==search||search!=null&&search.equals(element))
+				return true;
+		return false;
+	}
+	public static <T> boolean contains(Iterable<T> iterable, T search) {
+		for(T element:iterable)
+			if (element==search||search!=null&&search.equals(element))
+				return true;
+		return false;
+	}
+
+	public static <T> boolean containsOnly(T[] array, T search) {
+		for(T element:array)
+			if(element!=search&&(search==null||!search.equals(element)))
+				return false;
+		return true;
+	}
+	public static <T> boolean containsOnly(Iterable<T> iterable, T search) {
+		for(T element:iterable)
+			if(element!=search&&(search==null||!search.equals(element)))
+				return false;
+		return true;
+	}
+
 	public static String cropString(String text,int length) {
 		if(text.length()<=length)
 			return text;

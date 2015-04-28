@@ -220,7 +220,10 @@ public class GenTool extends JFrame implements ActionListener {
 		attributes.put(TEST_CRITERIA,TEST_CRITERIA_BREAK_IF_FALSE);
 		attributes.put(ANALYSIS_HANDLER,new Analysis.Handler() {
 			@Override public void handle(Result result) {
-				consolePane.log("Analysis \"%s\" result: %s",result.getAnalysis().getName(),result.toString());
+				if(result!=null) {
+					consolePane.appendText(String.format("Analysis \"%s\" result: ",result.getAnalysis().getName()),consolePane.success);
+					consolePane.insertText(result.toString());
+				} else consolePane.appendText("No result from analysis.",consolePane.failure);
 			}
 		});
 		attributes.put(SPLIT_PICK,new Split.Pick() {

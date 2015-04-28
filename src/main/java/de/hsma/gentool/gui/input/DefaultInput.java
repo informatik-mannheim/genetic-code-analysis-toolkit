@@ -1,6 +1,8 @@
 package de.hsma.gentool.gui.input;
 
 import static de.hsma.gentool.gui.helper.Guitilities.*;
+import static de.hsma.gentool.nucleic.Acid.*;
+import static de.hsma.gentool.nucleic.Base.*;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
@@ -12,15 +14,23 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.swing.JButton;
 import javax.swing.JPanel;
+import com.google.common.collect.ImmutableMap;
 import de.hsma.gentool.gui.editor.NucleicEditor;
 import de.hsma.gentool.gui.editor.NucleicListener;
+import de.hsma.gentool.nucleic.Acid;
+import de.hsma.gentool.nucleic.Base;
 import de.hsma.gentool.nucleic.Tuple;
 
 public abstract class DefaultInput extends JPanel implements Input, NucleicListener {
 	private static final long serialVersionUID = 1l;
 
-	protected static final Color USED_COLOR = new Color(70,100,255), DUPLICATE_COLOR = new Color(255,70,10);
+	protected static final Acid DEFAULT_ACID = RNA;
 	
+	protected static final Color USED_COLOR = new Color(70,100,255), DUPLICATE_COLOR = new Color(255,70,10);
+	protected static final Map<Base,Color> BASE_COLORS = ImmutableMap.of(
+		URACILE,new Color(143,199,150), THYMINE,new Color(143,199,150), CYTOSINE,new Color(255,245,154),
+		ADENINE,new Color(241,159,193), GUANINE,new Color(131,208,240));
+
 	protected NucleicEditor editor;
 	protected Map<Tuple,TupleButton> buttons;
 
@@ -38,9 +48,9 @@ public abstract class DefaultInput extends JPanel implements Input, NucleicListe
 	@Override public void tuplesInsert(NucleicEvent event) {
 		invokeAppropriate(new Runnable() {
 			public void run() {
-				Collection<Tuple> tuples = event.getTuples();
+				Collection<Tuple> tuples = Tuple.normalizeTuples(event.getTuples(),DEFAULT_ACID);
 				for(TupleButton button:buttons.values())
-					button.setTupleUsed(Collections.frequency(tuples, button.getTuple()));
+					button.setTupleUsed(Collections.frequency(tuples,button.getTuple()));
 			}
 		});
 	}

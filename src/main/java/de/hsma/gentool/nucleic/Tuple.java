@@ -40,12 +40,16 @@ public class Tuple implements Comparable<Tuple> {
 	}
 	
 	public Base[] getBases() { return bases; }
+	public boolean hasBase(Base base) { return contains(bases,base); }
+	
 	public Compound getCompound() { return Compound.forTuple(this); }
 	
 	public int length() { return string.length(); }
 	
 	public Tuple toAcid(Acid acid) {
-		return new Tuple(substitute(bases,ACID_SUBSTITUTIONS.get(acid)));
+		if(RNA.equals(acid)&&contains(bases,THYMINE)||DNA.equals(acid)&&contains(bases,URACILE))
+			return new Tuple(substitute(bases,ACID_SUBSTITUTIONS.get(acid)));
+		else return this;
 	}
 	
 	public Tuple getComplement() { return getComplement(RNA); }
@@ -90,8 +94,29 @@ public class Tuple implements Comparable<Tuple> {
 			PATTERN_NO_BASE.matcher(string.toUpperCase()).replaceAll(SPACE));
 	}
 	
-	public static List<Tuple> uniformAcid(List<Tuple> tuples) { return uniformAcid(tuples,DNA); }
-	public static List<Tuple> uniformAcid(List<Tuple> tuples, Acid acid) {
+	public static Acid tupleAcid(Tuple tuple) {
+		boolean thymine = tuple.hasBase(THYMINE);
+		if(thymine&&tuple.hasBase(URACILE))
+		 	return null; //contains both acids!
+		else if(thymine) return DNA;
+		else return RNA;
+	}
+	public static Acid tuplesAcid(Collection<Tuple> tuples) {
+		Acid acid = null;
+		for(Tuple tuple:tuples) {
+			if(tuple.hasBase(THYMINE))
+				if(acid==null) acid = DNA;
+				else if(!DNA.equals(acid))
+					return null; //contains both acids!
+			if(tuple.hasBase(URACILE))
+				if(acid==null) acid = RNA;
+				else if(!RNA.equals(acid))
+					return null; //contains both acids!
+		} return acid!=null?acid:RNA;
+	}
+	
+	public static List<Tuple> normalizeTuples(Collection<Tuple> tuples) { return normalizeTuples(tuples,RNA); }
+	public static List<Tuple> normalizeTuples(Collection<Tuple> tuples, Acid acid) {
 		List<Tuple> uniformTuples = new ArrayList<>(tuples);
 		ListIterator<Tuple> tuple = uniformTuples.listIterator();
 		while(tuple.hasNext()) tuple.set(tuple.next().toAcid(acid));
