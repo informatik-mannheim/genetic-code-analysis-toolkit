@@ -1,7 +1,11 @@
 package net.gumbix.geneticcode.dich.ct
 
-import net.gumbix.geneticcode.dich._
-import scala.collection.JavaConversions._
+import scala.collection.JavaConversions.mapAsScalaMap
+
+import net.gumbix.geneticcode.dich.AAImplicitDefs
+import net.gumbix.geneticcode.dich.BinaryDichotomicAlgorithm
+import net.gumbix.geneticcode.dich.Codon
+import net.gumbix.geneticcode.dich.Compound
 
 /**
  * Methods that outputs a class table in LaTeX format.

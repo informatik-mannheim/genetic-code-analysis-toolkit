@@ -5,9 +5,9 @@ import org.biojava3.core.sequence.transcription.Table
 import org.biojava3.core.sequence.template.{AbstractCompoundSet, CompoundSet}
 import scala.collection.JavaConversions._
 import java.util
-import org.apache.commons.math.stat.Frequency
 import net.gumbix.geneticcode._
 import net.gumbix.geneticcode.core.{StopCodon, AminoAcid20CompoundSet, RNA4CompoundSet}
+import org.apache.commons.math3.stat.Frequency
 
 /**
  * A genetic code table.

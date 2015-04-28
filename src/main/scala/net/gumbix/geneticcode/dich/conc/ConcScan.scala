@@ -1,14 +1,14 @@
 package net.gumbix.geneticcode.dich.conc
 
+import scala.actors.migration._
 import scala.actors.Actor
-import net.gumbix.geneticcode.dich._
 import scala.concurrent.SyncVar
 import scala.reflect.ClassTag
-import net.gumbix.geneticcode.dich.conc.SolutionMsg
-import net.gumbix.geneticcode.dich.conc.EndMsg
-import net.gumbix.geneticcode.dich.conc.ComputingMsg
-import net.gumbix.geneticcode.dich.conc.OutputMsg
-import net.gumbix.geneticcode.dich.conc.ScanMsg
+
+import net.gumbix.geneticcode.dich.BinaryDichotomicAlgorithm
+import net.gumbix.geneticcode.dich.Classifier
+import net.gumbix.geneticcode.dich.ClassifierSet
+import net.gumbix.geneticcode.dich.Scan
 import net.gumbix.geneticcode.dich.ct.ClassTable
 
 /**
@@ -76,7 +76,7 @@ abstract class ConcScan[T <: ClassTable : ClassTag]
         case SolutionMsg(t: T, actor) => super.foundSolution(t)
         case EndMsg => {
           // TODO kill slaves: slaves.foreach(s => s.exit())
-          sv.set(true)
+          sv.put(true)
           log info "Concurrent calculation end message."
         }
       }

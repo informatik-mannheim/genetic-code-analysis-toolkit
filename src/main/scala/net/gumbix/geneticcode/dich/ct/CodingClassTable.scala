@@ -1,13 +1,15 @@
 package net.gumbix.geneticcode.dich.ct
 
-import net.gumbix.lal.{F2VectorSpace, F2Vector}
-import scala.collection.mutable.ArrayBuffer
-import java.util.{HashMap, HashSet}
-import scala.collection.JavaConversions._
-import net.gumbix.util.Combine._
-import net.gumbix.geneticcode.core.{CodonMapping, AminoAcidMapping}
-import net.gumbix.geneticcode.dich.ct.ClassTable
-import net.gumbix.geneticcode.dich.{Codon, IUPAC, Classifier}
+import scala.collection.JavaConversions.asScalaSet
+import scala.collection.JavaConversions.mapAsScalaMap
+
+import net.gumbix.geneticcode.core.CodonMapping
+import net.gumbix.geneticcode.dich.Classifier
+import net.gumbix.geneticcode.dich.Codon
+import net.gumbix.geneticcode.dich.IUPAC
+import net.gumbix.lal.F2Vector
+import net.gumbix.lal.F2VectorSpace
+import net.gumbix.util.Combine.combine
 
 /**
  * @author Markus Gumbel (m.gumbel@hs-mannheim.de)

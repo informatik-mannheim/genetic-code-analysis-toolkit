@@ -1,26 +1,24 @@
 package net.gumbix.geneticcode.core
 
-import org.biojava3.core.sequence.{DNASequence, RNASequence}
 import org.biojava3.core.sequence.compound.RNACompoundSet
-import net.gumbix.geneticcode.feedback
-import feedback.Codon
+
+import net.gumbix.geneticcode.feedback.Codon
 
 /**
  * tRNA with some required properties.
  * (c) 2012 by Markus Gumbel (m.gumbel@hs-mannheim.de)
  * @author Markus Gumbel
  */
-case class tRNASequence(s: String) extends RNASequence(s) {
-
+case class tRNASequence(s: String) extends org.biojava3.core.sequence.RNASequence(s) {
   def antiCodon = Codon(toString.take(3).toString)
 }
 
 object DNASequence {
-  def apply(s: String) = new DNASequence(s)
+  def apply(s: String) = new org.biojava3.core.sequence.DNASequence(s)
 }
 
 object RNASequence {
-  def apply(s: String) = new RNASequence(s)
+  def apply(s: String) = new org.biojava3.core.sequence.RNASequence(s)
 }
 
 object RNA4CompoundSet extends RNACompoundSet {

@@ -1,7 +1,7 @@
 package net.gumbix.geneticcode.feedback
 
-import util.Random
-import net.gumbix.geneticcode.feedback.{MutuableCodeTable}
+import scala.util.Random
+
 import net.gumbix.geneticcode.core
 
 /**

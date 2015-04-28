@@ -1,7 +1,7 @@
 package net.gumbix.geneticcode.dich.conc
 
-import scala.actors.Actor
 import net.gumbix.geneticcode.dich.ct.ClassTable
+import scala.actors.Actor
 
 /**
  * @author Markus Gumbel (m.gumbel@hs-mannheim.de)
@@ -24,4 +24,4 @@ class Counter[T <: ClassTable](val master: ConcScan[T]) extends Actor {
   }
 }
 
-case class EndMsg
+case class EndMsg()

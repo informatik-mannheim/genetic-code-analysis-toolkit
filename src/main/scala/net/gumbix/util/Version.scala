@@ -20,7 +20,7 @@ object Version {
       stream.close()
       props.get("project.version")
     } catch {
-      case _ => "UNKNOWN"
+      case _ : Throwable => "UNKNOWN"
     }
   }
 

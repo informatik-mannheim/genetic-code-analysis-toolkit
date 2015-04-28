@@ -1,10 +1,10 @@
 package net.gumbix.geneticcode.core
 
-import org.apache.commons.math.stat.Frequency
 import net.gumbix.geneticcode.dich.{RumerBDA}
 import scala.collection.JavaConversions._
 import scala.Predef._
 import net.gumbix.geneticcode.dich.ct.ClassTable
+import org.apache.commons.math3.stat.Frequency
 
 /**
  * The degeneracy of a genetic code table.

@@ -62,7 +62,7 @@ object Main extends ArgsParser {
       case "NumberOfClassesScan" =>
         new ScanNumberOfClassesScan(toBDAList(args, 1), toInt(args, 2)).run()
       case _ => {
-        "Unknown command. Use -help."
+        println("Unknown command. Use -help.")
         printHelp
       }
     }

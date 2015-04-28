@@ -118,12 +118,12 @@ class ClassTable(val bdas: List[Classifier[Int]],
   lazy val prop2ClassesList = {
     import scala.collection.mutable._
     import scala.collection._
-    val m = mutable.HashMap[String, LinkedList[immutable.List[Int]]]()
+    val m = mutable.HashMap[String, MutableList[immutable.List[Int]]]()
     codon2class.foreach {
       e =>
         val (codon, clazz) = (e._1, e._2)
         val p = codonProperty.property(codon) // Convert into a property
-      val list = if (m.contains(p)) m(p) else LinkedList[List[Int]]()
+      val list = if (m.contains(p)) m(p) else MutableList[List[Int]]()
         m(p) = list :+ clazz
     }
     m

@@ -4,6 +4,7 @@ import net.gumbix.geneticcode.feedback
 import org.biojava3.core.sequence.transcription.TranscriptionEngine
 import net.gumbix.geneticcode.core.{StopCodon, AminoAcidMapping, DNASequence}
 import collection.immutable.HashMap
+import scala.language.implicitConversions
 
 /**
  * @author Markus Gumbel (m.gumbel@hs-mannheim.de)

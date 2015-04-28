@@ -1,7 +1,5 @@
 package net.gumbix.geneticcode.dich
 
-import net.gumbix.geneticcode.dich.Classifier
-
 /**
  * As thought on Nov. 2nd
  * @author Markus Gumbel (m.gumbel@hs-mannheim.de)

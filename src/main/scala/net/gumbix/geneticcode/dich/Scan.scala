@@ -158,7 +158,7 @@ abstract class Scan[T <: ClassTable : ClassTag]
   val qCounter = new HashMap[Classifier[Int], Int]()
 
   def count(q: Classifier[Int]) {
-    if (qCounter.get(q) == null) {
+    if (qCounter.get(q) == 0) {
       qCounter(q) = 1
     } else {
       qCounter(q) = qCounter(q) + 1
