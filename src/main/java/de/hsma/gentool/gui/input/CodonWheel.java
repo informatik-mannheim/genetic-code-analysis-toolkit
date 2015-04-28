@@ -11,11 +11,14 @@ import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Insets;
-import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.font.TextAttribute;
+import java.awt.geom.Arc2D;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.Line2D;
+import java.awt.geom.Point2D;
 import java.util.Map;
 import javax.swing.border.EmptyBorder;
 import de.hsma.gentool.nucleic.Base;
@@ -36,14 +39,13 @@ public class CodonWheel extends DefaultInput {
 		addComponentListener(new ComponentAdapter() {
 			@Override public void componentResized(ComponentEvent event) {
 				Insets insets = getInsets();
-				int width = getWidth(),height = getHeight(),diameter = min(width-insets.left-insets.right,height-insets.top-insets.bottom),radius = round((float)diameter/2);
-				Point center = new Point(round((float)width/2),round((float)height/2));
-				
+				int width = getWidth(),height = getHeight(),diameter = min(width-insets.left-insets.right,height-insets.top-insets.bottom);
+				float radius = (float)diameter/2; Point2D.Float center = new Point2D.Float((float)width/2,(float)height/2);
 				for(TupleButton button:buttons.values()) {
 					WheelButton wheelButton = (WheelButton)button;
 					FontMetrics metrics = wheelButton.getFontMetrics(wheelButton.getFont());
-					wheelButton.setLocation(center.x-(int)round(sin(wheelButton.angle)*radius*wheelButton.circle)-metrics.stringWidth(wheelButton.getText())/2,
-						center.y-(int)round(cos(wheelButton.angle)*radius*wheelButton.circle)-metrics.getHeight()/2);
+					wheelButton.setLocation((int)round(center.x-sin(wheelButton.angle)*radius*wheelButton.circle-(float)metrics.stringWidth(wheelButton.getText())/2),
+						(int)round(center.y-cos(wheelButton.angle)*radius*wheelButton.circle-(float)metrics.getHeight()/2));
 				}
 			}
 		});
@@ -52,13 +54,13 @@ public class CodonWheel extends DefaultInput {
 		float piFraction = (float)(PI/32), piFractionHalf = piFraction/2;
 		for(int baseA=0;baseA<4;baseA++) { //inner circle
 			float angleBaseA = (float)(-HALF_PI-HALF_PI*baseA+QUARTER_PI);
-			add(createTupleButton(new Tuple(bases[baseA]),angleBaseA,CIRCLES[2]/2,26f));
+			add(createTupleButton(new Tuple(bases[baseA]),angleBaseA,CIRCLES[2]/2,32f));
 			for(int baseB=0;baseB<4;baseB++) { //middle circle
 				float angleBaseB = angleBaseA+(float)(EIGHTH_PI-EIGHTH_PI*baseB+SIXTEENTH_PI);
-				add(createTupleButton(new Tuple(bases[baseA],bases[baseB]),angleBaseB,CIRCLES[1]-.155f,18f));
+				add(createTupleButton(new Tuple(bases[baseA],bases[baseB]),angleBaseB,CIRCLES[1]-.155f,24f));
 				for(int baseC=0;baseC<4;baseC++) { //outer circle
 					float angleBaseC = angleBaseB+(float)(piFraction-piFraction*baseC+piFractionHalf);
-					add(createTupleButton(new Tuple(bases[baseA],bases[baseB],bases[baseC]),angleBaseC,CIRCLES[0]-.08f,8f));
+					add(createTupleButton(new Tuple(bases[baseA],bases[baseB],bases[baseC]),angleBaseC,CIRCLES[0]-.08f,9f));
 				}
 			}
 		}
@@ -69,24 +71,35 @@ public class CodonWheel extends DefaultInput {
 		return button;
 	}
 	
-	@Override protected void paintComponent(Graphics graphics) {
-		super.paintComponent(graphics);
-		((Graphics2D)graphics).setRenderingHint(RenderingHints.KEY_ANTIALIASING,RenderingHints.VALUE_ANTIALIAS_ON);
+	@Override protected void paintComponent(Graphics defaultGraphics) {
+		super.paintComponent(defaultGraphics);
+		Graphics2D graphics = (Graphics2D)defaultGraphics;
+		graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING,RenderingHints.VALUE_ANTIALIAS_ON);
 		
 		Insets insets = getInsets();
-		int width = getWidth(),height = getHeight(),diameter = min(width-insets.left-insets.right,height-insets.top-insets.bottom),radius = round((float)diameter/2);
-		Point center = new Point(round((float)width/2),round((float)height/2));
+		int width = getWidth(),height = getHeight(),diameter = min(width-insets.left-insets.right,height-insets.top-insets.bottom);
+		float radius = (float)diameter/2; Point2D.Float center = new Point2D.Float((float)width/2,(float)height/2);
+		
+		Base[] bases = RNA.bases;
+		for(int circle=0;circle<CIRCLES.length;circle++) {
+			int sections = (int)Math.pow(4,CIRCLES.length-circle);
+			float angle = 360f/sections, size = diameter*CIRCLES[circle];
+			for(int section=0;section<sections;section++) {
+				graphics.setColor(BASE_COLORS.getOrDefault(bases[3-(section+(circle==CIRCLES.length-1?2:0))%4],Color.BLACK));
+				graphics.fill(new Arc2D.Float(center.x-radius*CIRCLES[circle],center.y-radius*CIRCLES[circle],size,size,angle*section-90,angle,Arc2D.PIE));
+			}
+		}
 		
 		graphics.setColor(Color.BLACK);
-		graphics.drawOval(center.x-radius,center.y-radius,diameter,diameter);
-		for(int circle=0;circle<CIRCLES.length;circle++)
-			graphics.drawOval(round(center.x-radius*CIRCLES[circle]),round(center.y-radius*CIRCLES[circle]),round(diameter*CIRCLES[circle]),round(diameter*CIRCLES[circle]));
+		graphics.draw(new Ellipse2D.Float(center.x-radius,center.y-radius,diameter,diameter));
+		for(int circle=0;circle<CIRCLES.length;circle++)			
+			graphics.draw(new Ellipse2D.Float(center.x-radius*CIRCLES[circle],center.y-radius*CIRCLES[circle],diameter*CIRCLES[circle],diameter*CIRCLES[circle]));
 		
 		float piFraction = (float)(TWO_PI/64);
 		for(int line=0;line<64;line++) {
-			float circle = line%16==0?0f:line%4==0?CIRCLES[2]:CIRCLES[1];
-			int x = (int)round(sin(piFraction*line)*radius),y = (int)round(cos(piFraction*line)*radius); 
-			graphics.drawLine(center.x-round(x*circle),center.y-round(y*circle),center.x-x,center.y-y);
+			float circle = line%16==0?0f:line%4==0?CIRCLES[2]:CIRCLES[1],
+				x = (float)(sin(piFraction*line)*radius),y = (float)(cos(piFraction*line)*radius);
+			graphics.draw(new Line2D.Float(center.x-x*circle,center.y-y*circle,center.x-x,center.y-y));
 		}
 	}
 	
@@ -98,7 +111,7 @@ public class CodonWheel extends DefaultInput {
 		public WheelButton(Tuple tuple, float angle, float circle, float font) {
 			super(tuple); this.angle = angle; this.circle = circle;
 			setFocusable(false); setContentAreaFilled(false); setBorderPainted(false); setBorder(EMPTY_BORDER);
-			setFont(getFont().deriveFont(font)); FontMetrics metrics = getFontMetrics(getFont().deriveFont(Font.BOLD));
+			setFont(getFont().deriveFont(Font.BOLD,font)); FontMetrics metrics = getFontMetrics(getFont().deriveFont(Font.BOLD));
 			setSize(metrics.stringWidth(getText()),metrics.getHeight());
 		}
 		
@@ -110,7 +123,6 @@ public class CodonWheel extends DefaultInput {
 			super.setTupleUsed(used);
 			Font font = getFont();
 			@SuppressWarnings("unchecked") Map<TextAttribute,Object> attributes = (Map<TextAttribute,Object>)font.getAttributes();
-			attributes.put(TextAttribute.WEIGHT, used!=0?TextAttribute.WEIGHT_BOLD:TextAttribute.WEIGHT_REGULAR);
 			attributes.put(TextAttribute.FOREGROUND, used<=0?Color.BLACK:used==1?USED_COLOR:DUPLICATE_COLOR);
 			setFont(font.deriveFont(attributes));
 			repaint();

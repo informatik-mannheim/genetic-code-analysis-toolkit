@@ -87,7 +87,7 @@ public class Tuple implements Comparable<Tuple> {
 	
 	public static String tupleString(String string) {
 		return Characters.WHITESPACE.condense(
-			PATTERN_NO_BASE.matcher(string.trim().toUpperCase()).replaceAll(SPACE));
+			PATTERN_NO_BASE.matcher(string.toUpperCase()).replaceAll(SPACE));
 	}
 	
 	public static List<Tuple> uniformAcid(List<Tuple> tuples) { return uniformAcid(tuples,DNA); }

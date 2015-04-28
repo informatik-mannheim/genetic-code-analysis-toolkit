@@ -9,6 +9,7 @@ import java.awt.font.TextAttribute;
 import java.util.List;
 import java.util.Map;
 import javax.swing.JPanel;
+import de.hsma.gentool.nucleic.Base;
 import de.hsma.gentool.nucleic.Tuple;
 
 public class CodonTable extends DefaultInput {
@@ -20,16 +21,18 @@ public class CodonTable extends DefaultInput {
 	@Override public String getName() { return NAME; }
 
 	public CodonTable() {
-		int bases = RNA.bases.length;
+		Base bases[] = RNA.bases;
 		List<Tuple> tuples = Tuple.allTuples(RNA,3);
 		
-		setLayout(new GridLayout(bases, bases, 5, 5));
-		for(int panelOffset=0;panelOffset<tuples.size();panelOffset+=bases)
-			add(createTuplePanel(tuples, panelOffset, bases));
+		setLayout(new GridLayout(bases.length, bases.length, 5, 5));
+		for(int panelOffset=0;panelOffset<tuples.size();panelOffset+=bases.length) {
+			add(createTuplePanel(tuples, panelOffset, bases.length));
+		}
 	}
 	
 	private JPanel createTuplePanel(List<Tuple> tuples, int panelOffset, int size) {
 		JPanel panel = new JPanel(new GridLayout(size,1));
+		panel.setBackground(BASE_COLORS.get(RNA.bases[panelOffset/16]));
 		for(int offset=0;offset<size;offset++)
 			panel.add(createTupleButton(tuples.get(panelOffset+offset)));
 		return panel;

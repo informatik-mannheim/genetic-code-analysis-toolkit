@@ -30,7 +30,7 @@ public class TupleUsage implements Analysis {
 		Multiset<Tuple> tupleCount = HashMultiset.create();
 		try(BufferedReader reader = new BufferedReader(new FileReader(file))) {
 			String line; while((line=reader.readLine())!=null)
-				tupleCount.addAll(Tuple.splitTuples(Tuple.tupleString(line)));
+				tupleCount.addAll(Tuple.splitTuples(Tuple.tupleString(line).trim()));
 		} catch(IOException e) { return new SimpleResult(this,"Error while reading file."); }
 		
 		StringBuilder builder = new StringBuilder();
