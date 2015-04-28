@@ -68,7 +68,7 @@
 			<groupId>org.scala-lang</groupId>
 			<artifactId>scala-actors</artifactId>
 			<version>2.11.5</version>
-		</dependency>	
+		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>

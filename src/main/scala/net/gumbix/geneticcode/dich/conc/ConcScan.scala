@@ -1,6 +1,5 @@
 package net.gumbix.geneticcode.dich.conc
 
-import scala.actors.migration._
 import scala.actors.Actor
 import scala.concurrent.SyncVar
 import scala.reflect.ClassTag
