@@ -28,15 +28,19 @@ public class NucleicDocument extends DefaultStyledDocument {
 		     if(DNA.equals(defaultAcid)) text = text.replace(Base.URACILE.letter, Base.THYMINE.letter);
 		else if(RNA.equals(defaultAcid)) text = text.replace(Base.THYMINE.letter, Base.URACILE.letter);
 		
+		// determine position and white spaces in document / text
+		boolean startOfText = offset==0, endOfText = offset==getLength(), nearEndOfText = endOfText||offset+1==getLength(),
+			afterSpace = !startOfText&&SPACE.equals(getText(offset-1,1)), beforeSpace = !endOfText&&SPACE.equalsIgnoreCase(getText(offset,1)), beforeTwoSpace = beforeSpace&&!nearEndOfText&&SPACE.equalsIgnoreCase(getText(offset+1,1)),
+			containsSpace = text.contains(SPACE), startsWithSpace = text.startsWith(SPACE), endsWithSpace = text.endsWith(SPACE);
+
 		// white space handling
-		boolean startOfText = offset==0, endOfText = offset==getLength(), containsSpace = text.contains(SPACE), startsWithSpace = text.startsWith(SPACE), endsWithSpace = text.endsWith(SPACE), afterSpace = !startOfText&&SPACE.equals(getText(offset-1,1)), beforeSpace = !endOfText&&SPACE.equalsIgnoreCase(getText(offset,1));
 		if((startOfText||afterSpace)&&startsWithSpace)
-			if((text = text.substring(1)).isEmpty())
-					return;
+			if((text = Characters.SPACE.trim(text,Characters.Trim.LEFT)).isEmpty())
+				return;
 			else startsWithSpace = false;
-		if(beforeSpace&&endsWithSpace)
-			if((text = text.substring(0, text.length()-1)).isEmpty())
-					return;
+		if(((startOfText&&endOfText&&startsWithSpace)||beforeTwoSpace)&&endsWithSpace)
+			if((text = Characters.SPACE.trim(text,Characters.Trim.RIGHT)).isEmpty())
+				return;
 			else endsWithSpace = false;
 		
 		// default tuple length input (di-nucleoide, codon, ...)
