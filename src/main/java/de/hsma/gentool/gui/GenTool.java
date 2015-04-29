@@ -137,7 +137,7 @@ import de.hsma.gentool.operation.transformation.Transformation;
 public class GenTool extends JFrame implements ActionListener {
 	private static final long serialVersionUID = 1l;
 	
-	private static final String VERSION = "1.4";
+	private static final String VERSION = "1.5";
 	private static final String
 		ACTION_NEW = "new",
 		ACTION_OPEN = "open",
