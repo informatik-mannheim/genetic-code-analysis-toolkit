@@ -103,7 +103,7 @@ public class CompoundDisplay extends JPanel implements NucleicDisplay {
 			} else text = "ERR";
 			
 			// adapt text length to tuple length
-			int defaultTupleLength = editor.getDocument().getDefaultTupleLength();
+			int defaultTupleLength = editor.getDefaultTupleLength();
 			if(defaultTupleLength>0&&defaultTupleLength<text.length())
 				text = text.substring(0,defaultTupleLength);
 			

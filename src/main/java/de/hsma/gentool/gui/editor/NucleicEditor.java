@@ -34,6 +34,7 @@ import javax.swing.JRootPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextPane;
+import javax.swing.SwingUtilities;
 import javax.swing.border.Border;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
@@ -58,9 +59,12 @@ import de.hsma.gentool.gui.editor.display.GraphDisplay;
 import de.hsma.gentool.gui.helper.AttachedScrollPane;
 import de.hsma.gentool.gui.helper.BetterGlassPane;
 import de.hsma.gentool.gui.helper.VerticalLabelUI;
+import de.hsma.gentool.nucleic.Acid;
 import de.hsma.gentool.nucleic.Tuple;
 
 public class NucleicEditor extends JRootPane {
+	public static enum InputMode { SEQUENCE,SET }
+	
 	protected static final Pattern LINE_PATTERN = Pattern.compile("^(([A-Z_]+): *)?([A-Z]{3})( +([#%+\\-]?)(\\d+)| +([A-Z_]+))?( *//.*)?$"); //^(([A-Z_]+): *)?([A-Z]{3})( +([#%]?)(\d+)| +([A-Z_]+))?( *//.*)?$
 	
 	private static final long serialVersionUID = 1l;
@@ -68,6 +72,8 @@ public class NucleicEditor extends JRootPane {
 	protected NucleicDocument document;
 	protected UndoManager undo = new UndoManager();
 	protected UndoableEditListener edit;
+	
+	protected InputMode inputMode;
 	
 	private JTextPane textPane;
 	private NumberPanel numberPanel;
@@ -92,7 +98,7 @@ public class NucleicEditor extends JRootPane {
 			private final Color lineColor = new Color(0,0,0,64);
 			@Override public void paint(Graphics graphics) {
 				super.paint(graphics);
-				int defaultTupleLength = document.getDefaultTupleLength();
+				int defaultTupleLength = getDefaultTupleLength();
 				if(defaultTupleLength>0) {
 					graphics.setColor(lineColor);
 					int width=getFontMetrics(getFont()).charWidth('0'), tupleWidth = width*defaultTupleLength;
@@ -175,6 +181,24 @@ public class NucleicEditor extends JRootPane {
 						return -1;
 				}	while(!SPACE.equals(document.getText(offset++,1)));
 				return offset;
+			}
+		});
+		
+		addNucleicListener(new NucleicAdapter() {
+			@Override public void tuplesInsert(NucleicEvent event) {
+				if(InputMode.SET.equals(inputMode)) {
+					int defaultTupleLength = getDefaultTupleLength();
+					List<Tuple> tuples = new ArrayList<>();
+					for(Tuple tuple:event.getTuples())
+						if(tuple.length()==defaultTupleLength) {
+							if(!tuples.contains(tuple))
+								tuples.add(tuple);
+						} else tuples.add(tuple);
+					if(tuples.size()!=event.getTuples().size())
+						SwingUtilities.invokeLater(new Runnable() {
+							@Override public void run() { setTuples(tuples); }
+						});
+				}
 			}
 		});
 		
@@ -311,6 +335,22 @@ public class NucleicEditor extends JRootPane {
 			  finally { edit.commitTransaction(); }
 		}});
 	}
+	
+	public int getDefaultTupleLength() { return document.getDefaultTupleLength(); }
+	public void setDefaultTupleLength(int defaultTupleLength) {
+		document.setDefaultTupleLength(defaultTupleLength);
+		document.adaptText(); repaint();
+	}
+	
+	public Acid getDefaultAcid() { return document.getDefaultAcid(); }
+	public void setDefaultAcid(Acid defaultAcid) {
+		document.setDefaultAcid(defaultAcid);
+		if(defaultAcid!=null) document.adaptText();
+	}
+	
+	public void setInputMode(InputMode inputMode) {
+		this.inputMode = inputMode; document.adaptText(); }
+	public InputMode getInputMode() { return inputMode; }
 	
 	public void setDirty() { cleanHash = -1; }
 	public void setClean() { cleanHash = textPane.getText().hashCode(); }

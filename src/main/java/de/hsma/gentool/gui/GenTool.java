@@ -115,9 +115,10 @@ import de.hsma.gentool.Utilities.RememberFileChooser;
 import de.hsma.gentool.batch.Action;
 import de.hsma.gentool.batch.Action.Task;
 import de.hsma.gentool.batch.Action.TaskAttribute;
+import de.hsma.gentool.gui.editor.NucleicAdapter;
 import de.hsma.gentool.gui.editor.NucleicDocument;
 import de.hsma.gentool.gui.editor.NucleicEditor;
-import de.hsma.gentool.gui.editor.NucleicListener;
+import de.hsma.gentool.gui.editor.NucleicEditor.InputMode;
 import de.hsma.gentool.gui.helper.FoldingPanel;
 import de.hsma.gentool.gui.helper.PopupMouseAdapter;
 import de.hsma.gentool.gui.input.CodonWheel;
@@ -197,7 +198,7 @@ public class GenTool extends JFrame implements ActionListener {
 	public GenTool() {
 		super("Genetic Code Tool (GenTool)"); TOOLS.add(this);
 		setIconImage(new ImageIcon(getResource("icon.png")).getImage());
-		setMinimumSize(new Dimension(660,400));
+		setMinimumSize(new Dimension(800,600));
 		setPreferredSize(new Dimension(1120,680));
 		setSize(getPreferredSize());
 		setLocationByPlatform(true);
@@ -250,7 +251,7 @@ public class GenTool extends JFrame implements ActionListener {
 							private final Color lineColor = new Color(0,0,0,64);
 							@Override public void paint(Graphics graphics) {
 								super.paint(graphics);
-								int defaultTupleLength = editor.getDocument().getDefaultTupleLength();
+								int defaultTupleLength = editor.getDefaultTupleLength();
 								if(defaultTupleLength>0) {
 									graphics.setColor(lineColor);
 									int width=getFontMetrics(getFont()).charWidth('0'), tupleWidth = width*defaultTupleLength;
@@ -401,9 +402,7 @@ public class GenTool extends JFrame implements ActionListener {
 					getMenuItem(menubar,action).setEnabled(!empty);
 			}
 		});
-		editor.addNucleicListener(new NucleicListener() {
-			@Override public void tuplesInsert(NucleicEvent event) { /* nothing to do here */ }
-			@Override public void tuplesRemoved(NucleicEvent event) { /* nothing to do here */ }
+		editor.addNucleicListener(new NucleicAdapter() {
 			@Override public void tuplesChanged(NucleicEvent event) {
 				getMenuItem(menubar,ACTION_UNDO).setEnabled(editor.canUndo());
 				getMenuItem(menubar,ACTION_REDO).setEnabled(editor.canRedo());
@@ -414,7 +413,7 @@ public class GenTool extends JFrame implements ActionListener {
 		
 		split = new JSplitPane[2];
 		split[0] = createSplitPane(JSplitPane.VERTICAL_SPLIT,false,false,0.725,editor,new JScrollPane(consolePane=new ConsolePane()));
-		split[1] = createSplitPane(JSplitPane.HORIZONTAL_SPLIT,false,true,360,0.195,new JScrollPane(catalogPanel=createCatalog()),split[0]);
+		split[1] = createSplitPane(JSplitPane.HORIZONTAL_SPLIT,false,true,390,0.195,new JScrollPane(catalogPanel=createCatalog()),split[0]);
 		add(split[1],BorderLayout.CENTER);
 		
 		add(bottom = new JPanel(new FlowLayout(FlowLayout.RIGHT)),BorderLayout.SOUTH);
@@ -1027,12 +1026,9 @@ public class GenTool extends JFrame implements ActionListener {
 		
 		protected Component createInputOptions() {
 			JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-			addInputOption(panel,new Option("tupleLength", "Default Tuple Length", editor.getDocument().getDefaultTupleLength(), 0, 10, 1)).addChangeListener(new ChangeListener() {
+			addInputOption(panel,new Option("tupleLength", "Tuple Length", editor.getDefaultTupleLength(), 0, 10, 1)).addChangeListener(new ChangeListener() {
 				@Override public void stateChanged(ChangeEvent event) {
-					NucleicDocument document = editor.getDocument();
-					document.setDefaultTupleLength((Integer)((JSpinner)event.getSource()).getValue());
-					document.adaptText();
-					editor.repaint();
+					editor.setDefaultTupleLength((Integer)((JSpinner)event.getSource()).getValue());
 				}
 			});
 			addInputOption(panel,new Option("acid", "Default Acid", RNA,
@@ -1040,17 +1036,23 @@ public class GenTool extends JFrame implements ActionListener {
 				EMPTY,RNA.name(),DNA.name())
 			).addItemListener(new ItemListener() {
 				@Override public void itemStateChanged(ItemEvent event) {
-					NucleicDocument document = editor.getDocument();
-					if(event.getStateChange()==ItemEvent.SELECTED) {
-						document.setDefaultAcid((Acid)event.getItem());
-						document.adaptText();
-					} else document.setDefaultAcid(null);
+					editor.setDefaultAcid(event.getStateChange()==ItemEvent.SELECTED?(Acid)event.getItem():null);
+				}
+			});
+			addInputOption(panel,new Option("inputMode", "Input Mode", InputMode.SEQUENCE,
+				new InputMode[]{InputMode.SEQUENCE,InputMode.SET},
+				new String[]{"Sequence","Set"})
+			).addItemListener(new ItemListener() {
+				@Override public void itemStateChanged(ItemEvent event) {
+					if(event.getStateChange()==ItemEvent.SELECTED)
+						editor.setInputMode((InputMode)event.getItem());
 				}
 			});
 			return panel;
 		}
 		private Option.Component addInputOption(Container container, final Option option) {
 			Option.Component component; 
+			if(option.type!=Parameter.Type.BOOLEAN)
 			container.add(new JLabel(option.label+":"));
 			container.add(component = option.new Component());
 			return component;

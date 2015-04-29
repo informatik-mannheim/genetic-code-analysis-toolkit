@@ -102,6 +102,7 @@ public class Parameter {
 	public class Component extends JComponent {
 		private static final long serialVersionUID = 1l;
 		private java.awt.Component component;
+		
 		public Component() { this(value); }
 		public Component(Object uncheckedValue) {
 			super(); setLayout(new BorderLayout());
@@ -147,6 +148,16 @@ public class Parameter {
 			} add(component, BorderLayout.CENTER);
 		}
 
+		public java.awt.Component getComponent() { return component; }
+		
+		public void setValue(Object value) {
+			switch(type) {
+			case TEXT: ((JTextField)component).setText((String)value);
+			case NUMBER: case DECIMAL: ((JSpinner)component).setValue(value);
+			case BOOLEAN: ((JCheckBox)component).setSelected((Boolean)value);					
+			case LIST: ((JComboBox<?>)component).setSelectedItem(value);
+			case FILE: ((FileComponent)component).setFile((File)value); }
+		}
 		public Object getValue() {
 			switch(type) {
 			case TEXT: return ((JTextField)component).getText();

@@ -7,6 +7,7 @@ import java.util.regex.Pattern;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultStyledDocument;
+import de.hsma.gentool.Utilities.Characters;
 import de.hsma.gentool.nucleic.Acid;
 import de.hsma.gentool.nucleic.Base;
 import de.hsma.gentool.nucleic.Tuple;
