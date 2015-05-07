@@ -1028,7 +1028,11 @@ public class GenTool extends JFrame implements ActionListener {
 			JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 			addInputOption(panel,new Option("tupleLength", "Tuple Length", editor.getDefaultTupleLength(), 0, 10, 1)).addChangeListener(new ChangeListener() {
 				@Override public void stateChanged(ChangeEvent event) {
-					editor.setDefaultTupleLength((Integer)((JSpinner)event.getSource()).getValue());
+					int oldValue = editor.getDefaultTupleLength(), newValue = (Integer)((JSpinner)event.getSource()).getValue();
+					if(InputMode.SET.equals(editor.getInputMode())&&newValue!=0&&newValue<oldValue&&
+						JOptionPane.showOptionDialog(GenTool.this,"<html><b>Warning:</b> Reducing the tuple length in set input mode, might lead\nto a loss of tuples, because duplicate tuples are beeing removed\nimmediately after the conversion was performed.",GenTool.this.getTitle(),JOptionPane.OK_CANCEL_OPTION,JOptionPane.WARNING_MESSAGE,null,new String[]{"Continue","Cancel"},JOptionPane.CANCEL_OPTION)!=JOptionPane.OK_OPTION) {
+						((JSpinner)event.getSource()).setValue(oldValue); return; }
+					editor.setDefaultTupleLength(newValue);
 				}
 			});
 			addInputOption(panel,new Option("acid", "Default Acid", RNA,

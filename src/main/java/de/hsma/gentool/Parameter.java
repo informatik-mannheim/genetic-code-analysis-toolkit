@@ -7,6 +7,7 @@ import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemListener;
+import java.beans.VetoableChangeListener;
 import java.io.File;
 import javax.swing.AbstractAction;
 import javax.swing.BoxLayout;
@@ -168,6 +169,14 @@ public class Parameter {
 			return null;
 		}
 		
+		public void addVetoableChangeListener(VetoableChangeListener listener) {
+			switch(type) {
+			case TEXT: ((JTextField)component).addVetoableChangeListener(listener); break;
+			case NUMBER: case DECIMAL: ((JSpinner)component).addVetoableChangeListener(listener); break;
+			case BOOLEAN: ((JCheckBox)component).addVetoableChangeListener(listener); break;	
+			case LIST: ((JComboBox<?>)component).addVetoableChangeListener(listener); break;
+			case FILE: ((FileComponent)component).addVetoableChangeListener(listener); break; }
+		}
 		@SuppressWarnings("incomplete-switch") public void addChangeListener(ChangeListener listener) {
 			switch(type) {
 			case NUMBER: case DECIMAL: ((JSpinner)component).addChangeListener(listener); break;
