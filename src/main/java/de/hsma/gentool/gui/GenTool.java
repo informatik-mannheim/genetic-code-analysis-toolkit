@@ -113,6 +113,7 @@ import de.hsma.gentool.Configurable;
 import de.hsma.gentool.Option;
 import de.hsma.gentool.Parameter;
 import de.hsma.gentool.Utilities.DefiniteFuture;
+import de.hsma.gentool.Utilities.OperatingSystem;
 import de.hsma.gentool.Utilities.RememberFileChooser;
 import de.hsma.gentool.batch.Action;
 import de.hsma.gentool.batch.Action.Task;
@@ -537,15 +538,16 @@ public class GenTool extends JFrame implements ActionListener {
 		case ACTION_ADD_TO_BATCH: addToBatch(); break;
 		case ACTION_PREFERENCES: showPreferences(); break;
 		case ACTION_ABOUT: showAbout(); break;
-	  //case "action_bda": //TODO: BCA
+	  case "action_bda": //TODO: BCA
 	  	/*scala.collection.immutable.HashSet tuple =
       	new scala.collection.immutable.HashSet<>();*/
-	  	
-	      /*scala.collection.immutable.HashSet tuple =
+	  	/*scala.collection.immutable.HashSet<String> test;
+	  		
+	  		scala.collection.immutable.HashSet tuple =
 	              new scala.collection.immutable.HashSet<>().$plus(Adenine$.MODULE$).$plus(Uracil$.MODULE$);
 	      List bdas = new ArrayList();
 	      bdas.add(new BinaryDichotomicAlgorithm(0, 1,
-	              new Tuple2<Compound, Compound>(Adenine$.MODULE$, Uracil$.MODULE$),
+	              new Tuple2<net.gumbix.geneticcode.dich.Compound, net.gumbix.geneticcode.dich.Compound>(Adenine$.MODULE$, Uracil$.MODULE$),
 	              tuple
 	              ));
 	
@@ -553,7 +555,7 @@ public class GenTool extends JFrame implements ActionListener {
 	
 	      for(Object bda:bdas) {
 	          bdasList = bdasList.$colon$colon(bda);
-	      }*/
+	      }
 	
 	      //ClassTable ct = new ClassTable(bdasList, IUPAC.STANDARD(), IdStandardAminoAcidProperty$.MODULE$);
 	      //ct.codon2class
