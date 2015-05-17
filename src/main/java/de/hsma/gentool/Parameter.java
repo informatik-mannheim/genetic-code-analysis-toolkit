@@ -9,6 +9,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemListener;
 import java.beans.VetoableChangeListener;
 import java.io.File;
+import java.util.Arrays;
 import javax.swing.AbstractAction;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListCellRenderer;
@@ -24,7 +25,6 @@ import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeListener;
 import javax.swing.text.NumberFormatter;
-import scala.actors.threadpool.Arrays;
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 
@@ -89,7 +89,7 @@ public class Parameter {
 		this.value = value; this.minimum = this.maximum = this.step = null;
 	}
 	public Parameter(String key, String label, Object[] options) { this(key,label,options!=null&&options.length>0?options[0]:null,options); }
-	@SuppressWarnings("unchecked") public Parameter(String key, String label, Object value, Object[] options) {
+	public Parameter(String key, String label, Object value, Object[] options) {
 		this(key,label,value,options,(String[])Iterables.toArray(Iterables.transform(Arrays.asList(options),new Function<Object,String>() {
 			@Override public String apply(Object option) { return option!=null?option.toString():null; }
 		}),String.class)); 
