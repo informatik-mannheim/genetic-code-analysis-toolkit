@@ -118,6 +118,8 @@ import de.hsma.gentool.Utilities.RememberFileChooser;
 import de.hsma.gentool.batch.Action;
 import de.hsma.gentool.batch.Action.Task;
 import de.hsma.gentool.batch.Action.TaskAttribute;
+import de.hsma.gentool.gui.GenTool.FileChooser;
+import de.hsma.gentool.gui.GenTool.GoTo;
 import de.hsma.gentool.gui.editor.NucleicAdapter;
 import de.hsma.gentool.gui.editor.NucleicDocument;
 import de.hsma.gentool.gui.editor.NucleicEditor;
@@ -539,35 +541,33 @@ public class GenTool extends JFrame implements ActionListener {
 		case ACTION_PREFERENCES: showPreferences(); break;
 		case ACTION_ABOUT: showAbout(); break;
 	  case "action_bda": //TODO: BCA
-	  	/*scala.collection.immutable.HashSet tuple =
-      	new scala.collection.immutable.HashSet<>();*/
-	  	/*scala.collection.immutable.HashSet<String> test;
-	  		
-	  		scala.collection.immutable.HashSet tuple =
-	              new scala.collection.immutable.HashSet<>().$plus(Adenine$.MODULE$).$plus(Uracil$.MODULE$);
-	      List bdas = new ArrayList();
-	      bdas.add(new BinaryDichotomicAlgorithm(0, 1,
-	              new Tuple2<net.gumbix.geneticcode.dich.Compound, net.gumbix.geneticcode.dich.Compound>(Adenine$.MODULE$, Uracil$.MODULE$),
-	              tuple
-	              ));
-	
-	      scala.collection.immutable.List bdasList = Nil$.MODULE$;
-	
-	      for(Object bda:bdas) {
-	          bdasList = bdasList.$colon$colon(bda);
-	      }
-	
-	      //ClassTable ct = new ClassTable(bdasList, IUPAC.STANDARD(), IdStandardAminoAcidProperty$.MODULE$);
+	  	scala.collection.immutable.HashSet<net.gumbix.geneticcode.dich.Compound> tuples =
+	  		new scala.collection.immutable.HashSet<>();
+	  	tuples = tuples.$plus(net.gumbix.geneticcode.dich.Adenine$.MODULE$).$plus(net.gumbix.geneticcode.dich.Uracil$.MODULE$);
+	  	
+	  	net.gumbix.geneticcode.dich.BinaryDichotomicAlgorithm bda =
+	  		new net.gumbix.geneticcode.dich.BinaryDichotomicAlgorithm(0,1,
+	  			new scala.Tuple2<net.gumbix.geneticcode.dich.Compound,net.gumbix.geneticcode.dich.Compound>(
+	  				net.gumbix.geneticcode.dich.Adenine$.MODULE$, net.gumbix.geneticcode.dich.Uracil$.MODULE$),
+	  				tuples);
+	  	
+	  	scala.collection.immutable.List<?> bdas =
+	  		scala.collection.immutable.Nil$.MODULE$;
+	    bdas = bdas.$colon$colon(bda);
+	    
+	    net.gumbix.geneticcode.dich.ct.ClassTable ct =
+	    	new net.gumbix.geneticcode.dich.ct.ClassTable(bdas,
+					net.gumbix.geneticcode.dich.IUPAC.STANDARD(),
+					net.gumbix.geneticcode.dich.IdStandardAminoAcidProperty$.MODULE$);
 	      //ct.codon2class
 	
-	      /*JFrame frame = new JFrame("Class Table Viewer");
-	      frame.getContentPane().add(new JGeneticCodeTable(ct), BorderLayout.CENTER);
-	      frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-	      frame.setPreferredSize(new Dimension(700, 500));
-	      frame.pack();
-	      frame.setVisible(true);
-	
-	      break;*/
+      JFrame frame = new JFrame("Class Table Viewer");
+      frame.getContentPane().add(new net.gumbix.geneticcode.dich.ui.JGeneticCodeTable(ct), BorderLayout.CENTER);
+      frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+      frame.setPreferredSize(new Dimension(700, 500));
+      frame.pack();
+      frame.setVisible(true);
+      break;
 		default: System.err.println(String.format("Action %s not implemented.", action)); }
 	}
 
