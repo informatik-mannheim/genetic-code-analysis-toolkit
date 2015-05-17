@@ -163,18 +163,20 @@ public class GenTool extends JFrame implements ActionListener {
 		ACTION_NEW_WINDOW = "new_window",
 		ACTION_COPY_WINDOW = "copy_window",
 		ACTION_TOGGLE_TOOLBAR = "toggle_toolbar",
-		ACTION_SHOW_BATCH = "open_batch",
+		ACTION_SHOW_BDA = "show_bda",
+		ACTION_SHOW_BATCH = "show_batch",
 		ACTION_ADD_TO_BATCH = "add_to_batch",
 		ACTION_PREFERENCES = "preferences",
 		ACTION_ABOUT = "about";
 	
 	private static final List<GenTool> TOOLS = new ArrayList<>();
+	private static final GenBDA BDA;
 	private static final GenBatch BATCH;
 	static {
 		UIManager.put("FileChooser.readOnly", Boolean.TRUE);
 		try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); }
 		catch(Exception e) { e.printStackTrace(); };
-		BATCH = new GenBatch();
+		BDA = new GenBDA(); BATCH = new GenBatch();
 	}
 	
 	protected final ListeningExecutorService service = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
@@ -361,7 +363,7 @@ public class GenTool extends JFrame implements ActionListener {
 		menu[2].add(createMenuItem("Copy Window", ACTION_COPY_WINDOW, this));
 		menu[2].add(createMenuItem("Hide Toolbar", ACTION_TOGGLE_TOOLBAR, this));
 		menu[2].add(createSeparator());
-    menu[2].add(createMenuItem("BDA", "action_bda", this)); //TODO: BCA
+    menu[2].add(createMenuItem("BDA Editor", "application_osx_terminal.png", ACTION_SHOW_BDA, this));
 		menu[2].add(createSeparator());
 		menu[2].add(createMenuItem("Open GenBatch", "calculator.png", KeyStroke.getKeyStroke(KeyEvent.VK_B, InputEvent.CTRL_DOWN_MASK), ACTION_SHOW_BATCH, this));
 		menu[2].add(createMenuItem("Add Sequence", "calculator_add.png", ACTION_ADD_TO_BATCH, this));
@@ -380,7 +382,7 @@ public class GenTool extends JFrame implements ActionListener {
 		toolbar[0].add(createToolbarButton("Save As File", "disk--arrow.png", ACTION_SAVE_AS, this));
 		toolbar[0].addSeparator();
 		toolbar[0].add(createToolbarButton("Open GenBatch", "calculator.png", ACTION_SHOW_BATCH, this));
-		toolbar[0].add(createToolbarButton("Add Sequence", "calculator_add.png", ACTION_ADD_TO_BATCH, this));
+		toolbar[0].add(createToolbarButton("Add Sequence to GenBatch", "calculator_add.png", ACTION_ADD_TO_BATCH, this));
 		toolbar[0].addSeparator();
 		toolbar[0].add(createToolbarButton("Exit", "control-power.png", ACTION_EXIT, this));
 		
@@ -534,39 +536,11 @@ public class GenTool extends JFrame implements ActionListener {
 		case ACTION_NEW_WINDOW: newTool(); break;
 		case ACTION_COPY_WINDOW: copyTool(); break;
 		case ACTION_TOGGLE_TOOLBAR: toggleToolbar(); break;
+		case ACTION_SHOW_BDA: showBDA(); break;
 		case ACTION_SHOW_BATCH: showBatch(); break;
 		case ACTION_ADD_TO_BATCH: addToBatch(); break;
 		case ACTION_PREFERENCES: showPreferences(); break;
 		case ACTION_ABOUT: showAbout(); break;
-	  case "action_bda": //TODO: BCA
-	  	scala.collection.immutable.HashSet<net.gumbix.geneticcode.dich.Compound> tuples =
-	  		new scala.collection.immutable.HashSet<>();
-	  	tuples = tuples.$plus(net.gumbix.geneticcode.dich.Adenine$.MODULE$).$plus(net.gumbix.geneticcode.dich.Uracil$.MODULE$);
-	  	
-	  	net.gumbix.geneticcode.dich.BinaryDichotomicAlgorithm bda =
-	  		new net.gumbix.geneticcode.dich.BinaryDichotomicAlgorithm(0,1,
-	  			new scala.Tuple2<net.gumbix.geneticcode.dich.Compound,net.gumbix.geneticcode.dich.Compound>(
-	  				net.gumbix.geneticcode.dich.Adenine$.MODULE$, net.gumbix.geneticcode.dich.Uracil$.MODULE$),
-	  				tuples);
-	  	
-	  	scala.collection.immutable.List<?> bdas =
-	  		scala.collection.immutable.Nil$.MODULE$;
-	    bdas = bdas.$colon$colon(bda);
-	    	    
-	    @SuppressWarnings("unchecked") net.gumbix.geneticcode.dich.ct.ClassTable ct =
-	    	new net.gumbix.geneticcode.dich.ct.ClassTable(
-	    		(scala.collection.immutable.List<net.gumbix.geneticcode.dich.Classifier<Object>>)bdas,
-					net.gumbix.geneticcode.dich.IUPAC.STANDARD(),
-					new net.gumbix.geneticcode.dich.IdAminoAcidProperty(1));
-	    ct.codon2class(); //TODO to determine classes during split
-	    
-      JFrame frame = new JFrame("Class Table Viewer");
-      frame.getContentPane().add(new net.gumbix.geneticcode.dich.ui.JGeneticCodeTable(ct), BorderLayout.CENTER);
-      frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-      frame.setPreferredSize(new Dimension(700, 500));
-      frame.pack();
-      frame.setVisible(true);
-      break;
 		default: System.err.println(String.format("Action %s not implemented.", action)); }
 	}
 
@@ -855,6 +829,13 @@ public class GenTool extends JFrame implements ActionListener {
 		boolean visible = toolbars.isVisible();
 		toolbars.setVisible(!visible);
 		getMenuItem(menubar,ACTION_TOGGLE_TOOLBAR).setText(visible?"Show Toolbar":"Hide Toolbar");
+	}
+	
+	public void showBDA() {
+		if(!BDA.isVisible()) {
+			BDA.setLocationRelativeTo(GenTool.this);
+			BDA.setVisible(true);
+		} else BDA.requestFocus();
 	}
 	
 	public void showBatch() {
