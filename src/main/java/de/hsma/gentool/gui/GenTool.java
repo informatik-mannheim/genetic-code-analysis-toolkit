@@ -102,6 +102,8 @@ import javax.swing.text.Style;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 import org.reflections.Reflections;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -242,25 +244,24 @@ public class GenTool extends JFrame implements ActionListener {
 					layout.setAutoCreateGaps(true);
 					layout.setAutoCreateContainerGaps(true);
 					
-					JLabel label = new JLabel("Sequences:");
+					JLabel label = new JLabel("Pick one or more (holding the "+(!OperatingSystem.MAC.equals(OperatingSystem.currentOperatingSystem())?"Ctrl":"Command")+" key) sequences from the list:");
 					
-					@SuppressWarnings("unchecked") JComboBox<Collection<Tuple>> combo = new JComboBox<Collection<Tuple>>(split.toArray((Collection<Tuple>[])new Collection<?>[0]));
-					combo.setRenderer(new ListCellRenderer<Collection<Tuple>>() {
-						private JLabel label = new JLabel() {
-							private static final long serialVersionUID = 1l;
-							private final Color lineColor = new Color(0,0,0,64);
-							@Override public void paint(Graphics graphics) {
-								super.paint(graphics);
-								int defaultTupleLength = editor.getDefaultTupleLength();
-								if(defaultTupleLength>0) {
-									graphics.setColor(lineColor);
-									int width=getFontMetrics(getFont()).charWidth('0'), tupleWidth = width*defaultTupleLength;
-									for(int left=getInsets().left+width/2+tupleWidth; left<combo.getWidth(); left += tupleWidth + width)
-										graphics.drawLine(left, 0, left, combo.getHeight());
-								}
+					@SuppressWarnings("unchecked") JList<Collection<Tuple>> list = new JList<Collection<Tuple>>(split.toArray((Collection<Tuple>[])new Collection<?>[0])) {
+						private static final long serialVersionUID = 1l;
+						private final Color lineColor = new Color(0,0,0,64);
+						@Override public void paint(Graphics graphics) {
+							super.paint(graphics);
+							int defaultTupleLength = editor.getDefaultTupleLength();
+							if(defaultTupleLength>0) {
+								graphics.setColor(lineColor);
+								int width=getFontMetrics(getFont()).charWidth('0'), tupleWidth = width*defaultTupleLength;
+								for(int left=getInsets().left+width/2+tupleWidth; left<getWidth(); left += tupleWidth + width)
+									graphics.drawLine(left, 0, left, getHeight());
 							}
-						};
-						
+						}
+					};
+					list.setCellRenderer(new ListCellRenderer<Collection<Tuple>>() {
+						private JLabel label = new JLabel();
 						@Override public Component getListCellRendererComponent(JList<? extends Collection<Tuple>> list,Collection<Tuple> tuples,int index,boolean isSelected,boolean cellHasFocus) {						
 					    label.setText(Tuple.joinTuples(tuples));
 					    
@@ -278,11 +279,15 @@ public class GenTool extends JFrame implements ActionListener {
 					    return label;
 						}
 					});
-					combo.setFont(new Font(Font.MONOSPACED,Font.PLAIN,12));
+					list.setFont(new Font(Font.MONOSPACED,Font.PLAIN,12));
+					
+					JScrollPane scroll = new JScrollPane(list);
 					
 					JButton pick = new JButton("Pick");
 					pick.addActionListener(new ActionListener() {
-						@Override public void actionPerformed(ActionEvent e) { future.set(combo.getModel().getElementAt(combo.getSelectedIndex())); dialog.dispose(); }
+						@Override public void actionPerformed(ActionEvent e) {
+							future.set(Lists.newArrayList(Iterables.concat(list.getSelectedValuesList()))); dialog.dispose();
+						}
 					});
 					
 					JButton cancel = new JButton("Cancel");
@@ -291,23 +296,21 @@ public class GenTool extends JFrame implements ActionListener {
 					});
 					
 					layout.setHorizontalGroup(
-						layout.createSequentialGroup()
+						layout.createParallelGroup(Alignment.TRAILING)
 							.addComponent(label)
-							.addGroup(layout.createParallelGroup(Alignment.TRAILING)
-									.addComponent(combo, 285, 285, GroupLayout.DEFAULT_SIZE)
-									.addGroup(layout.createSequentialGroup()
-										.addComponent(pick)
-										.addComponent(cancel)	
-									)									
+							.addComponent(scroll, 325, 325, GroupLayout.DEFAULT_SIZE)
+							.addGroup(layout.createSequentialGroup()
+								.addComponent(pick)
+								.addComponent(cancel)	
 							)
 					);
-	
+					layout.linkSize(SwingConstants.HORIZONTAL, scroll, label);
+					layout.linkSize(SwingConstants.HORIZONTAL, pick, cancel);
+					
 					layout.setVerticalGroup(
 						layout.createSequentialGroup()
-							.addGroup(layout.createParallelGroup(Alignment.CENTER)
-								.addComponent(label)
-								.addComponent(combo)
-							)
+							.addComponent(label)
+							.addComponent(scroll, 0, 125, GroupLayout.DEFAULT_SIZE)
 							.addGroup(layout.createParallelGroup()
 								.addComponent(pick)
 								.addComponent(cancel)
@@ -413,7 +416,7 @@ public class GenTool extends JFrame implements ActionListener {
 		
 		split = new JSplitPane[2];
 		split[0] = createSplitPane(JSplitPane.VERTICAL_SPLIT,false,false,0.725,editor,new JScrollPane(consolePane=new ConsolePane()));
-		split[1] = createSplitPane(JSplitPane.HORIZONTAL_SPLIT,false,true,390,0.195,new JScrollPane(catalogPanel=createCatalog()),split[0]);
+		split[1] = createSplitPane(JSplitPane.HORIZONTAL_SPLIT,false,true,410,0.195,new JScrollPane(catalogPanel=createCatalog()),split[0]);
 		add(split[1],BorderLayout.CENTER);
 		
 		add(bottom = new JPanel(new FlowLayout(FlowLayout.RIGHT)),BorderLayout.SOUTH);

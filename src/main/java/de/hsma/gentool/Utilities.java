@@ -462,6 +462,24 @@ public final class Utilities {
 		}
 	}
 	
+	public static enum OperatingSystem {
+		WINDOWS,MAC,UNIX,SOLARIS;
+		private static final OperatingSystem OPERATING_SYSTEM;
+		static {
+			String name = System.getProperty("os.name").toLowerCase();
+			if(name.contains("win"))
+				OPERATING_SYSTEM = WINDOWS;
+			else if(name.contains("mac"))
+				OPERATING_SYSTEM = MAC;
+			else if(name.contains("nix")||name.contains("nux")||name.contains("aix"))
+				OPERATING_SYSTEM = UNIX;
+			else if(name.contains("sunos"))
+				OPERATING_SYSTEM = SOLARIS;
+			else OPERATING_SYSTEM = null;
+		}
+		public static OperatingSystem currentOperatingSystem() { return OPERATING_SYSTEM; }
+	}
+	
 	public static class DefiniteFuture<T> implements Future<T> {
 		private T result;
 		public DefiniteFuture() {}

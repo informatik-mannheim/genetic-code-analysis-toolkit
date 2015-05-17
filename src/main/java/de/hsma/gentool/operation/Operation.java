@@ -57,14 +57,7 @@ public interface Operation extends InjectionLogger.Injectable {
 	}
 	
 	public static Multimap<String,Class<? extends Operation>> getGroups() {
-		Multimap<String,Class<? extends Operation>> groups = TreeMultimap.create(new Comparator<String>() {
-			@Override public int compare(String groupA,String groupB) {
-				     if(groupA==groupB) return 0;
-				else if(groupA==null)   return -1;
-				else if(groupB==null)   return 1;
-				else return groupA.compareTo(groupB);
-			}
-		},new Comparator<Class<? extends Operation>>() {
+		Multimap<String,Class<? extends Operation>> groups = TreeMultimap.create(Comparator.reverseOrder(),new Comparator<Class<? extends Operation>>() {
 			@Override public int compare(Class<? extends Operation> operationA,Class<? extends Operation> operationB) {
 				Cataloged catalogedA = operationA.getAnnotation(Cataloged.class), catalogedB = operationB.getAnnotation(Cataloged.class);
 				int orderA = catalogedA!=null?catalogedA.order():Short.MAX_VALUE, orderB = catalogedB!=null?catalogedB.order():Short.MAX_VALUE;
