@@ -1,3 +1,7 @@
+P=
+Xplugin=
+Xplugin-disable=
+Xplugin-require=
 eclipse.preferences.version=1
 organizeimports.expandcollapse=expand
 organizeimports.groups=java$scala$org$com

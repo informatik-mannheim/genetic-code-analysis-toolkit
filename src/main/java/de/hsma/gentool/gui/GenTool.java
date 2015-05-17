@@ -118,8 +118,6 @@ import de.hsma.gentool.Utilities.RememberFileChooser;
 import de.hsma.gentool.batch.Action;
 import de.hsma.gentool.batch.Action.Task;
 import de.hsma.gentool.batch.Action.TaskAttribute;
-import de.hsma.gentool.gui.GenTool.FileChooser;
-import de.hsma.gentool.gui.GenTool.GoTo;
 import de.hsma.gentool.gui.editor.NucleicAdapter;
 import de.hsma.gentool.gui.editor.NucleicDocument;
 import de.hsma.gentool.gui.editor.NucleicEditor;
@@ -363,7 +361,7 @@ public class GenTool extends JFrame implements ActionListener {
 		menu[2].add(createMenuItem("Copy Window", ACTION_COPY_WINDOW, this));
 		menu[2].add(createMenuItem("Hide Toolbar", ACTION_TOGGLE_TOOLBAR, this));
 		menu[2].add(createSeparator());
-    //menu[2].add(createMenuItem("BDA", "action_bda", this)); //TODO: BCA
+    menu[2].add(createMenuItem("BDA", "action_bda", this)); //TODO: BCA
 		menu[2].add(createSeparator());
 		menu[2].add(createMenuItem("Open GenBatch", "calculator.png", KeyStroke.getKeyStroke(KeyEvent.VK_B, InputEvent.CTRL_DOWN_MASK), ACTION_SHOW_BATCH, this));
 		menu[2].add(createMenuItem("Add Sequence", "calculator_add.png", ACTION_ADD_TO_BATCH, this));
@@ -554,13 +552,14 @@ public class GenTool extends JFrame implements ActionListener {
 	  	scala.collection.immutable.List<?> bdas =
 	  		scala.collection.immutable.Nil$.MODULE$;
 	    bdas = bdas.$colon$colon(bda);
-	    
-	    net.gumbix.geneticcode.dich.ct.ClassTable ct =
-	    	new net.gumbix.geneticcode.dich.ct.ClassTable(bdas,
+	    	    
+	    @SuppressWarnings("unchecked") net.gumbix.geneticcode.dich.ct.ClassTable ct =
+	    	new net.gumbix.geneticcode.dich.ct.ClassTable(
+	    		(scala.collection.immutable.List<net.gumbix.geneticcode.dich.Classifier<Object>>)bdas,
 					net.gumbix.geneticcode.dich.IUPAC.STANDARD(),
-					net.gumbix.geneticcode.dich.IdStandardAminoAcidProperty$.MODULE$);
-	      //ct.codon2class
-	
+					new net.gumbix.geneticcode.dich.IdAminoAcidProperty(1));
+	    ct.codon2class(); //TODO to determine classes during split
+	    
       JFrame frame = new JFrame("Class Table Viewer");
       frame.getContentPane().add(new net.gumbix.geneticcode.dich.ui.JGeneticCodeTable(ct), BorderLayout.CENTER);
       frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
