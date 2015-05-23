@@ -447,11 +447,11 @@ public class GenBatch extends JFrame implements ActionListener, ListDataListener
 			this.attribute = attribute;
 		}
 		public TaskAttributeParameter(TaskAttribute attribute,String label,int value,int minimum,int maximum,int step) {
-			super(attribute.getName(),label,value,minimum,maximum,step);
+			super(attribute.getName(),label,minimum,value,maximum,step);
 			this.attribute = attribute;
 		}
 		public TaskAttributeParameter(TaskAttribute attribute,String label,double value,double minimum,double maximum,double step) {
-			super(attribute.getName(),label,value,minimum,maximum,step);
+			super(attribute.getName(),label,minimum,value,maximum,step);
 			this.attribute = attribute;
 		}
 		public TaskAttributeParameter(TaskAttribute attribute,String label,boolean value) {

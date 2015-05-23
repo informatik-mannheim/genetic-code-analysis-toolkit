@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import de.hsma.gentool.Parameter;
+import de.hsma.gentool.Utilities;
 import de.hsma.gentool.Parameter.Type;
 import de.hsma.gentool.nucleic.Tuple;
 import de.hsma.gentool.operation.Named;
@@ -21,13 +22,9 @@ public interface Test extends Operation {
 	}
 	
 	@Named(name="match")
+	@Parameter.Annotation(key="pattern",label="Term",type=Type.TEXT)
+	@Parameter.Annotation(key="regex",label="Regex",type=Type.BOOLEAN,value=Utilities.TRUE)
 	public class Expression implements Test {
-		private static final Parameter[] PARAMETERS = new Parameter[] {
-   		new Parameter("pattern", "Match", Type.TEXT),
-   		new Parameter("regex", "Regex", true),
-   	};
-   	public static Parameter[] getParameters() { return PARAMETERS; }
-
    	@Override public boolean test(Collection<Tuple> tuples,Object... values) { return test(tuples, (String)values[0], (Boolean)values[1]); }
   	public boolean test(Collection<Tuple> tuples,String pattern,boolean regex) {
   		try {

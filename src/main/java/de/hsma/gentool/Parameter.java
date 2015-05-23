@@ -9,6 +9,12 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemListener;
 import java.beans.VetoableChangeListener;
 import java.io.File;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Repeatable;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import javax.swing.AbstractAction;
 import javax.swing.BoxLayout;
@@ -26,7 +32,9 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeListener;
 import javax.swing.text.NumberFormatter;
 import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.ObjectArrays;
 
 public class Parameter {
 	public enum Type {
@@ -54,6 +62,16 @@ public class Parameter {
 		}
 	}
 	
+	@Repeatable(Annotations.class)
+	@Target({ElementType.TYPE}) @Retention(RetentionPolicy.RUNTIME)
+	public @interface Annotation {
+		String key(); String label(); Type type();
+		String value() default EMPTY;
+	}
+	
+	@Target({ElementType.TYPE}) @Retention(RetentionPolicy.RUNTIME)
+	public @interface Annotations { Annotation[] value(); }
+	
 	public final String key,label;
 	public final Type type;
 	public final Object value;
@@ -72,22 +90,27 @@ public class Parameter {
 		this.minimum = Short.MIN_VALUE; this.maximum = Short.MAX_VALUE; this.step = 1;
 	}
 	
+	
+	public Parameter(String key, String label, String value) { this(key,label,Type.TEXT,value); }
+	
+	public Parameter(String key, String label, int value) { this(key,label,Type.NUMBER,value); }
 	public Parameter(String key, String label, int minimum, int maximum) { this(key,label,minimum,minimum,maximum); }
-	public Parameter(String key, String label, int value, int minimum, int maximum) { this(key,label,value,minimum,maximum,1); }
-	public Parameter(String key, String label, int value, int minimum, int maximum, int step) {
+	public Parameter(String key, String label, int minimum, int value, int maximum) { this(key,label,minimum,value,maximum,1); }
+	public Parameter(String key, String label, int minimum, int value, int maximum, int step) {
 		this.key = key; this.label = label; this.type = Type.NUMBER; this.options = this.labels = null;
 		this.value = value; this.minimum = minimum; this.maximum = maximum; this.step = step;
 	}
+	
+	public Parameter(String key, String label, double value) { this(key,label,Type.DECIMAL,value); }
 	public Parameter(String key, String label, double minimum, double maximum) { this(key,label,minimum,minimum,maximum); }
-	public Parameter(String key, String label, double value, double minimum, double maximum) { this(key,label,value,minimum,maximum,.1); }
-	public Parameter(String key, String label, double value, double minimum, double maximum, double step) {
+	public Parameter(String key, String label, double minimum, double value, double maximum) { this(key,label,minimum,value,maximum,.1); }
+	public Parameter(String key, String label, double minimum, double value, double maximum, double step) {
 		this.key = key; this.label = label; this.type = Type.DECIMAL; this.options = this.labels = null;
 		this.value = value; this.minimum = minimum; this.maximum = maximum; this.step = step;		
 	}
-	public Parameter(String key, String label, boolean value) {
-		this.key = key; this.label = label; this.type = Type.BOOLEAN; this.options = this.labels = null;
-		this.value = value; this.minimum = this.maximum = this.step = null;
-	}
+	
+	public Parameter(String key, String label, boolean value) { this(key,label,Type.BOOLEAN,value); }
+
 	public Parameter(String key, String label, Object[] options) { this(key,label,options!=null&&options.length>0?options[0]:null,options); }
 	public Parameter(String key, String label, Object value, Object[] options) {
 		this(key,label,value,options,(String[])Iterables.toArray(Iterables.transform(Arrays.asList(options),new Function<Object,String>() {
@@ -99,6 +122,8 @@ public class Parameter {
 		this.key = key; this.label = label; this.type = Type.LIST; this.options = options; this.labels = labels;
 		this.value = value; this.minimum = this.maximum = this.step = null;
 	}
+	
+	public Parameter(String key, String label, File value) { this(key,label,Type.FILE,value); }
 	
 	public class Component extends JComponent {
 		private static final long serialVersionUID = 1l;
@@ -153,11 +178,11 @@ public class Parameter {
 		
 		public void setValue(Object value) {
 			switch(type) {
-			case TEXT: ((JTextField)component).setText((String)value);
-			case NUMBER: case DECIMAL: ((JSpinner)component).setValue(value);
-			case BOOLEAN: ((JCheckBox)component).setSelected((Boolean)value);					
-			case LIST: ((JComboBox<?>)component).setSelectedItem(value);
-			case FILE: ((FileComponent)component).setFile((File)value); }
+			case TEXT: ((JTextField)component).setText((String)value); break;
+			case NUMBER: case DECIMAL: ((JSpinner)component).setValue(value); break;
+			case BOOLEAN: ((JCheckBox)component).setSelected((Boolean)value); break;	
+			case LIST: ((JComboBox<?>)component).setSelectedItem(value); break;
+			case FILE: ((FileComponent)component).setFile((File)value); break; }
 		}
 		public Object getValue() {
 			switch(type) {
@@ -193,6 +218,57 @@ public class Parameter {
 			case BOOLEAN: ((JCheckBox)component).addActionListener(listener); break;	
 			case LIST: ((JComboBox<?>)component).addActionListener(listener); break;
 			case FILE: ((FileComponent)component).addActionListener(listener); break; }
+		}
+	}
+	
+	public static String GET_PARAMETERS = "getParameters";
+	public static Parameter[] getParameters(Class<?> parameterized) {
+		if(parameterized.isAnnotationPresent(Annotation.class))
+			return getParameters(parameterized.getAnnotationsByType(Annotation.class));
+		else try {
+			Object parameters = parameterized.getMethod(GET_PARAMETERS).invoke(null);
+			return parameters instanceof Parameter[]?(Parameter[])parameters:null;
+		} catch(NoSuchMethodException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | SecurityException e) { return null; }
+	}
+	private static Parameter[] getParameters(Annotation[] annotations) {
+		Parameter[] parameters = new Parameter[annotations.length];
+		for(int annotation=0;annotation<annotations.length;annotation++)
+			parameters[annotation] = getParameter(annotations[annotation]);
+		return parameters;
+	}
+	private static Parameter getParameter(Annotation annotation) {
+		String value, values[];
+		if((value=annotation.value()).isEmpty())
+			return new Parameter(annotation.key(),annotation.label(),annotation.type());
+		else switch(annotation.type()) {
+			case TEXT: return new Parameter(annotation.key(),annotation.label(),annotation.value());
+			case NUMBER:
+				try {
+					Class<?>[] types = new Class<?>[2+(values=value.split(",")).length];
+					Arrays.fill(types,int.class); types[0] = types[1] = String.class;
+					return Parameter.class.getConstructor(types).newInstance(
+						ObjectArrays.concat(new Object[]{annotation.key(),annotation.label()},
+							Collections2.transform(Arrays.asList(values),new Function<String,Integer>() {
+								@Override public Integer apply(String input) { return Integer.parseInt(input); }
+							}).toArray(new Integer[0]),Object.class));
+				}	catch(Exception e) { throw new RuntimeException(e); }
+			case DECIMAL:
+				try {
+					Class<?>[] types = new Class<?>[2+(values=value.split(",")).length];
+					Arrays.fill(types,double.class); types[0] = types[1] = String.class;
+					return Parameter.class.getConstructor(types).newInstance(
+						ObjectArrays.concat(new Object[]{annotation.key(),annotation.label()},
+							Collections2.transform(Arrays.asList(values),new Function<String,Double>() {
+								@Override public Double apply(String input) { return Double.parseDouble(input); }
+							}).toArray(new Integer[0]),Object.class));
+				}	catch(Exception e) { throw new RuntimeException(e); }
+			case BOOLEAN:
+				return new Parameter(annotation.key(),annotation.label(),Boolean.parseBoolean(value));
+			case LIST:
+				return new Parameter(annotation.key(),annotation.label(),value.split(","));
+			case FILE:
+				return new Parameter(annotation.key(),annotation.label(),new File(value));
+			default: return null;
 		}
 	}
 	

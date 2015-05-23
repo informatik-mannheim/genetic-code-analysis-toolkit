@@ -5,6 +5,7 @@ import java.util.Collection;
 import org.paukov.combinatorics.Factory;
 import org.paukov.combinatorics.ICombinatoricsVector;
 import de.hsma.gentool.Parameter;
+import de.hsma.gentool.Parameter.Type;
 import de.hsma.gentool.log.Logger;
 import de.hsma.gentool.nucleic.Tuple;
 import de.hsma.gentool.operation.Cataloged;
@@ -13,12 +14,8 @@ import de.hsma.gentool.operation.transformation.ShiftSequence;
 import de.hsma.gentool.operation.transformation.Transformation;
 
 @Named(name="n-circular?") @Cataloged(group="Tests")
-public class Circular implements Test {
-	private static final Parameter[] PARAMETERS = new Parameter[] {
- 		new Parameter("n", "n-Circular", 1, 1, Short.MAX_VALUE, 1),
- 	};
-	public static Parameter[] getParameters() { return PARAMETERS; }
-	
+@Parameter.Annotation(key="n",label="n-Circular",type=Type.NUMBER,value="1,10")
+public class Circular implements Test {	
 	private static final Test
 		DUPLICATE_FREE = new DuplicateFree();
 	private static final Transformation

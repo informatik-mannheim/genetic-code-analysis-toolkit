@@ -5,6 +5,7 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import de.hsma.gentool.Parameter;
 import de.hsma.gentool.Parameter.Type;
+import de.hsma.gentool.Utilities;
 import de.hsma.gentool.nucleic.Tuple;
 import de.hsma.gentool.operation.Named;
 import de.hsma.gentool.operation.Operation;
@@ -14,14 +15,11 @@ public interface Transformation extends Operation {
 	public Collection<Tuple> transform(Collection<Tuple> tuples, Object... values);
 	
 	@Named(name="find & replace")
-	public class Expression implements Transformation {
-		private static final Parameter[] PARAMETERS = new Parameter[] {
-  		new Parameter("pattern", "Term", Type.TEXT),
-  		new Parameter("replace", "Replace", Type.TEXT),
-  		new Parameter("regex", "Regex", true)
-  	};
-  	public static Parameter[] getParameters() { return PARAMETERS; }
-  	
+	@Parameter.Annotation(key="pattern",label="Term",type=Type.TEXT)
+	@Parameter.Annotation(key="replace",label="Replace",type=Type.TEXT)
+	@Parameter.Annotation(key="regex",label="Regex",type=Type.BOOLEAN,value=Utilities.TRUE)
+	
+	public class Expression implements Transformation {  	
   	@Override public Collection<Tuple> transform(Collection<Tuple> tuples,Object... values) { return transform(tuples, (String)values[0], (String)values[1], (Boolean)values[2]); }
   	public Collection<Tuple> transform(Collection<Tuple> tuples,String pattern,String replace,boolean regex) {
 			try {

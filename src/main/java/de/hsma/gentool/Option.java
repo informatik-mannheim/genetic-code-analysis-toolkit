@@ -7,10 +7,10 @@ public class Option extends Parameter {
 		super(key,label,type,value);
 	}
 	public Option(String key,String label,double value,double minimum,double maximum,double step) {
-		super(key,label,value,minimum,maximum,step);
+		super(key,label,minimum,value,maximum,step);
 	}
 	public Option(String key,String label,int value,int minimum,int maximum,int step) {
-		super(key,label,value,minimum,maximum,step);
+		super(key,label,minimum,value,maximum,step);
 	}
 	public Option(String key,String label,Object value,Object[] options,String... labels) {
 		super(key,label,value,options,labels);

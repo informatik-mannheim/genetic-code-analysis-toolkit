@@ -18,12 +18,8 @@ import de.hsma.gentool.operation.Cataloged;
 import de.hsma.gentool.operation.Named;
 
 @Named(name="tuple usage") @Cataloged(group="Analyses")
-public class TupleUsage implements Analysis {
-	private static final Parameter[] PARAMETERS = new Parameter[] {
-		new Parameter("file", "File", Type.FILE),
-	};
-	public static Parameter[] getParameters() { return PARAMETERS; }
-	
+@Parameter.Annotation(key="file",label="File",type=Type.FILE)
+public class TupleUsage implements Analysis {	
 	private static final String DELIMITER = ", ", TIMES = "x ";
 	private static final Tuple EMPTY_TUPLE = new Tuple();
 	

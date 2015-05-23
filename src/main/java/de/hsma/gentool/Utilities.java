@@ -37,7 +37,7 @@ import de.hsma.gentool.gui.GenTool;
 
 public final class Utilities {
 	private static Properties configuration = new Properties();
-	public static final String EMPTY = "", SPACE = " ", NEW_LINE = "\n", WHITESPACE = " \t\n\r\f";
+	public static final String EMPTY = "", SPACE = " ", NEW_LINE = "\n", WHITESPACE = " \t\n\r\f", TRUE = "true", FALSE = "false";
 	public static final double TWO_PI = PI*2, HALF_PI = PI/2, QUARTER_PI = PI/4, EIGHTH_PI = PI/8, SIXTEENTH_PI = PI/16;
 	
   private static final int BUFFER_SIZE = 8192;

@@ -1,6 +1,5 @@
 package de.hsma.gentool.operation;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.Comparator;
 import java.util.Set;
@@ -14,23 +13,21 @@ import de.hsma.gentool.log.InjectionLogger;
 import de.hsma.gentool.log.Logger;
 
 public interface Operation extends InjectionLogger.Injectable {
-	public static String GET_PARAMETERS = "getParameters";
+	public default String getName() { return getName(this.getClass()); }
+	public default String getGroup() { return getGroup(this.getClass()); }
 	
-	public default String getName() {
-		Named displayed = this.getClass().getAnnotation(Named.class);
-		return displayed!=null?displayed.name():null;
+	public static String getName(Class<? extends Operation> operation) {
+		if(operation.isAnnotationPresent(Named.class))
+		     return operation.getAnnotation(Named.class).name();
+		else return operation.getSimpleName();
 	}
-	public default String getGroup() {
-		Cataloged cataloged = this.getClass().getAnnotation(Cataloged.class);
-		return cataloged!=null?cataloged.group():null;
+	public static String getGroup(Class<? extends Operation> operation) {
+		if(operation.isAnnotationPresent(Cataloged.class))
+		     return operation.getAnnotation(Cataloged.class).group();
+		else return null;
 	}
-	
-	public static String getName(Class<? extends Operation> operation) { return operation.isAnnotationPresent(Named.class)?operation.getAnnotation(Named.class).name():operation.getSimpleName(); }
 	public static Parameter[] getParameters(Class<? extends Operation> operation) {
-		try {
-			Object parameters = operation.getMethod(Operation.GET_PARAMETERS).invoke(null);
-			return parameters instanceof Parameter[]?(Parameter[])parameters:null;
-		} catch(NoSuchMethodException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | SecurityException e) { return null; }
+		return Parameter.getParameters(operation);
 	}
 	
 	public static <T extends Operation> T newInstance(Class<T> operation) throws InstantiationException, IllegalAccessException { return newInstance(operation,null); }
