@@ -17,9 +17,9 @@ import de.hsma.gentool.Utilities.Characters;
 
 public class Tuple implements Comparable<Tuple> {
 	private static final Map<Base,Base> COMPLEMENT_SUBSTITUTION = ImmutableMap.of(
-		ADENINE,URACILE, URACILE,ADENINE, THYMINE,ADENINE, GUANINE,CYTOSINE, CYTOSINE,GUANINE);
+		ADENINE,URACIL, URACIL,ADENINE, THYMINE,ADENINE, GUANINE,CYTOSINE, CYTOSINE,GUANINE);
 	private static final Map<Acid,Map<Base,Base>> ACID_SUBSTITUTIONS = ImmutableMap.of(
-		RNA,ImmutableMap.of(THYMINE,URACILE), DNA,ImmutableMap.of(URACILE,THYMINE));
+		RNA,ImmutableMap.of(THYMINE,URACIL), DNA,ImmutableMap.of(URACIL,THYMINE));
 	
 	private static final Pattern PATTERN_NO_WORD = Pattern.compile("\\W"),PATTERN_NO_BASE;
 	static {
@@ -48,7 +48,7 @@ public class Tuple implements Comparable<Tuple> {
 	public int length() { return string.length(); }
 	
 	public Tuple toAcid(Acid acid) {
-		if(RNA.equals(acid)&&contains(bases,THYMINE)||DNA.equals(acid)&&contains(bases,URACILE))
+		if(RNA.equals(acid)&&contains(bases,THYMINE)||DNA.equals(acid)&&contains(bases,URACIL))
 			return new Tuple(substitute(bases,ACID_SUBSTITUTIONS.get(acid)));
 		else return this;
 	}
@@ -97,7 +97,7 @@ public class Tuple implements Comparable<Tuple> {
 	
 	public static Acid tupleAcid(Tuple tuple) {
 		boolean thymine = tuple.hasBase(THYMINE);
-		if(thymine&&tuple.hasBase(URACILE))
+		if(thymine&&tuple.hasBase(URACIL))
 		 	return null; //contains both acids!
 		else if(thymine) return DNA;
 		else return RNA;
@@ -109,7 +109,7 @@ public class Tuple implements Comparable<Tuple> {
 				if(acid==null) acid = DNA;
 				else if(!DNA.equals(acid))
 					return null; //contains both acids!
-			if(tuple.hasBase(URACILE))
+			if(tuple.hasBase(URACIL))
 				if(acid==null) acid = RNA;
 				else if(!RNA.equals(acid))
 					return null; //contains both acids!

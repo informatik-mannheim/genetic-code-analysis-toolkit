@@ -4,7 +4,7 @@ import static de.hsma.gentool.nucleic.Acid.*;
 import java.util.Arrays;
 
 public enum Base {
-	ADENINE('A'), GUANINE('G'), CYTOSINE('C'), THYMINE('T'), URACILE('U'), HYPOXANTHINE('H'), XANTHINE('X');
+	ADENINE('A'), GUANINE('G'), CYTOSINE('C'), THYMINE('T'), URACIL('U'), HYPOXANTHINE('H'), XANTHINE('X');
 	
 	public final char letter;
 	
@@ -21,7 +21,7 @@ public enum Base {
 		case 'G': return GUANINE;
 		case 'C': return CYTOSINE;
 		case 'T': return THYMINE;
-		case 'U': return URACILE;
+		case 'U': return URACIL;
 		case 'H': return HYPOXANTHINE;
 		case 'X': return XANTHINE;
 		default: throw new IllegalArgumentException("'"+letter+"' is not a valid base."); }

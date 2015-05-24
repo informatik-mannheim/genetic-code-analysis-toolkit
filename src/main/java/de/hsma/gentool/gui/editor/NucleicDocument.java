@@ -26,8 +26,8 @@ public class NucleicDocument extends DefaultStyledDocument {
 			return;
 		
 		// simplify input if only DNA or RNA input is chosen
-		     if(DNA.equals(defaultAcid)) text = text.replace(Base.URACILE.letter, Base.THYMINE.letter);
-		else if(RNA.equals(defaultAcid)) text = text.replace(Base.THYMINE.letter, Base.URACILE.letter);
+		     if(DNA.equals(defaultAcid)) text = text.replace(Base.URACIL.letter, Base.THYMINE.letter);
+		else if(RNA.equals(defaultAcid)) text = text.replace(Base.THYMINE.letter, Base.URACIL.letter);
 		
 		// determine position and white spaces in document / text
 		boolean startOfText = offset==0, endOfText = offset==getLength(), nearEndOfText = endOfText||offset+1==getLength(),

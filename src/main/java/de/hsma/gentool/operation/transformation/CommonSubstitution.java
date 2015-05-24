@@ -29,124 +29,124 @@ public class CommonSubstitution implements Transformation {
 			ADENINE,ADENINE,
 			CYTOSINE,CYTOSINE,
 			GUANINE,GUANINE,
-			URACILE,URACILE));
+			URACIL,URACIL));
 		substitutions.put("c",ImmutableMap.of(
-			ADENINE,URACILE,
+			ADENINE,URACIL,
 			CYTOSINE,GUANINE,
 			GUANINE,CYTOSINE,
-			URACILE,ADENINE));
+			URACIL,ADENINE));
 		substitutions.put("p",ImmutableMap.of(
 			ADENINE,GUANINE,
-			CYTOSINE,URACILE,
+			CYTOSINE,URACIL,
 			GUANINE,ADENINE,
-			URACILE,CYTOSINE));
+			URACIL,CYTOSINE));
 		substitutions.put("r",ImmutableMap.of(
 			ADENINE,CYTOSINE,
 			CYTOSINE,ADENINE,
-			GUANINE,URACILE,
-			URACILE,GUANINE));
+			GUANINE,URACIL,
+			URACIL,GUANINE));
 		substitutions.put("\u03c0CG",ImmutableMap.of(
 			ADENINE,ADENINE,
 			CYTOSINE,GUANINE,
 			GUANINE,CYTOSINE,
-			URACILE,URACILE));
+			URACIL,URACIL));
 		substitutions.put("\u03c0AU",ImmutableMap.of(
-			ADENINE,URACILE,
+			ADENINE,URACIL,
 			CYTOSINE,CYTOSINE,
 			GUANINE,GUANINE,
-			URACILE,ADENINE));
+			URACIL,ADENINE));
 		substitutions.put("\u03c0ACUG",ImmutableMap.of(
 			ADENINE,CYTOSINE,
-			CYTOSINE,URACILE,
+			CYTOSINE,URACIL,
 			GUANINE,ADENINE,
-			URACILE,GUANINE));
+			URACIL,GUANINE));
 		substitutions.put("\u03c0AGUC",ImmutableMap.of(
 			ADENINE,GUANINE,
 			CYTOSINE,ADENINE,
-			GUANINE,URACILE,
-			URACILE,CYTOSINE));
+			GUANINE,URACIL,
+			URACIL,CYTOSINE));
 			
 		/* normal substitutions */
 		substitutions.put("\u03c0AC",ImmutableMap.of(
 			ADENINE,CYTOSINE,
 			CYTOSINE,ADENINE,
 			GUANINE,GUANINE,
-			URACILE,URACILE));
+			URACIL,URACIL));
 		substitutions.put("\u03c0AG",ImmutableMap.of(
 			ADENINE,GUANINE,
 			CYTOSINE,CYTOSINE,
 			GUANINE,ADENINE,
-			URACILE,URACILE));
+			URACIL,URACIL));
 		substitutions.put("\u03c0UG",ImmutableMap.of(
 			ADENINE,ADENINE,
 			CYTOSINE,CYTOSINE,
-			GUANINE,URACILE,
-			URACILE,GUANINE));
+			GUANINE,URACIL,
+			URACIL,GUANINE));
 		substitutions.put("\u03c0UC",ImmutableMap.of(
 			ADENINE,ADENINE,
-			CYTOSINE,URACILE,
+			CYTOSINE,URACIL,
 			GUANINE,GUANINE,
-			URACILE,CYTOSINE));
+			URACIL,CYTOSINE));
 		substitutions.put("\u03c0AUCG",ImmutableMap.of(
-			ADENINE,URACILE,
+			ADENINE,URACIL,
 			CYTOSINE,GUANINE,
 			GUANINE,ADENINE,
-			URACILE,CYTOSINE));
+			URACIL,CYTOSINE));
 		substitutions.put("\u03c0AUGC",ImmutableMap.of(
-			ADENINE,URACILE,
+			ADENINE,URACIL,
 			CYTOSINE,ADENINE,
 			GUANINE,CYTOSINE,
-			URACILE,GUANINE));
+			URACIL,GUANINE));
 		substitutions.put("\u03c0UACG",ImmutableMap.of(
 			ADENINE,CYTOSINE,
 			CYTOSINE,GUANINE,
-			GUANINE,URACILE,
-			URACILE,ADENINE));
+			GUANINE,URACIL,
+			URACIL,ADENINE));
 		substitutions.put("\u03c0UAGC",ImmutableMap.of(
 			ADENINE,GUANINE,
-			CYTOSINE,URACILE,
+			CYTOSINE,URACIL,
 			GUANINE,CYTOSINE,
-			URACILE,ADENINE));
+			URACIL,ADENINE));
 		substitutions.put("\u03c0AUC",ImmutableMap.of(
-			ADENINE,URACILE,
+			ADENINE,URACIL,
 			CYTOSINE,ADENINE,
 			GUANINE,GUANINE,
-			URACILE,CYTOSINE));
+			URACIL,CYTOSINE));
 		substitutions.put("\u03c0UAC",ImmutableMap.of(
 			ADENINE,CYTOSINE,
-			CYTOSINE,URACILE,
+			CYTOSINE,URACIL,
 			GUANINE,GUANINE,
-			URACILE,ADENINE));
+			URACIL,ADENINE));
 		substitutions.put("\u03c0AUG",ImmutableMap.of(
-			ADENINE,URACILE,
+			ADENINE,URACIL,
 			CYTOSINE,CYTOSINE,
 			GUANINE,ADENINE,
-			URACILE,GUANINE));
+			URACIL,GUANINE));
 		substitutions.put("\u03c0UAG",ImmutableMap.of(
 			ADENINE,GUANINE,
 			CYTOSINE,CYTOSINE,
-			GUANINE,URACILE,
-			URACILE,ADENINE));
+			GUANINE,URACIL,
+			URACIL,ADENINE));
 		substitutions.put("\u03c0GUC",ImmutableMap.of(
 			ADENINE,ADENINE,
 			CYTOSINE,GUANINE,
-			GUANINE,URACILE,
-			URACILE,CYTOSINE));
+			GUANINE,URACIL,
+			URACIL,CYTOSINE));
 		substitutions.put("\u03c0UGC",ImmutableMap.of(
 			ADENINE,ADENINE,
-			CYTOSINE,URACILE,
+			CYTOSINE,URACIL,
 			GUANINE,CYTOSINE,
-			URACILE,GUANINE));
+			URACIL,GUANINE));
 		substitutions.put("\u03c0AGC",ImmutableMap.of(
 			ADENINE,GUANINE,
 			CYTOSINE,ADENINE,
 			GUANINE,CYTOSINE,
-			URACILE,URACILE));
+			URACIL,URACIL));
 		substitutions.put("\u03c0GAC",ImmutableMap.of(
 			ADENINE,CYTOSINE,
 			CYTOSINE,GUANINE,
 			GUANINE,ADENINE,
-			URACILE,URACILE));
+			URACIL,URACIL));
 		
 		SUBSTITUTIONS = Collections.unmodifiableMap(substitutions);
 		PARAMETERS = new Parameter[] {

@@ -123,6 +123,7 @@ import de.hsma.gentool.gui.editor.NucleicDocument;
 import de.hsma.gentool.gui.editor.NucleicEditor;
 import de.hsma.gentool.gui.editor.NucleicEditor.InputMode;
 import de.hsma.gentool.gui.helper.FoldingPanel;
+import de.hsma.gentool.gui.helper.Guitilities;
 import de.hsma.gentool.gui.helper.PopupMouseAdapter;
 import de.hsma.gentool.gui.input.CodonWheel;
 import de.hsma.gentool.gui.input.Input;
@@ -170,14 +171,7 @@ public class GenTool extends JFrame implements ActionListener {
 		ACTION_ABOUT = "about";
 	
 	private static final List<GenTool> TOOLS = new ArrayList<>();
-	private static final GenBDA BDA;
-	private static final GenBatch BATCH;
-	static {
-		UIManager.put("FileChooser.readOnly", Boolean.TRUE);
-		try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); }
-		catch(Exception e) { e.printStackTrace(); };
-		BDA = new GenBDA(); BATCH = new GenBatch();
-	}
+	private static GenBDA bda; private static GenBatch batch;
 	
 	protected final ListeningExecutorService service = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
 	protected final List<ListenableFuture<Collection<Tuple>>> futures = Collections.synchronizedList(new LinkedList<>());
@@ -216,8 +210,8 @@ public class GenTool extends JFrame implements ActionListener {
 				service.shutdownNow();
 				TOOLS.remove(GenTool.this);
 				if(TOOLS.isEmpty()) {
-					if(BATCH!=null)
-						BATCH.dispose();
+					if(batch!=null)
+						batch.dispose();
 				}
 			}
 		});
@@ -508,8 +502,7 @@ public class GenTool extends JFrame implements ActionListener {
 		container.add(panel);
 	}
 	public void addBatchOperation(Class<? extends Operation> operation,Object... values) {
-		BATCH.addOperation(operation,values);
-		showBatch();
+		showBatch(); batch.addOperation(operation,values);		
 	}
 	
 	@Override public void actionPerformed(ActionEvent event) {
@@ -832,21 +825,22 @@ public class GenTool extends JFrame implements ActionListener {
 	}
 	
 	public void showBDA() {
-		if(!BDA.isVisible()) {
-			BDA.setLocationRelativeTo(GenTool.this);
-			BDA.setVisible(true);
-		} else BDA.requestFocus();
+		if(bda==null) bda = new GenBDA();
+		if(!bda.isVisible()) {
+			bda.setLocationRelativeTo(GenTool.this);
+			bda.setVisible(true);
+		} else bda.requestFocus();
 	}
 	
 	public void showBatch() {
-		if(!BATCH.isVisible()) {
-			BATCH.setLocationRelativeTo(GenTool.this);
-			BATCH.setVisible(true);
-		} else BATCH.requestFocus();
+		if(batch==null) batch = new GenBatch();
+		if(!batch.isVisible()) {
+			batch.setLocationRelativeTo(GenTool.this);
+			batch.setVisible(true);
+		} else batch.requestFocus();
 	}
 	public void addToBatch() {
-		BATCH.addSequence(editor.getTuples());
-		showBatch();
+		showBatch(); batch.addSequence(editor.getTuples());
 	}
 	
 	public void showPreferences() {
@@ -1508,7 +1502,8 @@ public class GenTool extends JFrame implements ActionListener {
     }
 	}
 
-	public static void main(final String[] args) throws ParseException {		
+	public static void main(final String[] args) throws ParseException {
+		Guitilities.prepareLookAndFeel();
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override public void run() {
 				final GenTool tool = new GenTool();

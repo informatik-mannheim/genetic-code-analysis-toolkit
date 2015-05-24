@@ -28,7 +28,7 @@ public abstract class DefaultInput extends JPanel implements Input, NucleicListe
 	
 	protected static final Color USED_COLOR = new Color(70,100,255), DUPLICATE_COLOR = new Color(255,70,10);
 	protected static final Map<Base,Color> BASE_COLORS = ImmutableMap.of(
-		URACILE,new Color(143,199,150), THYMINE,new Color(143,199,150), CYTOSINE,new Color(255,245,154),
+		URACIL,new Color(143,199,150), THYMINE,new Color(143,199,150), CYTOSINE,new Color(255,245,154),
 		ADENINE,new Color(241,159,193), GUANINE,new Color(131,208,240));
 
 	protected NucleicEditor editor;

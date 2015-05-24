@@ -40,6 +40,7 @@ import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
+import javax.swing.GroupLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComponent;
@@ -386,9 +387,16 @@ public class Guitilities {
   	else return null;
 	}
 
-  public static <ContainerType extends Container> ContainerType setBoxLayout(ContainerType container, int align) {
-		BoxLayout box = new BoxLayout(container, align);
-		container.setLayout(box);
+  public static GroupLayout setGroupLayout(Container container) {
+		GroupLayout layout = new GroupLayout(container);
+		layout.setAutoCreateGaps(true);
+		layout.setAutoCreateContainerGaps(true);
+		container.setLayout(layout);
+		return layout;
+  }
+  public static <T extends Container> T setBoxLayout(T container, int align) {
+		BoxLayout layout = new BoxLayout(container, align);
+		container.setLayout(layout);
 		return container;
   }
   
@@ -714,5 +722,12 @@ public class Guitilities {
 		SpringLayout.Constraints pCons = layout.getConstraints(parent);
 		pCons.setConstraint(SpringLayout.SOUTH,y);
 		pCons.setConstraint(SpringLayout.EAST,x);
+	}
+	
+	public static void prepareLookAndFeel() {
+		UIManager.put("FileChooser.readOnly", Boolean.TRUE);
+		try {
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		}	catch(Exception e) { e.printStackTrace(); };
 	}
 }

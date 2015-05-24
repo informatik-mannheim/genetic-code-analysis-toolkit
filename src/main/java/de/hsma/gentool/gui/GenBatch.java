@@ -19,6 +19,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -277,7 +279,6 @@ public class GenBatch extends JFrame implements ActionListener, ListDataListener
 		case ACTION_SEQUENCES_REMOVE: removeSequences(); break;
 		case ACTION_SEQUENCES_CLEAR: clearSequences(); break;
 		case ACTION_EXECUTE: executeBatch(); break;
-		case ACTION_PREFERENCES: showPreferences(); break;
 		case ACTION_ABOUT: showAbout(); break; 
 		default: System.err.println(String.format("Action %s not implemented.", action)); }
 	}
@@ -399,14 +400,6 @@ public class GenBatch extends JFrame implements ActionListener, ListDataListener
 		}
 	}
 	
-	public void showPreferences() {
-		final JDialog preferences = new JDialog(this, "Preferences", true);
-		
-		preferences.pack();
-		preferences.setResizable(false);
-		preferences.setLocationRelativeTo(this);
-		preferences.setVisible(true);
-	}
 	public void showAbout() { GenTool.showAbout(this); }
 
 	protected void updateStatus() {
@@ -473,10 +466,7 @@ public class GenBatch extends JFrame implements ActionListener, ListDataListener
 		private JButton add,edit,up,down,remove,clear;
 		
 		public ActionPanel() {
-			GroupLayout layout = new GroupLayout(this);
-			setLayout(layout);
-			layout.setAutoCreateGaps(true);
-			layout.setAutoCreateContainerGaps(true);
+			GroupLayout layout = Guitilities.setGroupLayout(this);
 			
 			(actions = new DefaultListModel<>()).addListDataListener(new ListDataListener() {
 				@Override public void intervalRemoved(ListDataEvent event) { contentsChanged(event); }
@@ -489,6 +479,12 @@ public class GenBatch extends JFrame implements ActionListener, ListDataListener
 			(list = new JList<>(actions)).addListSelectionListener(new ListSelectionListener() {
 				@Override public void valueChanged(ListSelectionEvent event) {
 					enableActionButtons();
+				}
+			});
+			list.addMouseListener(new MouseAdapter() {
+				@Override public void mouseClicked(MouseEvent event) {
+					if(event.getClickCount()==2&&list.locationToIndex(event.getPoint())!=-1)						
+						editAction();
 				}
 			});
 			list.addKeyListener(new KeyAdapter() {
@@ -558,7 +554,7 @@ public class GenBatch extends JFrame implements ActionListener, ListDataListener
 			JDialog dialog = new JDialog(GenBatch.this,true);
 			
 			dialog.setTitle("Add Operation");
-			dialog.setLocationRelativeTo(GenBatch.this);
+			dialog.setLocationRelativeTo(add);
 			dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 			
 			GroupLayout layout = new GroupLayout(dialog.getContentPane());
@@ -624,11 +620,12 @@ public class GenBatch extends JFrame implements ActionListener, ListDataListener
 			JDialog dialog = new JDialog(GenBatch.this,true);
 			
 			dialog.setTitle("Edit Operation");
-			dialog.setLocationRelativeTo(GenBatch.this);
+			dialog.setLocationRelativeTo(edit);
 			dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 			
-			final Action action = list.getSelectedValue();				
+			final Action action = list.getSelectedValue(); if(action==null) return;
 			final Parameter[] parameters = getParameters(action.getOperation());
+			if(parameters==null||parameters.length==0) return;
 			final Map<Parameter,Option.Component> components = new HashMap<>();
 			
 			JPanel panel = new JPanel(new SpringLayout());
@@ -687,8 +684,8 @@ public class GenBatch extends JFrame implements ActionListener, ListDataListener
 			int index = list.getSelectedIndex();
 			if(index!=-1) {
 				actions.remove(index);
-				if(index<=actions.size())
-					list.setSelectedIndex(index-1);
+				if(!actions.isEmpty()&&index<=actions.size())
+					list.setSelectedIndex(index!=0?index-1:0);
 			}
 		}
 		public void clearActions() { actions.clear(); }
