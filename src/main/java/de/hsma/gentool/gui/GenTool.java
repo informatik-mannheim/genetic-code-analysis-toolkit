@@ -1496,15 +1496,22 @@ public class GenTool extends JFrame implements ActionListener {
 		Guitilities.prepareLookAndFeel();
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override public void run() {
-				final GenTool tool = new GenTool();
 				if(args.length>=1)
 					switch(args[0]) {
 					case "-open":
-						if(args.length>=2)
-							tool.openFile(new File(args[1]));
-						break;
+						if(args.length>=2) {
+							if(args[1].endsWith(".gen")) {
+								GenTool tool = new GenTool();
+								tool.openFile(new File(args[1]));
+								tool.setVisible(true);
+							}	else if(args[1].endsWith(".bda")) {
+								GenBDA bda = new GenBDA();
+								bda.openFile(new File(args[1]));
+								bda.setVisible(true);
+							} else System.out.println(String.format("Unknown file \"%s\"", args[1]));
+						}	break;
 					default: System.out.println(String.format("Unknown argument \"%s\"", args[0])); }
-				tool.setVisible(true);
+				else new GenTool().setVisible(true);
 			}
 		});
 	}
