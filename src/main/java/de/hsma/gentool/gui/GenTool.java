@@ -84,6 +84,7 @@ import javax.swing.ListCellRenderer;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
+import javax.swing.WindowConstants;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
@@ -1506,6 +1507,7 @@ public class GenTool extends JFrame implements ActionListener {
 								tool.setVisible(true);
 							}	else if(args[1].endsWith(".bda")) {
 								GenBDA bda = new GenBDA();
+								bda.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 								bda.openFile(new File(args[1]));
 								bda.setVisible(true);
 							} else System.out.println(String.format("Unknown file \"%s\"", args[1]));
