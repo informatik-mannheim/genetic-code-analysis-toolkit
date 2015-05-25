@@ -61,18 +61,11 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.table.DefaultTableCellRenderer;
-import net.gumbix.geneticcode.dich.Adenine$;
 import net.gumbix.geneticcode.dich.AntiCodonBDA$;
 import net.gumbix.geneticcode.dich.BinaryDichotomicAlgorithm;
-import net.gumbix.geneticcode.dich.Compound;
-import net.gumbix.geneticcode.dich.Cytosine$;
-import net.gumbix.geneticcode.dich.Guanine$;
 import net.gumbix.geneticcode.dich.ParityBDA$;
 import net.gumbix.geneticcode.dich.RumerBDA$;
-import net.gumbix.geneticcode.dich.Uracil$;
-import net.gumbix.geneticcode.dich.ui.JGeneticCodeTable;
 import org.apache.commons.math3.util.Pair;
-import scala.collection.mutable.StringBuilder;
 import de.hsma.gentool.Utilities.RememberFileChooser;
 import de.hsma.gentool.gui.helper.Guitilities;
 import de.hsma.gentool.gui.helper.ListTableModel;
@@ -102,7 +95,7 @@ public class GenBDA extends JFrame implements ActionListener, ListDataListener, 
 	
 	private BinaryDichotomicAlgorithmPanel bdaPanel;
 	private JPanel gcTablePanel;
-	private JGeneticCodeTable gcTable;
+	private net.gumbix.geneticcode.dich.ui.JGeneticCodeTable gcTable;
 	
 	public GenBDA() {		
 		super("Genetic Code BDA Editor (GenBDA)");
@@ -685,8 +678,12 @@ public class GenBDA extends JFrame implements ActionListener, ListDataListener, 
 			try { writeTo(writer, bdas); } catch(IOException e) { /* nothing to do here */ }
 			return writer.toString();
 		}
-		public static Collection<BinaryDichotomicAlgorithm> fromString(String string) throws IOException {			
+		public static Collection<BinaryDichotomicAlgorithm> parseString(String string) throws IOException {			
 			return readFrom(new StringReader(string));
+		}
+		
+		public static void writeFile(File file,Collection<BinaryDichotomicAlgorithm> bdas) throws IOException {
+			try(FileWriter writer=new FileWriter(file)) { writeTo(writer,bdas); }
 		}
 		public static void writeTo(Writer writer,Collection<BinaryDichotomicAlgorithm> bdas) throws IOException {
 			for(BinaryDichotomicAlgorithm bda:bdas) {
@@ -694,6 +691,10 @@ public class GenBDA extends JFrame implements ActionListener, ListDataListener, 
 				writer.write(String.format("(%d,%d) (%C,%C) {%C,%C}\n",
 					bda.i1()+1,bda.i2()+1,q1.getFirst().letter,q1.getSecond().letter,q2.getFirst().letter,q2.getSecond().letter));
 			}
+		}
+		
+		public static List<BinaryDichotomicAlgorithm> readFile(File file) throws IOException {
+			try(FileReader reader=new FileReader(file)) { return readFrom(reader); }
 		}
 		public static List<BinaryDichotomicAlgorithm> readFrom(Reader reader) throws IOException {
 			List<BinaryDichotomicAlgorithm> bdas = new ArrayList<>();
@@ -723,40 +724,41 @@ public class GenBDA extends JFrame implements ActionListener, ListDataListener, 
 					|| AntiCodonBDA$.MODULE$.equals(bda);
 		}
 		
-		public static Pair<Base,Base> toPair(scala.Tuple2<Compound,Compound> tuple) {
+		public static Pair<Base,Base> toPair(scala.Tuple2<net.gumbix.geneticcode.dich.Compound,net.gumbix.geneticcode.dich.Compound> tuple) {
 			return new Pair<Base,Base>(toBase(tuple._1),toBase(tuple._2));
 		}
-		public static Pair<Base,Base> toPair(scala.collection.Set<Compound> set) {
+		public static Pair<Base,Base> toPair(scala.collection.Set<net.gumbix.geneticcode.dich.Compound> set) {
 			scala.collection.Iterator<net.gumbix.geneticcode.dich.Compound> compounds =
 				set.iterator();
 			return new Pair<Base,Base>(toBase(compounds.next()),toBase(compounds.next()));
 		}
-		public static scala.Tuple2<Compound,Compound> toTuple(Pair<Base,Base> bases) {
-			return new scala.Tuple2<Compound,Compound>(toCompound(bases.getFirst()),toCompound(bases.getSecond()));
+		public static scala.Tuple2<net.gumbix.geneticcode.dich.Compound,net.gumbix.geneticcode.dich.Compound> toTuple(Pair<Base,Base> bases) {
+			return new scala.Tuple2<net.gumbix.geneticcode.dich.Compound,net.gumbix.geneticcode.dich.Compound>(
+					toCompound(bases.getFirst()),toCompound(bases.getSecond()));
 		}
-		public static scala.collection.immutable.Set<Compound> toSet(Pair<Base,Base> bases) {
+		public static scala.collection.immutable.Set<net.gumbix.geneticcode.dich.Compound> toSet(Pair<Base,Base> bases) {
 			scala.collection.immutable.HashSet<net.gumbix.geneticcode.dich.Compound> set =
 		  		new scala.collection.immutable.HashSet<>();
 	  	return set.$plus(toCompound(bases.getFirst())).$plus(toCompound(bases.getSecond()));
 		}
 		
-		public static Base toBase(Compound compound) {
-			if(compound.equals(Adenine$.MODULE$))
+		public static Base toBase(net.gumbix.geneticcode.dich.Compound compound) {
+			if(compound.equals(net.gumbix.geneticcode.dich.Adenine$.MODULE$))
 				return Base.ADENINE;
-			else if(compound.equals(Uracil$.MODULE$))
+			else if(compound.equals(net.gumbix.geneticcode.dich.Uracil$.MODULE$))
 				return Base.URACIL;
-			else if(compound.equals(Cytosine$.MODULE$))
+			else if(compound.equals(net.gumbix.geneticcode.dich.Cytosine$.MODULE$))
 				return Base.CYTOSINE;
-			else if(compound.equals(Guanine$.MODULE$))
+			else if(compound.equals(net.gumbix.geneticcode.dich.Guanine$.MODULE$))
 				return Base.GUANINE;
 			else return null;
 		}
-		public static Compound toCompound(Base base) {
+		public static net.gumbix.geneticcode.dich.Compound toCompound(Base base) {
 			switch(base) {
-			case ADENINE: return Adenine$.MODULE$;
-			case URACIL: case THYMINE: return Uracil$.MODULE$;
-			case CYTOSINE: return Cytosine$.MODULE$;
-			case GUANINE: return Guanine$.MODULE$;
+			case ADENINE: return net.gumbix.geneticcode.dich.Adenine$.MODULE$;
+			case URACIL: case THYMINE: return net.gumbix.geneticcode.dich.Uracil$.MODULE$;
+			case CYTOSINE: return net.gumbix.geneticcode.dich.Cytosine$.MODULE$;
+			case GUANINE: return net.gumbix.geneticcode.dich.Guanine$.MODULE$;
 			default: return null; }
 		}
 	}

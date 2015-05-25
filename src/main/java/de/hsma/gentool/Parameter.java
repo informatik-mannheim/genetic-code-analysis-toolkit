@@ -16,6 +16,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.swing.AbstractAction;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListCellRenderer;
@@ -30,6 +32,7 @@ import javax.swing.JSpinner;
 import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeListener;
+import javax.swing.filechooser.FileFilter;
 import javax.swing.text.NumberFormatter;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
@@ -81,15 +84,16 @@ public class Parameter {
 	public final Object[] options;
 	public final String[] labels;
 	
+	public final FileFilter filter;
+	
 	public Parameter(String key, String label, Type type) {
 		this(key, label, type, type.initialValue());
 	}
 	public Parameter(String key, String label, Type type, Object value) {
-		this.key = key; this.label = label; this.type = type; this.options = this.labels = null;
+		this.key = key; this.label = label; this.type = type; this.options = this.labels = null; this.filter = null;
 		this.value = type.checkType(value)?value:type.initialValue();
 		this.minimum = Short.MIN_VALUE; this.maximum = Short.MAX_VALUE; this.step = 1;
 	}
-	
 	
 	public Parameter(String key, String label, String value) { this(key,label,Type.TEXT,value); }
 	
@@ -97,7 +101,7 @@ public class Parameter {
 	public Parameter(String key, String label, int minimum, int maximum) { this(key,label,minimum,minimum,maximum); }
 	public Parameter(String key, String label, int minimum, int value, int maximum) { this(key,label,minimum,value,maximum,1); }
 	public Parameter(String key, String label, int minimum, int value, int maximum, int step) {
-		this.key = key; this.label = label; this.type = Type.NUMBER; this.options = this.labels = null;
+		this.key = key; this.label = label; this.type = Type.NUMBER; this.options = this.labels = null; this.filter = null;
 		this.value = value; this.minimum = minimum; this.maximum = maximum; this.step = step;
 	}
 	
@@ -105,7 +109,7 @@ public class Parameter {
 	public Parameter(String key, String label, double minimum, double maximum) { this(key,label,minimum,minimum,maximum); }
 	public Parameter(String key, String label, double minimum, double value, double maximum) { this(key,label,minimum,value,maximum,.1); }
 	public Parameter(String key, String label, double minimum, double value, double maximum, double step) {
-		this.key = key; this.label = label; this.type = Type.DECIMAL; this.options = this.labels = null;
+		this.key = key; this.label = label; this.type = Type.DECIMAL; this.options = this.labels = null; this.filter = null;
 		this.value = value; this.minimum = minimum; this.maximum = maximum; this.step = step;		
 	}
 	
@@ -119,11 +123,15 @@ public class Parameter {
 	}
 	public Parameter(String key, String label, Object[] options, String... labels) { this(key,label,options!=null&&options.length>0?options[0]:null,options,labels); }
 	public Parameter(String key, String label, Object value, Object[] options, String... labels) {
-		this.key = key; this.label = label; this.type = Type.LIST; this.options = options; this.labels = labels;
+		this.key = key; this.label = label; this.type = Type.LIST; this.options = options; this.labels = labels; this.filter = null;
 		this.value = value; this.minimum = this.maximum = this.step = null;
 	}
 	
 	public Parameter(String key, String label, File value) { this(key,label,Type.FILE,value); }
+	public Parameter(String key, String label, FileFilter filter) {
+		this.key = key; this.label = label; this.type = Type.FILE; this.options = this.labels = null; this.filter = filter;
+		this.value = null; this.minimum = this.maximum = this.step = null;
+	}
 	
 	public class Component extends JComponent {
 		private static final long serialVersionUID = 1l;
@@ -169,7 +177,7 @@ public class Parameter {
 				((JComboBox<?>)component).setSelectedItem(value);
 				break;
 			case FILE:
-				((FileComponent)(component = new FileComponent())).setFile((File)value);
+				((FileComponent)(component = new FileComponent(filter))).setFile((File)value);
 				break;
 			} add(component, BorderLayout.CENTER);
 		}
@@ -237,7 +245,7 @@ public class Parameter {
 		return parameters;
 	}
 	private static Parameter getParameter(Annotation annotation) {
-		String value, values[];
+		String value, values[]; Matcher matcher;
 		if((value=annotation.value()).isEmpty())
 			return new Parameter(annotation.key(),annotation.label(),annotation.type());
 		else switch(annotation.type()) {
@@ -267,7 +275,12 @@ public class Parameter {
 			case LIST:
 				return new Parameter(annotation.key(),annotation.label(),value.split(","));
 			case FILE:
-				return new Parameter(annotation.key(),annotation.label(),new File(value));
+				if((matcher=Pattern.compile(".* \\(\\*\\.(\\w+)\\)").matcher(value)).matches())
+					return new Parameter(annotation.key(),annotation.label(),new FileFilter() {
+						@Override	public String getDescription() { return value; }
+						@Override	public boolean accept(File file) { return file.isDirectory()||file.getName().toLowerCase().endsWith('.'+matcher.group(1)); }
+					});
+				else return new Parameter(annotation.key(),annotation.label(),new File(value));
 			default: return null;
 		}
 	}
@@ -320,7 +333,10 @@ public class Parameter {
 				}
 			}));
 		}
-
+		public FileComponent(FileFilter filter) {
+			this(); chooser.setFileFilter(filter);
+		}
+		
 		public void addActionListener(ActionListener listener) { chooser.addActionListener(listener); }
 		@SuppressWarnings("unused") public void removeActionListener(ActionListener listener) { chooser.removeActionListener(listener); }
 		@SuppressWarnings("unused") public ActionListener[] getActionListeners() { return chooser.getActionListeners(); }

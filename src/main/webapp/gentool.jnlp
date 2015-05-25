@@ -7,8 +7,9 @@
     <description>Genetic Code Tool (GenTool)</description>
     <icon href="images/icon.png"/>
     <icon kind="splash" href="images/splash.png"/>
-    <offline-allowed/> 
-    <association mime-type="text/genetic_code" extensions="gen"/> 
+    <offline-allowed/>
+    <association mime-type="text/gentool" extensions="gen"/> 
+    <association mime-type="text/bda" extensions="bda"/>
     <shortcut online="false">
       <desktop/>
       <menu submenu="Genetic Code Tool (GenTool)"/>
