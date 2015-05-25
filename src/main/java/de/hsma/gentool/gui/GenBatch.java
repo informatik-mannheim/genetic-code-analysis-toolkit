@@ -226,7 +226,8 @@ public class GenBatch extends JFrame implements ActionListener, ListDataListener
 		sequenceList.getModel().addListDataListener(this);
 		sequenceList.addListSelectionListener(this);
 		
-		add(createSplitPane(JSplitPane.HORIZONTAL_SPLIT,false,true,360,0.195,new JScrollPane(actionPanel=new ActionPanel()),scroll), BorderLayout.CENTER);
+		add(createSplitPane(JSplitPane.HORIZONTAL_SPLIT,false,true,360,0.195,
+			new JScrollPane(actionPanel=new ActionPanel()),scroll), BorderLayout.CENTER);
 		add(bottom = new JPanel(new FlowLayout(FlowLayout.RIGHT)),BorderLayout.SOUTH);
 		actionPanel.list.getModel().addListDataListener(this);
 		actionPanel.list.addListSelectionListener(this);
@@ -269,7 +270,7 @@ public class GenBatch extends JFrame implements ActionListener, ListDataListener
 		switch(action=event.getActionCommand()) {
 		case ACTION_IMPORT: importSequences(); break;
 		case ACTION_EXPORT: exportSequences(); break;
-		case ACTION_CLOSE: hideBatch(); break;
+		case ACTION_CLOSE: hideDialog(); break;
 		case ACTION_ACTION_ADD: addAction(); break;
 		case ACTION_ACTION_EDIT: editAction(); break;
 		case ACTION_ACTION_REMOVE: removeAction(); break;
@@ -291,8 +292,6 @@ public class GenBatch extends JFrame implements ActionListener, ListDataListener
 	@Override public void valueChanged(ListSelectionEvent event) {
 		enableActionMenus(); enableSequenceMenus();
 	}
-	
-	public void hideBatch() { setVisible(false); }
 
 	public void addAction() { actionPanel.addAction(); }
 	public void editAction() { actionPanel.editAction(); }
@@ -401,7 +400,8 @@ public class GenBatch extends JFrame implements ActionListener, ListDataListener
 	}
 	
 	public void showAbout() { GenTool.showAbout(this); }
-
+	public void hideDialog() { setVisible(false); }
+	
 	protected void updateStatus() {
 		invokeAppropriate(new Runnable() {
 			@Override public void run() {
@@ -550,6 +550,8 @@ public class GenBatch extends JFrame implements ActionListener, ListDataListener
 			);
 		}
 		
+		public List<Action> getActions() { return Collections.list(actions.elements()); }
+		
 		public void addAction() {
 			JDialog dialog = new JDialog(GenBatch.this,true);
 			
@@ -616,6 +618,19 @@ public class GenBatch extends JFrame implements ActionListener, ListDataListener
 			dialog.setResizable(false);
 			dialog.setVisible(true);
 		}
+		public void addAction(Action action) {
+			actions.addElement(action);
+			list.setSelectedIndex(actions.size()-1);
+			list.requestFocus();
+		}
+		
+		public void addOperation(Class<? extends Operation> operation) {
+			addAction(new Action(operation));
+		}
+		public void addOperation(Class<? extends Operation> operation,Object... values) {
+			addAction(new Action(operation,values));
+		}
+
 		public void editAction() {
 			JDialog dialog = new JDialog(GenBatch.this,true);
 			
@@ -689,19 +704,6 @@ public class GenBatch extends JFrame implements ActionListener, ListDataListener
 			}
 		}
 		public void clearActions() { actions.clear(); }
-		
-		public void addOperation(Class<? extends Operation> operation) {
-			addAction(new Action(operation));
-		}
-		public void addOperation(Class<? extends Operation> operation,Object... values) {
-			addAction(new Action(operation,values));
-		}
-		public List<Action> getActions() { return Collections.list(actions.elements()); }
-		protected void addAction(Action action) {
-			actions.addElement(action);
-			list.setSelectedIndex(actions.size()-1);
-			list.requestFocus();
-		}
 		
 		private void enableActionButtons() {
 			int size = actions.getSize(),

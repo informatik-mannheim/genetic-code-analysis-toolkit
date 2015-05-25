@@ -1,20 +1,36 @@
 package de.hsma.gentool.gui;
 
 import static de.hsma.gentool.Utilities.*;
+import static de.hsma.gentool.gui.GenBDA.Helper.*;
 import static de.hsma.gentool.gui.helper.Guitilities.*;
 import static de.hsma.gentool.nucleic.Acid.*;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.InputEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
@@ -22,15 +38,18 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTable;
+import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
@@ -40,6 +59,7 @@ import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.filechooser.FileFilter;
 import javax.swing.table.DefaultTableCellRenderer;
 import net.gumbix.geneticcode.dich.Adenine$;
 import net.gumbix.geneticcode.dich.AntiCodonBDA$;
@@ -52,6 +72,8 @@ import net.gumbix.geneticcode.dich.RumerBDA$;
 import net.gumbix.geneticcode.dich.Uracil$;
 import net.gumbix.geneticcode.dich.ui.JGeneticCodeTable;
 import org.apache.commons.math3.util.Pair;
+import scala.collection.mutable.StringBuilder;
+import de.hsma.gentool.Utilities.RememberFileChooser;
 import de.hsma.gentool.gui.helper.Guitilities;
 import de.hsma.gentool.gui.helper.ListTableModel;
 import de.hsma.gentool.nucleic.Acid;
@@ -60,10 +82,23 @@ import de.hsma.gentool.nucleic.Base;
 public class GenBDA extends JFrame implements ActionListener, ListDataListener, ListSelectionListener {
 	private static final long serialVersionUID = 1l;
 	
+	private static final String
+		ACTION_OPEN = "open",
+		ACTION_SAVE_AS = "save_as",
+		ACTION_CLOSE = "close",
+		ACTION_BDA_ADD = "actions_add",
+		ACTION_BDA_EDIT = "actions_edit",
+		ACTION_BDA_REMOVE = "actions_remove",
+		ACTION_BDAS_CLEAR = "actions_clear",
+		ACTION_BDA_MOVE_UP = "actions_move_up",
+		ACTION_BDA_MOVE_DOWN = "actions_move_down",
+		ACTION_PREFERENCES = "preferences",
+		ACTION_ABOUT = "about";
+		
 	private JMenuBar menubar;
 	private JMenu[] menu;
-	/*private JPanel toolbars;
-	private JToolBar[] toolbar;*/
+	private JPanel toolbars;
+	private JToolBar[] toolbar;
 	
 	private BinaryDichotomicAlgorithmPanel bdaPanel;
 	private JPanel gcTablePanel;
@@ -85,81 +120,123 @@ public class GenBDA extends JFrame implements ActionListener, ListDataListener, 
 		menubar.add(menu[3] = new JMenu("Help"));
 		setJMenuBar(menubar);
 		
-		/*menu[0].add(createMenuItem("Import...", "table_go.png", KeyStroke.getKeyStroke(KeyEvent.VK_I, InputEvent.CTRL_DOWN_MASK), ACTION_IMPORT, this));
-		menu[0].add(createMenuItem("Export...", "table_save.png", ACTION_EXPORT, this));
-		menu[0].add(createMenuItem("Execute", "table_lightning.png", KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, InputEvent.CTRL_DOWN_MASK), ACTION_EXECUTE, this));
+		menu[0].add(createMenuItem("Open...", "folder-horizontal-open.png", KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_DOWN_MASK), ACTION_OPEN, this));
+		menu[0].add(createMenuItem("Save As...", "disk--arrow.png", KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK), ACTION_SAVE_AS, this));
 		menu[0].add(createSeparator());
 		menu[0].add(createMenuItem("Close", "control-power.png", ACTION_CLOSE, this));
-		menu[1].add(createMenuText("Actions:"));
-		menu[1].add(createMenuItem("Add", KeyStroke.getKeyStroke(KeyEvent.VK_A, InputEvent.CTRL_DOWN_MASK), ACTION_ACTION_ADD, this));
-		menu[1].add(createMenuItem("Edit...", KeyStroke.getKeyStroke(KeyEvent.VK_E, InputEvent.CTRL_DOWN_MASK), ACTION_ACTION_EDIT, this));
-		menu[1].add(createMenuItem("Remove", KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), ACTION_ACTION_REMOVE, this));
-		menu[1].add(createMenuItem("Clear", ACTION_ACTIONS_CLEAR, this));
-		menu[1].add(seperateMenuItem(createMenuItem("Move Up", KeyStroke.getKeyStroke(KeyEvent.VK_UP, InputEvent.CTRL_DOWN_MASK), ACTION_ACTION_MOVE_UP, this)));
-		menu[1].add(createMenuItem("Move Down", KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, InputEvent.CTRL_DOWN_MASK), ACTION_ACTION_MOVE_DOWN, this));
-		menu[1].add(createSeparator());
-		menu[1].add(createMenuText("Sequences:"));
-		menu[1].add(createMenuItem("Remove", "table_row_delete.png", KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), ACTION_SEQUENCES_REMOVE, this));
-		menu[1].add(createMenuItem("Clear", ACTION_SEQUENCES_CLEAR, this));
+		menu[1].add(createMenuText("Binary Dichotomic Algorithm:"));
+		menu[1].add(createMenuItem("Add", KeyStroke.getKeyStroke(KeyEvent.VK_A, InputEvent.CTRL_DOWN_MASK), ACTION_BDA_ADD, this));
+		menu[1].add(createMenuItem("Edit...", KeyStroke.getKeyStroke(KeyEvent.VK_E, InputEvent.CTRL_DOWN_MASK), ACTION_BDA_EDIT, this));
+		menu[1].add(createMenuItem("Remove", KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), ACTION_BDA_REMOVE, this));
+		menu[1].add(createMenuItem("Clear", ACTION_BDAS_CLEAR, this));
+		menu[1].add(seperateMenuItem(createMenuItem("Move Up", KeyStroke.getKeyStroke(KeyEvent.VK_UP, InputEvent.CTRL_DOWN_MASK), ACTION_BDA_MOVE_UP, this)));
+		menu[1].add(createMenuItem("Move Down", KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, InputEvent.CTRL_DOWN_MASK), ACTION_BDA_MOVE_DOWN, this));
 		menu[2].add(createMenuItem("Preferences", ACTION_PREFERENCES, this));
-		menu[3].add(createMenuItem("About GenBatch", "calculator.png", ACTION_ABOUT, this));
-		for(String action:new String[]{ACTION_ACTION_EDIT,ACTION_ACTION_REMOVE,ACTION_ACTIONS_CLEAR,ACTION_ACTION_MOVE_UP,ACTION_ACTION_MOVE_DOWN,ACTION_SEQUENCES_REMOVE,ACTION_SEQUENCES_CLEAR})
+		menu[3].add(createMenuItem("About GenBDA", "application_osx_terminal.png", ACTION_ABOUT, this));
+		for(String action:new String[]{ACTION_BDA_EDIT,ACTION_BDA_REMOVE,ACTION_BDAS_CLEAR,ACTION_BDA_MOVE_UP,ACTION_BDA_MOVE_DOWN})
 			getMenuItem(menubar,action).setEnabled(false);
 		getMenuItem(menubar,ACTION_PREFERENCES).setEnabled(false);
 		registerKeyStroke(getRootPane(),KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0),"remove",new ActionListener() {
 			@Override public void actionPerformed(ActionEvent event) {
-				 if(actionPanel.list.hasFocus()) removeAction();
-				else if(sequenceList.hasFocus()) removeSequences();
+				 if(bdaPanel.table.hasFocus())
+					 removeBinaryDichotomicAlgorithm();
 			}
 		});
 		
-		JButton execute = createToolbarButton("Execute Batch", "table_lightning.png", ACTION_EXECUTE, this);
-		execute.setText(execute.getToolTipText());
-		execute.setFont(execute.getFont().deriveFont(Font.ITALIC));
-		
 		toolbar = new JToolBar[1];
 		toolbar[0] = new JToolBar("File");
-		toolbar[0].add(createToolbarButton("Import", "table_go.png", ACTION_IMPORT, this));
-		toolbar[0].add(createToolbarButton("Export", "table_save.png", ACTION_EXPORT, this));
-		toolbar[0].addSeparator();
-		toolbar[0].add(execute);*/
+		toolbar[0].add(createToolbarButton("Open File", "folder-horizontal-open.png", ACTION_OPEN, this));
+		toolbar[0].add(createToolbarButton("Save As File", "disk--arrow.png", ACTION_SAVE_AS, this));
 		
-		add(createSplitPane(JSplitPane.HORIZONTAL_SPLIT,false,true,360,0.195,new JScrollPane(bdaPanel=new BinaryDichotomicAlgorithmPanel()),new JScrollPane(gcTablePanel=new JPanel())), BorderLayout.CENTER);
+		toolbars = new JPanel(new FlowLayout(FlowLayout.LEADING));
+		for(JToolBar toolbar:toolbar)
+			toolbars.add(toolbar);
+		add(toolbars,BorderLayout.NORTH);
+		
+		add(createSplitPane(JSplitPane.HORIZONTAL_SPLIT,false,true,360,0.195,
+			new JScrollPane(bdaPanel=new BinaryDichotomicAlgorithmPanel()),
+			new JScrollPane(gcTablePanel=new JPanel())), BorderLayout.CENTER);
 		((ListTableModel<?>)bdaPanel.table.getModel()).addListDataListener(this);
 		bdaPanel.table.getSelectionModel().addListSelectionListener(this);
 	}
 	
 	@Override public void actionPerformed(ActionEvent event) {
-		/*String action;
+		String action;
 		switch(action=event.getActionCommand()) {
-		case ACTION_IMPORT: importSequences(); break;
-		case ACTION_EXPORT: exportSequences(); break;
-		case ACTION_CLOSE: hideBatch(); break;
-		case ACTION_ACTION_ADD: addAction(); break;
-		case ACTION_ACTION_EDIT: editAction(); break;
-		case ACTION_ACTION_REMOVE: removeAction(); break;
-		case ACTION_ACTIONS_CLEAR: clearActions(); break;
-		case ACTION_ACTION_MOVE_UP: moveAction(true); break;
-		case ACTION_ACTION_MOVE_DOWN: moveAction(false); break;
-		case ACTION_SEQUENCES_REMOVE: removeSequences(); break;
-		case ACTION_SEQUENCES_CLEAR: clearSequences(); break;
-		case ACTION_EXECUTE: executeBatch(); break;
-		case ACTION_PREFERENCES: showPreferences(); break;
-		case ACTION_ABOUT: showAbout(); break; 
-		default: System.err.println(String.format("Action %s not implemented.", action)); }*/
+		case ACTION_OPEN: openFile(); break;
+		case ACTION_SAVE_AS: saveFileAs(); break;
+		case ACTION_CLOSE: hideDialog(); break;
+		case ACTION_BDA_ADD: addBinaryDichotomicAlgorithm(); break;
+		case ACTION_BDA_EDIT: editBinaryDichotomicAlgorithm(); break;
+		case ACTION_BDA_REMOVE: removeBinaryDichotomicAlgorithm(); break;
+		case ACTION_BDAS_CLEAR: clearBinaryDichotomicAlgorithms(); break;
+		case ACTION_BDA_MOVE_UP: moveBinaryDichotomicAlgorithm(true); break;
+		case ACTION_BDA_MOVE_DOWN: moveBinaryDichotomicAlgorithm(false); break;
+		case ACTION_ABOUT: showAbout(); break;
+		default: System.err.println(String.format("Action %s not implemented.", action)); }
 	}
 	
 	@Override public void intervalRemoved(ListDataEvent event) { contentsChanged(event); }
 	@Override public void intervalAdded(ListDataEvent event) { contentsChanged(event); }
 	@Override public void contentsChanged(ListDataEvent event) {
-		//enableActionMenus(); enableSequenceMenus();
+		enableBinaryDichotomicAlgorithmMenus();
 		revalidateGeneticCodeTable();
 	}
 	@Override public void valueChanged(ListSelectionEvent event) {
-		//enableActionMenus(); enableSequenceMenus();
+		enableBinaryDichotomicAlgorithmMenus();
 	}
 	
-	@SuppressWarnings("unchecked") public void revalidateGeneticCodeTable() {		
+	public boolean openFile() {
+		JFileChooser chooser = new FileChooser();
+		chooser.setDialogTitle("Open");
+		if(chooser.showOpenDialog(this)!=JFileChooser.APPROVE_OPTION)
+			return false;
+		
+		return openFile(chooser.getSelectedFile());
+	}
+	public boolean openFile(File file) {
+		try(FileReader reader=new FileReader(file)) {
+			bdaPanel.setBinaryDichotomicAlgorithms(readFrom(reader));
+			return true;
+		}	catch(IOException e) { return false; }
+	}
+	public boolean saveFileAs() {
+		JFileChooser chooser = new FileChooser();
+		chooser.setDialogTitle("Save As");
+		if(chooser.showSaveDialog(this)==JFileChooser.APPROVE_OPTION)
+			   return saveFile(chooser.getSelectedFile());
+		else return false;
+	}
+	public boolean saveFile(File file) {
+		try(FileWriter writer = new FileWriter(file)) {
+			writeTo(writer,bdaPanel.getBinaryDichotomicAlgorithms());
+			return true;
+		}	catch(IOException e) { return false; }
+	}
+	
+	public void addBinaryDichotomicAlgorithm() { bdaPanel.addBinaryDichotomicAlgorithm(); }
+	public void editBinaryDichotomicAlgorithm() { bdaPanel.editBinaryDichotomicAlgorithm(); }
+	public void removeBinaryDichotomicAlgorithm() { bdaPanel.removeBinaryDichotomicAlgorithm(); }
+	public void clearBinaryDichotomicAlgorithms() { bdaPanel.clearBinaryDichotomicAlgorithms(); }
+	public void moveBinaryDichotomicAlgorithm(boolean up) { bdaPanel.moveBinaryDichotomicAlgorithm(up); }
+	private void enableBinaryDichotomicAlgorithmMenus() {
+		JTable table = bdaPanel.table;
+		javax.swing.table.TableModel bdas = table.getModel();
+		int size = bdas.getRowCount(),
+			index = table.getSelectedRow();
+		boolean selected = index!=-1,
+		  filled = size!=0;
+		getMenuItem(menubar,ACTION_BDA_EDIT).setEnabled(selected&&index<size); //BinaryDichotomicAlgorithm bda = bdas.get(index); !isPredefined(bda);
+		getMenuItem(menubar,ACTION_BDA_MOVE_UP).setEnabled(index>0);
+		getMenuItem(menubar,ACTION_BDA_MOVE_DOWN).setEnabled(selected&&index<size-1);
+		getMenuItem(menubar,ACTION_BDA_REMOVE).setEnabled(selected);
+		getMenuItem(menubar,ACTION_BDAS_CLEAR).setEnabled(filled);
+	}
+	
+	public void showAbout() { GenTool.showAbout(this); }
+	public void hideDialog() { setVisible(false); }
+	
+	@SuppressWarnings("unchecked") private void revalidateGeneticCodeTable() {		
     scala.collection.immutable.List<?> bdas =
     	scala.collection.JavaConversions.collectionAsScalaIterable(bdaPanel.getBinaryDichotomicAlgorithms()).toList();
     
@@ -182,7 +259,7 @@ public class GenBDA extends JFrame implements ActionListener, ListDataListener, 
 	class BinaryDichotomicAlgorithmPanel extends JPanel {
 		private static final long serialVersionUID = 1l;
 		
-		private BinaryDichotomicAlgorithmTableModel bdas;
+		private TableModel bdas;
 		private JTable table;
 		
 		private JButton add,edit,up,down,remove,clear;
@@ -190,7 +267,7 @@ public class GenBDA extends JFrame implements ActionListener, ListDataListener, 
 		public BinaryDichotomicAlgorithmPanel() {
 			GroupLayout layout = setGroupLayout(this);
 			
-			(bdas = new BinaryDichotomicAlgorithmTableModel()).addListDataListener(new ListDataListener() {
+			(bdas = new TableModel()).addListDataListener(new ListDataListener() {
 				@Override public void intervalRemoved(ListDataEvent event) { contentsChanged(event); }
 				@Override public void intervalAdded(ListDataEvent event) { contentsChanged(event); }
 				@Override public void contentsChanged(ListDataEvent event) {
@@ -295,12 +372,12 @@ public class GenBDA extends JFrame implements ActionListener, ListDataListener, 
 			
 			JLabel label = new JLabel("Please select or define a Binary Dichotomic Algorithm:");
 			
-			final BinaryDichotomicAlgorithmEditor editor = new BinaryDichotomicAlgorithmEditor();
+			final EditorPanel editor = new EditorPanel();
 			
 			JButton add = new JButton("Add");
 			add.addActionListener(new ActionListener() {
 				@Override public void actionPerformed(ActionEvent e) {
-					addBinaryDichotomicAlgorithm(editor.getBDA());
+					addBinaryDichotomicAlgorithm(editor.getBinaryDichotomicAlgorithm());
 					dialog.dispose();
 				}
 			});
@@ -350,12 +427,12 @@ public class GenBDA extends JFrame implements ActionListener, ListDataListener, 
 			
 			JLabel label = new JLabel("Please select another or redefine the Binary Dichotomic Algorithm:");
 			
-			final BinaryDichotomicAlgorithmEditor editor = new BinaryDichotomicAlgorithmEditor(getSelectedBinaryDichotomicAlgorithm());
+			final EditorPanel editor = new EditorPanel(getSelectedBinaryDichotomicAlgorithm());
 			
-			JButton add = new JButton("Edit");
-			add.addActionListener(new ActionListener() {
+			JButton modify = new JButton("Modify");
+			modify.addActionListener(new ActionListener() {
 				@Override public void actionPerformed(ActionEvent e) {
-					bdas.set(table.getSelectedRow(),editor.getBDA());
+					bdas.set(table.getSelectedRow(),editor.getBinaryDichotomicAlgorithm());
 					dialog.dispose();
 				}
 			});
@@ -371,7 +448,7 @@ public class GenBDA extends JFrame implements ActionListener, ListDataListener, 
 					.addComponent(label)
 					.addComponent(editor)
 					.addGroup(layout.createSequentialGroup()
-						.addComponent(add)
+						.addComponent(modify)
 						.addComponent(cancel)	
 					)					
 			);
@@ -382,7 +459,7 @@ public class GenBDA extends JFrame implements ActionListener, ListDataListener, 
 					.addComponent(label)
 					.addComponent(editor)
 					.addGroup(layout.createParallelGroup()
-						.addComponent(add)
+						.addComponent(modify)
 						.addComponent(cancel)
 					)
 			);
@@ -406,37 +483,40 @@ public class GenBDA extends JFrame implements ActionListener, ListDataListener, 
 			}
 		}
 		public void clearBinaryDichotomicAlgorithms() { bdas.clear(); }
-		protected void selectBinaryDichotomicAlgorithm(int index) {
-			table.setRowSelectionInterval(index,index);
-		}
-		
+
 		public List<BinaryDichotomicAlgorithm> getBinaryDichotomicAlgorithms() { return bdas; }
 		public BinaryDichotomicAlgorithm getSelectedBinaryDichotomicAlgorithm() {
 			return bdas.get(table.getSelectedRow());
 		}
+		
+		public void setBinaryDichotomicAlgorithms(Collection<BinaryDichotomicAlgorithm> bdas) { clearBinaryDichotomicAlgorithms(); addBinaryDichotomicAlgorithms(bdas); }
+		public void setBinaryDichotomicAlgorithms(BinaryDichotomicAlgorithm... bdas) { clearBinaryDichotomicAlgorithms(); addBinaryDichotomicAlgorithms(bdas); }
+		
+		public void addBinaryDichotomicAlgorithms(Collection<BinaryDichotomicAlgorithm> bdas) { addBinaryDichotomicAlgorithms(bdas.toArray(new BinaryDichotomicAlgorithm[0])); }
+		public void addBinaryDichotomicAlgorithms(BinaryDichotomicAlgorithm... bdas) { for(BinaryDichotomicAlgorithm bda:bdas) addBinaryDichotomicAlgorithm(bda); }
 		public void addBinaryDichotomicAlgorithm(BinaryDichotomicAlgorithm bda) {
 			bdas.add(bda);
 			selectBinaryDichotomicAlgorithm(bdas.size()-1);
 			table.requestFocus();
 		}
 		
+		protected void selectBinaryDichotomicAlgorithm(int index) {
+			table.setRowSelectionInterval(index,index);
+		}
+		
 		private void enableBinaryDichotomicAlgorithmButtons() {
-			int size = bdas.size(),
+			int size = bdas.getRowCount(),
 				index = table.getSelectedRow();
 			boolean selected = index!=-1,
 			  filled = size!=0;
-			if(selected&&index<size) {
-				/*BinaryDichotomicAlgorithm bda = bdas.get(index);
-				edit.setEnabled(isOtherBDA(bda));*/
-				edit.setEnabled(true);
-			} else edit.setEnabled(false);
+			edit.setEnabled(selected&&index<size); //BinaryDichotomicAlgorithm bda = bdas.get(index); !isPredefined(bda);
 			up.setEnabled(index>0);
 			down.setEnabled(selected&&index<size-1);
 			remove.setEnabled(selected);
 			clear.setEnabled(filled);
 		}
 		
-		private class BinaryDichotomicAlgorithmTableModel extends ListTableModel<BinaryDichotomicAlgorithm> {
+		private class TableModel extends ListTableModel<BinaryDichotomicAlgorithm> {
 			private static final long serialVersionUID = 1l;
 			
 			@Override public int getColumnCount() { return 4; }
@@ -451,7 +531,7 @@ public class GenBDA extends JFrame implements ActionListener, ListDataListener, 
 			@Override public Object getValueAt(BinaryDichotomicAlgorithm bda,int columnIndex) {
 				switch(columnIndex) {
 				case 0: //BDA (name)
-					return getBDAName(bda);
+					return Helper.getName(bda);
 				case 1: //(i1,i2)
 					return "("+(bda.i1()+1)+","+(bda.i2()+1)+")";
 				case 2: //Q1
@@ -469,7 +549,7 @@ public class GenBDA extends JFrame implements ActionListener, ListDataListener, 
 				}
 			}
 		}
-		private class BinaryDichotomicAlgorithmEditor extends JPanel {
+		private class EditorPanel extends JPanel {
 			private static final long serialVersionUID = 1l;
 			
 			protected final Acid DEFAULT_ACID = RNA;
@@ -478,7 +558,7 @@ public class GenBDA extends JFrame implements ActionListener, ListDataListener, 
 			private JComboBox<Pair<Integer,Integer>> i1i2;
 			private JComboBox<Pair<Base,Base>> q1,q2;
 			
-			public BinaryDichotomicAlgorithmEditor() {
+			public EditorPanel() {
 				setLayout(new GridLayout(2,4));
 				add(new JLabel("BDA",JLabel.CENTER));
 				add(new JLabel("(i\u2081,i\u2082)",JLabel.CENTER));
@@ -492,7 +572,7 @@ public class GenBDA extends JFrame implements ActionListener, ListDataListener, 
 					private static final long serialVersionUID = 1l;
 					@Override public Component getListCellRendererComponent(JList<?> list,Object value,int index,boolean isSelected,boolean cellHasFocus) {
 						super.getListCellRendererComponent(list,value,index,isSelected,cellHasFocus);
-						setText(getBDAName((BinaryDichotomicAlgorithm)value));
+						setText(Helper.getName((BinaryDichotomicAlgorithm)value));
 						return this;
 					}
 				});
@@ -539,90 +619,148 @@ public class GenBDA extends JFrame implements ActionListener, ListDataListener, 
 				
 				bdas.addActionListener(new ActionListener() {
 					@Override public void actionPerformed(ActionEvent event) {
-						setBDA(bdas.getItemAt(bdas.getSelectedIndex()));
+						setBinaryDichotomicAlgorithm(bdas.getItemAt(bdas.getSelectedIndex()));
 					}
 				});
 				bdas.setSelectedIndex(bdas.getItemCount()-1);
 			}
-			public BinaryDichotomicAlgorithmEditor(BinaryDichotomicAlgorithm bda) {
-				this(); setBDA(bda);
+			public EditorPanel(BinaryDichotomicAlgorithm bda) {
+				this(); setBinaryDichotomicAlgorithm(bda);
 			}
 			
-			public void setBDA(BinaryDichotomicAlgorithm bda) {
+			public void setBinaryDichotomicAlgorithm(BinaryDichotomicAlgorithm bda) {
 				bdas.setSelectedItem(bda);
 				if(bda!=null) {
 					i1i2.setSelectedItem(new Pair<Integer,Integer>(bda.i1()+1,bda.i2()+1));
 					q1.setSelectedItem(toPair(bda.q1())); q2.setSelectedItem(toPair(bda.q2()));
 				}
 				
-				boolean enabled = !isBDAKnown(bda);
+				boolean enabled = !isPredefined(bda);
 				for(JComboBox<?> combo:new JComboBox<?>[]{i1i2,q1,q2})
 					combo.setEnabled(enabled);
 			}
-			public BinaryDichotomicAlgorithm getBDA() {
+			public BinaryDichotomicAlgorithm getBinaryDichotomicAlgorithm() {
 				BinaryDichotomicAlgorithm bda = bdas.getItemAt(bdas.getSelectedIndex());
 				if(bda==null) {
 			  	Pair<Integer,Integer> indices = i1i2.getItemAt(i1i2.getSelectedIndex());
-			  	bda =new net.gumbix.geneticcode.dich.BinaryDichotomicAlgorithm(indices.getFirst()-1,indices.getSecond()-1,
+			  	bda = new net.gumbix.geneticcode.dich.BinaryDichotomicAlgorithm(indices.getFirst()-1,indices.getSecond()-1,
 		  			toTuple(q1.getItemAt(q1.getSelectedIndex())),toSet(q2.getItemAt(q2.getSelectedIndex())));
 				} return bda;
 			}
 		}
 	}
 	
-	private static String getBDAName(BinaryDichotomicAlgorithm bda) {
-		if(bda==(Object)RumerBDA$.MODULE$)
-			return "Rumer";
-		else if(bda==(Object)ParityBDA$.MODULE$)
-			return "Partiy";
-		else if(bda==(Object)AntiCodonBDA$.MODULE$)
-			return "Complementary";
-		else return "Other";
-	}
-	private boolean isBDAKnown(BinaryDichotomicAlgorithm bda) {
-		Object bdaObject = bda;
-		return bdaObject instanceof RumerBDA$
-				|| bdaObject instanceof ParityBDA$
-				|| bdaObject instanceof AntiCodonBDA$;
-	}
-	
-	private static Pair<Base,Base> toPair(scala.Tuple2<Compound,Compound> tuple) {
-		return new Pair<Base,Base>(toBase(tuple._1),toBase(tuple._2));
-	}
-	private static Pair<Base,Base> toPair(scala.collection.Set<Compound> set) {
-		scala.collection.Iterator<net.gumbix.geneticcode.dich.Compound> compounds =
-			set.iterator();
-		return new Pair<Base,Base>(toBase(compounds.next()),toBase(compounds.next()));
-	}
-	private static scala.Tuple2<Compound,Compound> toTuple(Pair<Base,Base> bases) {
-		return new scala.Tuple2<Compound,Compound>(toCompound(bases.getFirst()),toCompound(bases.getSecond()));
-	}
-	private static scala.collection.immutable.Set<Compound> toSet(Pair<Base,Base> bases) {
-		scala.collection.immutable.HashSet<net.gumbix.geneticcode.dich.Compound> set =
-	  		new scala.collection.immutable.HashSet<>();
-  	return set.$plus(toCompound(bases.getFirst())).$plus(toCompound(bases.getSecond()));
+	static class FileChooser extends RememberFileChooser {
+		private static final long serialVersionUID = 1l;
+		
+		public static final String FILE_EXTENSION = "bda";
+		private static File currentDirectory;
+		
+		public FileChooser() {
+			setFileFilter(new FileFilter() {
+				@Override	public String getDescription() { return "Binary Dichotomic Algorithm (*."+FILE_EXTENSION+")"; }
+				@Override	public boolean accept(File file) { return file.isDirectory()||file.getName().toLowerCase().endsWith('.'+FILE_EXTENSION); }
+			});
+		}
+		
+		@Override public void approveSelection() {
+  		File file = getSelectedFile();
+  		if(!file.getName().toLowerCase().endsWith('.'+FILE_EXTENSION))
+				setSelectedFile(file=new File(file.getAbsolutePath()+'.'+FILE_EXTENSION));
+  		if(getDialogType()==SAVE_DIALOG&&file!=null&&file.exists())
+  			if(JOptionPane.showOptionDialog(getParent(),String.format("%s already exists.\nDo you want to replace it?",file.getName()),"Confirm Overwrite",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE,null,null,null)==JOptionPane.NO_OPTION)
+  				return;
+  		currentDirectory = file.getParentFile();
+  		if(currentDirectory!=null&&!currentDirectory.isDirectory())
+  			currentDirectory = null;
+  		super.approveSelection();
+    }
 	}
 	
-	private static Base toBase(Compound compound) {
-		if(compound.equals(Adenine$.MODULE$))
-			return Base.ADENINE;
-		else if(compound.equals(Uracil$.MODULE$))
-			return Base.URACIL;
-		else if(compound.equals(Cytosine$.MODULE$))
-			return Base.CYTOSINE;
-		else if(compound.equals(Guanine$.MODULE$))
-			return Base.GUANINE;
-		else return null;
+	public static class Helper {
+		private static final Pattern BDA_PATTERN = Pattern.compile("\\((\\d),(\\d)\\) \\((\\w),(\\w)\\) \\{(\\w),(\\w)\\}");
+		
+		public static String toString(Collection<BinaryDichotomicAlgorithm> bdas) {
+			StringWriter writer = new StringWriter();
+			try { writeTo(writer, bdas); } catch(IOException e) { /* nothing to do here */ }
+			return writer.toString();
+		}
+		public static Collection<BinaryDichotomicAlgorithm> fromString(String string) throws IOException {			
+			return readFrom(new StringReader(string));
+		}
+		public static void writeTo(Writer writer,Collection<BinaryDichotomicAlgorithm> bdas) throws IOException {
+			for(BinaryDichotomicAlgorithm bda:bdas) {
+				Pair<Base,Base> q1 = toPair(bda.q1()), q2 = toPair(bda.q2());
+				writer.write(String.format("(%d,%d) (%C,%C) {%C,%C}\n",
+					bda.i1()+1,bda.i2()+1,q1.getFirst().letter,q1.getSecond().letter,q2.getFirst().letter,q2.getSecond().letter));
+			}
+		}
+		public static List<BinaryDichotomicAlgorithm> readFrom(Reader reader) throws IOException {
+			List<BinaryDichotomicAlgorithm> bdas = new ArrayList<>();
+			String line; Matcher matcher; BufferedReader buffer = new BufferedReader(reader);			
+			while((line=buffer.readLine())!=null) {
+				if(line.isEmpty()) continue;
+				else if((matcher=BDA_PATTERN.matcher(line)).matches()) {
+			  	bdas.add(new net.gumbix.geneticcode.dich.BinaryDichotomicAlgorithm(Integer.parseInt(matcher.group(1))-1,Integer.parseInt(matcher.group(2))-1,
+		  			toTuple(new Pair<Base,Base>(Base.valueOf(matcher.group(3).charAt(0)),Base.valueOf(matcher.group(4).charAt(0)))),
+		  			toSet(new Pair<Base,Base>(Base.valueOf(matcher.group(5).charAt(0)),Base.valueOf(matcher.group(6).charAt(0))))));
+				} else throw new IOException("Unknown line format for BDA \""+line+"\", expected (%d,%d) (%C,%C) {%C,%C}");
+			} return bdas;
+		}
+		
+		public static String getName(BinaryDichotomicAlgorithm bda) {
+			if(RumerBDA$.MODULE$.equals(bda))
+				return "Rumer";
+			else if(ParityBDA$.MODULE$.equals(bda))
+				return "Partiy";
+			else if(AntiCodonBDA$.MODULE$.equals(bda))
+				return "Complementary";
+			else return "Other";
+		}
+		public static boolean isPredefined(BinaryDichotomicAlgorithm bda) {
+			return RumerBDA$.MODULE$.equals(bda)
+					|| ParityBDA$.MODULE$.equals(bda)
+					|| AntiCodonBDA$.MODULE$.equals(bda);
+		}
+		
+		public static Pair<Base,Base> toPair(scala.Tuple2<Compound,Compound> tuple) {
+			return new Pair<Base,Base>(toBase(tuple._1),toBase(tuple._2));
+		}
+		public static Pair<Base,Base> toPair(scala.collection.Set<Compound> set) {
+			scala.collection.Iterator<net.gumbix.geneticcode.dich.Compound> compounds =
+				set.iterator();
+			return new Pair<Base,Base>(toBase(compounds.next()),toBase(compounds.next()));
+		}
+		public static scala.Tuple2<Compound,Compound> toTuple(Pair<Base,Base> bases) {
+			return new scala.Tuple2<Compound,Compound>(toCompound(bases.getFirst()),toCompound(bases.getSecond()));
+		}
+		public static scala.collection.immutable.Set<Compound> toSet(Pair<Base,Base> bases) {
+			scala.collection.immutable.HashSet<net.gumbix.geneticcode.dich.Compound> set =
+		  		new scala.collection.immutable.HashSet<>();
+	  	return set.$plus(toCompound(bases.getFirst())).$plus(toCompound(bases.getSecond()));
+		}
+		
+		public static Base toBase(Compound compound) {
+			if(compound.equals(Adenine$.MODULE$))
+				return Base.ADENINE;
+			else if(compound.equals(Uracil$.MODULE$))
+				return Base.URACIL;
+			else if(compound.equals(Cytosine$.MODULE$))
+				return Base.CYTOSINE;
+			else if(compound.equals(Guanine$.MODULE$))
+				return Base.GUANINE;
+			else return null;
+		}
+		public static Compound toCompound(Base base) {
+			switch(base) {
+			case ADENINE: return Adenine$.MODULE$;
+			case URACIL: case THYMINE: return Uracil$.MODULE$;
+			case CYTOSINE: return Cytosine$.MODULE$;
+			case GUANINE: return Guanine$.MODULE$;
+			default: return null; }
+		}
 	}
-	private static Compound toCompound(Base base) {
-		switch(base) {
-		case ADENINE: return Adenine$.MODULE$;
-		case URACIL: case THYMINE: return Uracil$.MODULE$;
-		case CYTOSINE: return Cytosine$.MODULE$;
-		case GUANINE: return Guanine$.MODULE$;
-		default: return null; }
-	}	
-			
+	
 	public static void main(String[] args) {
 		Guitilities.prepareLookAndFeel();
 		SwingUtilities.invokeLater(new Runnable() {

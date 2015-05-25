@@ -141,7 +141,7 @@ import de.hsma.gentool.operation.transformation.Transformation;
 public class GenTool extends JFrame implements ActionListener {
 	private static final long serialVersionUID = 1l;
 	
-	private static final String VERSION = "1.5";
+	private static final String VERSION = "1.6";
 	private static final String
 		ACTION_NEW = "new",
 		ACTION_OPEN = "open",
@@ -357,12 +357,11 @@ public class GenTool extends JFrame implements ActionListener {
 		menu[2].add(createMenuItem("Copy Window", ACTION_COPY_WINDOW, this));
 		menu[2].add(createMenuItem("Hide Toolbar", ACTION_TOGGLE_TOOLBAR, this));
 		menu[2].add(createSeparator());
-    menu[2].add(createMenuItem("BDA Editor", "application_osx_terminal.png", ACTION_SHOW_BDA, this));
-		menu[2].add(createSeparator());
 		menu[2].add(createMenuItem("Open GenBatch", "calculator.png", KeyStroke.getKeyStroke(KeyEvent.VK_B, InputEvent.CTRL_DOWN_MASK), ACTION_SHOW_BATCH, this));
 		menu[2].add(createMenuItem("Add Sequence", "calculator_add.png", ACTION_ADD_TO_BATCH, this));
+    menu[2].add(createMenuItem("BDA Editor", "application_osx_terminal.png", ACTION_SHOW_BDA, this));
     menu[2].add(createSeparator());
-		menu[2].add(createMenuItem("Preferences", ACTION_PREFERENCES, this));
+    menu[2].add(createMenuItem("Preferences", ACTION_PREFERENCES, this));
 		menu[3].add(createMenuItem("About GenTool", "icon.png", ACTION_ABOUT, this));
 		for(String action:new String[]{ACTION_SAVE,ACTION_UNDO,ACTION_REDO,ACTION_CUT,ACTION_COPY,ACTION_DELETE})
 			getMenuItem(menubar,action).setEnabled(false);
@@ -378,6 +377,7 @@ public class GenTool extends JFrame implements ActionListener {
 		toolbar[0].add(createToolbarButton("Open GenBatch", "calculator.png", ACTION_SHOW_BATCH, this));
 		toolbar[0].add(createToolbarButton("Add Sequence to GenBatch", "calculator_add.png", ACTION_ADD_TO_BATCH, this));
 		toolbar[0].addSeparator();
+		toolbar[0].add(createToolbarButton("BDA Editor", "application_osx_terminal.png", ACTION_SHOW_BDA, this));
 		toolbar[0].add(createToolbarButton("Exit", "control-power.png", ACTION_EXIT, this));
 		
 		toolbars = new JPanel(new FlowLayout(FlowLayout.LEADING));
@@ -532,7 +532,6 @@ public class GenTool extends JFrame implements ActionListener {
 		case ACTION_SHOW_BDA: showBDA(); break;
 		case ACTION_SHOW_BATCH: showBatch(); break;
 		case ACTION_ADD_TO_BATCH: addToBatch(); break;
-		case ACTION_PREFERENCES: showPreferences(); break;
 		case ACTION_ABOUT: showAbout(); break;
 		default: System.err.println(String.format("Action %s not implemented.", action)); }
 	}
@@ -637,7 +636,28 @@ public class GenTool extends JFrame implements ActionListener {
 			   return saveFile(chooser.getSelectedFile());
 		else return false;
 	}
-
+	public boolean saveFile(File file) {
+		try {
+			writeFile(editor.getText(), file);
+			editor.setClean();
+			currentFile = file;
+			getMenuItem(menu[0], ACTION_SAVE).setEnabled(true);
+			return true;
+		}	catch(IOException e) { return false; }
+	}
+	protected boolean confirmIfDirty() {
+		if(editor.isDirty())
+			switch(JOptionPane.showOptionDialog(this, currentFile==null?"Do you want to save changes?":"Do you want to save changes to "+currentFile.getName()+"?", this.getTitle(), 0, JOptionPane.QUESTION_MESSAGE, null, new String[]{"Save","Don't Save","Cancel"}, null)) {
+			case JOptionPane.YES_OPTION:
+				if(!saveFile())
+					return false;
+			case JOptionPane.NO_OPTION:
+				return true;
+			case JOptionPane.CANCEL_OPTION: default:
+				return false;
+		} else return true;
+	}
+	
 	public void undoEdit() {
 		editor.undoEdit();
 		editor.requestFocus();
@@ -824,14 +844,6 @@ public class GenTool extends JFrame implements ActionListener {
 		getMenuItem(menubar,ACTION_TOGGLE_TOOLBAR).setText(visible?"Show Toolbar":"Hide Toolbar");
 	}
 	
-	public void showBDA() {
-		if(bda==null) bda = new GenBDA();
-		if(!bda.isVisible()) {
-			bda.setLocationRelativeTo(GenTool.this);
-			bda.setVisible(true);
-		} else bda.requestFocus();
-	}
-	
 	public void showBatch() {
 		if(batch==null) batch = new GenBatch();
 		if(!batch.isVisible()) {
@@ -843,14 +855,14 @@ public class GenTool extends JFrame implements ActionListener {
 		showBatch(); batch.addSequence(editor.getTuples());
 	}
 	
-	public void showPreferences() {
-		final JDialog preferences = new JDialog(this, "Preferences", true);
-		
-		preferences.pack();
-		preferences.setResizable(false);
-		preferences.setLocationRelativeTo(this);
-		preferences.setVisible(true);
+	public void showBDA() {
+		if(bda==null) bda = new GenBDA();
+		if(!bda.isVisible()) {
+			bda.setLocationRelativeTo(GenTool.this);
+			bda.setVisible(true);
+		} else bda.requestFocus();
 	}
+	
 	public void showAbout() { showAbout(this); }
 	public static void showAbout(Frame parent) {
 		final JDialog about = new JDialog(parent, "About Genetic Code Tool (GenTool)", true);
@@ -895,28 +907,6 @@ public class GenTool extends JFrame implements ActionListener {
 		about.setResizable(false);
 		about.setLocationRelativeTo(parent);
 		about.setVisible(true);
-	}
-
-	protected boolean saveFile(File file) {
-		try {
-			writeFile(editor.getText(), file);
-			editor.setClean();
-			currentFile = file;
-			getMenuItem(menu[0], ACTION_SAVE).setEnabled(true);
-			return true;
-		}	catch(IOException e) { return false; }
-	}
-	protected boolean confirmIfDirty() {
-		if(editor.isDirty())
-			switch(JOptionPane.showOptionDialog(this, currentFile==null?"Do you want to save changes?":"Do you want to save changes to "+currentFile.getName()+"?", this.getTitle(), 0, JOptionPane.QUESTION_MESSAGE, null, new String[]{"Save","Don't Save","Cancel"}, null)) {
-			case JOptionPane.YES_OPTION:
-				if(!saveFile())
-					return false;
-			case JOptionPane.NO_OPTION:
-				return true;
-			case JOptionPane.CANCEL_OPTION: default:
-				return false;
-		} else return true;
 	}
 	
 	class CatalogPanel extends JPanel {
