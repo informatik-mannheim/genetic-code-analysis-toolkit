@@ -873,7 +873,7 @@ public class GenTool extends JFrame implements ActionListener {
 		Border gap = new EmptyBorder(5,0,5,0); JLabel label;
 		about.add(label=new JLabel(new ImageIcon(getResource("gentool.png")), SwingConstants.CENTER));
 		label.setBorder(gap); label.setAlignmentX(CENTER_ALIGNMENT);
-		about.add(label=new JLabel("\u00A9 2014 Hochschule Mannheim - Version "+VERSION));
+		about.add(label=new JLabel("\u00A9 2014-2015 Hochschule Mannheim - Version "+VERSION));
 		label.setBorder(gap); label.setAlignmentX(CENTER_ALIGNMENT);
 		label.setFont(label.getFont().deriveFont(Font.BOLD));
 		about.add(label=new JLabel("(Prof. Dr. Elena Fimmel, Prof. Dr. Lutz Str\u00FCngmann, Kristian Kralji\u0107)"));
