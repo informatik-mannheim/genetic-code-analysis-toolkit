@@ -23,7 +23,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -71,7 +70,9 @@ import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import javax.swing.filechooser.FileFilter;
+import com.google.common.collect.EnumMultiset;
+import com.google.common.collect.Multiset;
+import com.google.common.collect.Multiset.Entry;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -79,7 +80,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import de.hsma.gentool.Option;
 import de.hsma.gentool.Parameter;
-import de.hsma.gentool.Utilities.RememberFileChooser;
+import de.hsma.gentool.Utilities.FileExtensionFileChooser;
 import de.hsma.gentool.batch.Action;
 import de.hsma.gentool.batch.Action.TaskAttribute;
 import de.hsma.gentool.batch.Batch;
@@ -97,6 +98,8 @@ import de.hsma.gentool.operation.transformation.Transformation;
 public class GenBatch extends JFrame implements ActionListener, ListDataListener, ListSelectionListener {
 	private static final long serialVersionUID = 1l;
 
+	public static final String FILE_EXTENSION = "gens", FILE_DESCRIPTION = "Genetic Sequences";
+	
 	private static final String
 		ACTION_IMPORT = "import",
 		ACTION_EXPORT = "export",
@@ -118,7 +121,7 @@ public class GenBatch extends JFrame implements ActionListener, ListDataListener
 			new Boolean[]{TEST_CRITERIA_BREAK_IF_FALSE,TEST_CRITERIA_BREAK_IF_TRUE,TEST_CRITERIA_NEVER_BREAK},
 			"Break If False", "Break If True", "Never Break");
 	
-	protected final ListeningExecutorService service = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(16));
+	protected final ListeningExecutorService service = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(Math.max(1,Runtime.getRuntime().availableProcessors()-1)));
 	protected final Split.Pick
 		splitPickAll = new Split.Pick() {
 			@Override public Collection<Tuple> pick(List<Collection<Tuple>> split) {
@@ -228,11 +231,12 @@ public class GenBatch extends JFrame implements ActionListener, ListDataListener
 		
 		add(createSplitPane(JSplitPane.HORIZONTAL_SPLIT,false,true,360,0.195,
 			new JScrollPane(actionPanel=new ActionPanel()),scroll), BorderLayout.CENTER);
-		add(bottom = new JPanel(new FlowLayout(FlowLayout.RIGHT)),BorderLayout.SOUTH);
 		actionPanel.list.getModel().addListDataListener(this);
 		actionPanel.list.addListSelectionListener(this);
 		
-		status = new JLabel("Test");
+		add(bottom = new JPanel(new FlowLayout(FlowLayout.RIGHT)),BorderLayout.SOUTH);
+		
+		status = new JLabel();
 		status.setBorder(new EmptyBorder(0,5,0,5));
 		status.setHorizontalAlignment(JLabel.RIGHT);
 		bottom.add(status);
@@ -242,7 +246,7 @@ public class GenBatch extends JFrame implements ActionListener, ListDataListener
 		cancel.setContentAreaFilled(false); cancel.setBorder(EMPTY_BORDER);
 		cancel.addActionListener(new ActionListener() {
 			@Override public void actionPerformed(ActionEvent event) {
-				for(ListenableFuture<Result> future:futures)
+				for(ListenableFuture<Result> future:new ArrayList<ListenableFuture<Result>>(futures))
 					future.cancel(true);
 			}
 		});
@@ -259,10 +263,10 @@ public class GenBatch extends JFrame implements ActionListener, ListDataListener
 	}
 	
 	public void addSequence(Collection<Tuple> sequence) {
-		this.sequenceList.addSequence(sequence);
+		this.sequenceList.addSequence(sequence); updateStatus();
 	}
 	public void addSequences(List<Collection<Tuple>> sequences) {
-		this.sequenceList.addSequences(sequences);
+		this.sequenceList.addSequences(sequences); updateStatus();
 	}
 	
 	@Override public void actionPerformed(ActionEvent event) {
@@ -315,43 +319,36 @@ public class GenBatch extends JFrame implements ActionListener, ListDataListener
 	}
 
 	public void importSequences() {
-		JFileChooser chooser = new FileChooser();
+		JFileChooser chooser = new FileExtensionFileChooser(FILE_EXTENSION,FILE_DESCRIPTION);
 		chooser.setDialogTitle("Open");
 		if(chooser.showOpenDialog(this)!=JFileChooser.APPROVE_OPTION)
 			return;
 		
 		clearSequences();
-		BufferedReader reader = null;
-		try {
-			String line;
-			reader = new BufferedReader(new FileReader(chooser.getSelectedFile()));
-			while((line=reader.readLine())!=null)
+		try(BufferedReader reader = new BufferedReader(new FileReader(chooser.getSelectedFile()))) {
+			String line; while((line=reader.readLine())!=null)
 				addSequence(Tuple.splitTuples(Tuple.tupleString(line)));
 		}	catch(IOException e) {
+			JOptionPane.showMessageDialog(GenBatch.this,"Could not open file:\n"+e.getMessage(),"Open File",JOptionPane.WARNING_MESSAGE);
 			e.printStackTrace();
-		} finally {
-			if(reader!=null)
-				try { reader.close(); }
-				catch(IOException e) { /* nothing to do here */ }
 		}
 	}
 	public void exportSequences() {
-		JFileChooser chooser = new FileChooser();
+		JFileChooser chooser = new FileExtensionFileChooser(FILE_EXTENSION,FILE_DESCRIPTION);
 		chooser.setDialogTitle("Save As");
 		if(chooser.showSaveDialog(this)!=JFileChooser.APPROVE_OPTION)
 			return;
-	
-		PrintWriter writer = null;
-		try {
-			writer = new PrintWriter(new BufferedWriter(new FileWriter(chooser.getSelectedFile())));
+		
+		try(PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(chooser.getSelectedFile())))) {
 			for(Collection<Tuple> sequence:this.sequenceList.getSequences())
 				writer.println(Tuple.joinTuples(sequence));
 		}	catch(IOException e) {
+			JOptionPane.showMessageDialog(GenBatch.this,"Could not open file:\n"+e.getMessage(),"Open File",JOptionPane.WARNING_MESSAGE);
 			e.printStackTrace();
-		} finally { if(writer!=null) writer.close(); }
+		}
 	}
-	public void removeSequences() { sequenceList.removeSequences(); }
-	public void clearSequences() { sequenceList.clearSequences(); }
+	public void removeSequences() { sequenceList.removeSequences(); updateStatus(); }
+	public void clearSequences() { sequenceList.clearSequences(); updateStatus(); }
 	private void enableSequenceMenus() {
 		JList<SequenceListItem> list = sequenceList;
 		ListModel<SequenceListItem> items = list.getModel();
@@ -405,12 +402,20 @@ public class GenBatch extends JFrame implements ActionListener, ListDataListener
 	protected void updateStatus() {
 		invokeAppropriate(new Runnable() {
 			@Override public void run() {
-				int size = futures.size();
-				if(size>0) {
-					status.setText(size==1?"Computing...":"Computing ("+size+")...");
+				StringBuilder text = new StringBuilder("<html>");
+				final String seperator = "<span style=\"color:#808080\"> | </span>";
+				int count = sequenceList.countSequences();
+				text.append(count).append(SPACE).append(count==1?"Sequence":"Sequences").append(seperator);				
+				for(Entry<Status> status:sequenceList.countSequenceStatus().entrySet()) {
+					Color color = status.getElement().color.darker();
+					text.append("<span style=\"color:rgb("+color.getRed()+","+color.getGreen()+","+color.getBlue()+")\">")
+						.append(status.getCount()).append(SPACE).append(firstToUpper(status.getElement().toString())).append("</span>").append(seperator);
+				}
+				if(futures.size()>0) {
+					status.setText(text.append("Computing...").toString());
 					cancel.setVisible(true);
 				} else {
-					status.setText("Ready");
+					status.setText(text.append("Ready").toString());
 					cancel.setVisible(false);
 				}
 			}
@@ -854,6 +859,20 @@ public class GenBatch extends JFrame implements ActionListener, ListDataListener
 	    return label;
 		}
 		
+		public int countSequences() { return items.getSize(); }
+		public int countSequences(Status status) {
+			int count = 0;
+			for(SequenceListItem item:items)
+				if(item.status.equals(status))
+					count++;
+			return count;
+		}
+		public Multiset<Status> countSequenceStatus() {
+			Multiset<Status> status = EnumMultiset.create(Status.class);
+			for(SequenceListItem item:items)
+				if(item.status!=null) status.add(item.status);
+			return status;
+		}
 		public List<Collection<Tuple>> getSequences() {
       List<Collection<Tuple>> sequences = new ArrayList<>();
       for(SequenceListItem item:items)
@@ -958,32 +977,5 @@ public class GenBatch extends JFrame implements ActionListener, ListDataListener
 				public void run() { adaptDigits(); repaint(); }
 			});
 		}
-	}
-	
-	public static class FileChooser extends RememberFileChooser {
-		private static final long serialVersionUID = 1l;
-		
-		public static final String FILE_EXTENSION = "gens";
-		private static File currentDirectory;
-		
-		public FileChooser() {
-			setFileFilter(new FileFilter() {
-				@Override	public String getDescription() { return "Genetic Sequences (*."+FILE_EXTENSION+")"; }
-				@Override	public boolean accept(File file) { return file.isDirectory()||file.getName().toLowerCase().endsWith('.'+FILE_EXTENSION); }
-			});
-		}
-		
-		@Override public void approveSelection() {
-  		File file = getSelectedFile();
-  		if(!file.getName().toLowerCase().endsWith('.'+FILE_EXTENSION))
-				setSelectedFile(file=new File(file.getAbsolutePath()+'.'+FILE_EXTENSION));
-  		if(getDialogType()==SAVE_DIALOG&&file!=null&&file.exists())
-  			if(JOptionPane.showOptionDialog(getParent(),String.format("%s already exists.\nDo you want to replace it?",file.getName()),"Confirm Overwrite",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE,null,null,null)==JOptionPane.NO_OPTION)
-  				return;
-  		currentDirectory = file.getParentFile();
-  		if(currentDirectory!=null&&!currentDirectory.isDirectory())
-  			currentDirectory = null;
-  		super.approveSelection();
-    }
 	}
 }

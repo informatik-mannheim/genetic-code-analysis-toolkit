@@ -55,18 +55,18 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
+import javax.swing.border.EmptyBorder;
 import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import javax.swing.filechooser.FileFilter;
 import javax.swing.table.DefaultTableCellRenderer;
 import net.gumbix.geneticcode.dich.AntiCodonBDA$;
 import net.gumbix.geneticcode.dich.BinaryDichotomicAlgorithm;
 import net.gumbix.geneticcode.dich.ParityBDA$;
 import net.gumbix.geneticcode.dich.RumerBDA$;
 import org.apache.commons.math3.util.Pair;
-import de.hsma.gentool.Utilities.RememberFileChooser;
+import de.hsma.gentool.Utilities.FileExtensionFileChooser;
 import de.hsma.gentool.gui.helper.Guitilities;
 import de.hsma.gentool.gui.helper.ListTableModel;
 import de.hsma.gentool.nucleic.Acid;
@@ -74,6 +74,8 @@ import de.hsma.gentool.nucleic.Base;
 
 public class GenBDA extends JFrame implements ActionListener, ListDataListener, ListSelectionListener {
 	private static final long serialVersionUID = 1l;
+	
+	public static final String FILE_EXTENSION = "bda", FILE_DESCRIPTION = "Binary Dichotomic Algorithm";
 	
 	private static final String
 		ACTION_OPEN = "open",
@@ -90,12 +92,13 @@ public class GenBDA extends JFrame implements ActionListener, ListDataListener, 
 		
 	private JMenuBar menubar;
 	private JMenu[] menu;
-	private JPanel toolbars;
+	private JPanel toolbars, bottom;
 	private JToolBar[] toolbar;
+	private JLabel status;
 	
 	private BinaryDichotomicAlgorithmPanel bdaPanel;
-	private JPanel gcTablePanel;
-	private net.gumbix.geneticcode.dich.ui.JGeneticCodeTable gcTable;
+	private JPanel tablePanel;
+	private net.gumbix.geneticcode.dich.ui.JGeneticCodeTable table;
 	
 	public GenBDA() {		
 		super("Genetic Code BDA Editor (GenBDA)");
@@ -148,9 +151,19 @@ public class GenBDA extends JFrame implements ActionListener, ListDataListener, 
 		
 		add(createSplitPane(JSplitPane.HORIZONTAL_SPLIT,false,true,360,0.195,
 			new JScrollPane(bdaPanel=new BinaryDichotomicAlgorithmPanel()),
-			new JScrollPane(gcTablePanel=new JPanel())), BorderLayout.CENTER);
+			new JScrollPane(tablePanel=new JPanel())), BorderLayout.CENTER);
+		
+		add(bottom = new JPanel(new FlowLayout(FlowLayout.RIGHT)),BorderLayout.SOUTH);
+		
+		status = new JLabel();
+		status.setBorder(new EmptyBorder(0,5,0,5));
+		status.setHorizontalAlignment(JLabel.RIGHT);
+		bottom.add(status);
+		
 		((ListTableModel<?>)bdaPanel.table.getModel()).addListDataListener(this);
 		bdaPanel.table.getSelectionModel().addListSelectionListener(this);
+		
+		revalidateGeneticCodeTable();
 	}
 	
 	@Override public void actionPerformed(ActionEvent event) {
@@ -180,7 +193,7 @@ public class GenBDA extends JFrame implements ActionListener, ListDataListener, 
 	}
 	
 	public boolean openFile() {
-		JFileChooser chooser = new FileChooser();
+		JFileChooser chooser = new FileExtensionFileChooser(FILE_EXTENSION,FILE_DESCRIPTION);
 		chooser.setDialogTitle("Open");
 		if(chooser.showOpenDialog(this)!=JFileChooser.APPROVE_OPTION)
 			return false;
@@ -191,10 +204,13 @@ public class GenBDA extends JFrame implements ActionListener, ListDataListener, 
 		try(FileReader reader=new FileReader(file)) {
 			bdaPanel.setBinaryDichotomicAlgorithms(readFrom(reader));
 			return true;
-		}	catch(IOException e) { return false; }
+		}	catch(IOException e) {
+			JOptionPane.showMessageDialog(this,"Could not open file:\n"+e.getMessage(),"Open File",JOptionPane.WARNING_MESSAGE);
+			return false;
+		}
 	}
 	public boolean saveFileAs() {
-		JFileChooser chooser = new FileChooser();
+		JFileChooser chooser = new FileExtensionFileChooser(FILE_EXTENSION,FILE_DESCRIPTION);
 		chooser.setDialogTitle("Save As");
 		if(chooser.showSaveDialog(this)==JFileChooser.APPROVE_OPTION)
 			   return saveFile(chooser.getSelectedFile());
@@ -204,7 +220,10 @@ public class GenBDA extends JFrame implements ActionListener, ListDataListener, 
 		try(FileWriter writer = new FileWriter(file)) {
 			writeTo(writer,bdaPanel.getBinaryDichotomicAlgorithms());
 			return true;
-		}	catch(IOException e) { return false; }
+		}	catch(IOException e) {
+			JOptionPane.showMessageDialog(this,"Could not save file:\n"+e.getMessage(),"Save File",JOptionPane.WARNING_MESSAGE);
+			return false;
+		}
 	}
 	
 	public void addBinaryDichotomicAlgorithm() { bdaPanel.addBinaryDichotomicAlgorithm(); }
@@ -240,13 +259,16 @@ public class GenBDA extends JFrame implements ActionListener, ListDataListener, 
 				net.gumbix.geneticcode.dich.IUPAC.STANDARD(),
 				new net.gumbix.geneticcode.dich.IdAminoAcidProperty(1));
     
-    if(gcTable!=null) gcTablePanel.remove(gcTable);
+    if(table!=null) tablePanel.remove(table);
     if(classTable!=null)
-    	gcTablePanel.add(gcTable=new net.gumbix.geneticcode.dich.ui.JGeneticCodeTable(classTable),
+    	tablePanel.add(table=new net.gumbix.geneticcode.dich.ui.JGeneticCodeTable(classTable),
 	    	BorderLayout.CENTER);
-    else gcTable = null;
-    gcTablePanel.revalidate();
-    gcTablePanel.repaint();
+    else table = null;
+    tablePanel.revalidate();
+    tablePanel.repaint();
+    
+    int classes = classTable==null?0:classTable.classes().size();
+    status.setText((classes==0?"No":classes)+(classes==1?" class":" classes"));
 	}
 	
 	class BinaryDichotomicAlgorithmPanel extends JPanel {
@@ -641,33 +663,6 @@ public class GenBDA extends JFrame implements ActionListener, ListDataListener, 
 				} return bda;
 			}
 		}
-	}
-	
-	static class FileChooser extends RememberFileChooser {
-		private static final long serialVersionUID = 1l;
-		
-		public static final String FILE_EXTENSION = "bda";
-		private static File currentDirectory;
-		
-		public FileChooser() {
-			setFileFilter(new FileFilter() {
-				@Override	public String getDescription() { return "Binary Dichotomic Algorithm (*."+FILE_EXTENSION+")"; }
-				@Override	public boolean accept(File file) { return file.isDirectory()||file.getName().toLowerCase().endsWith('.'+FILE_EXTENSION); }
-			});
-		}
-		
-		@Override public void approveSelection() {
-  		File file = getSelectedFile();
-  		if(!file.getName().toLowerCase().endsWith('.'+FILE_EXTENSION))
-				setSelectedFile(file=new File(file.getAbsolutePath()+'.'+FILE_EXTENSION));
-  		if(getDialogType()==SAVE_DIALOG&&file!=null&&file.exists())
-  			if(JOptionPane.showOptionDialog(getParent(),String.format("%s already exists.\nDo you want to replace it?",file.getName()),"Confirm Overwrite",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE,null,null,null)==JOptionPane.NO_OPTION)
-  				return;
-  		currentDirectory = file.getParentFile();
-  		if(currentDirectory!=null&&!currentDirectory.isDirectory())
-  			currentDirectory = null;
-  		super.approveSelection();
-    }
 	}
 	
 	public static class Helper {

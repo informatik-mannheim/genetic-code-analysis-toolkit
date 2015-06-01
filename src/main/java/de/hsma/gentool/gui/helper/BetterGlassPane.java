@@ -17,16 +17,15 @@ import javax.swing.event.EventListenerList;
 public class BetterGlassPane extends JPanel implements AWTEventListener {
 	private static final long serialVersionUID = 1l;
 
-	private final JRootPane pane;
+	private JRootPane pane;
 	private EventListenerList listeners = new EventListenerList();
 	
-	public BetterGlassPane(JRootPane pane) {
-		super(null);
-		(this.pane=pane).setGlassPane(this);
+	public BetterGlassPane() {
+		super(); setOpaque(false); setVisible(true);
 		Toolkit.getDefaultToolkit().addAWTEventListener(this,
 			AWTEvent.MOUSE_WHEEL_EVENT_MASK|AWTEvent.MOUSE_MOTION_EVENT_MASK|AWTEvent.MOUSE_EVENT_MASK);
-		setOpaque(false);
 	}
+	public BetterGlassPane(JRootPane pane) { this(); (this.pane=pane).setGlassPane(this); }
 
 	@Override public synchronized MouseListener[] getMouseListeners() { return listeners.getListeners(MouseListener.class); }
 	@Override public synchronized void addMouseListener(MouseListener listener) { listeners.add(MouseListener.class,listener); }
@@ -41,7 +40,7 @@ public class BetterGlassPane extends JPanel implements AWTEventListener {
 	@Override public synchronized void removeMouseWheelListener(MouseWheelListener listener) { listeners.remove(MouseWheelListener.class,listener); }
 	
 	public void eventDispatched(AWTEvent event) {
-		if(event instanceof MouseEvent) {
+		if(pane!=null&&event instanceof MouseEvent) {
 			MouseEvent mouseEvent = (MouseEvent)event;
 			if(!SwingUtilities.isDescendingFrom(mouseEvent.getComponent(),pane))
 				return;

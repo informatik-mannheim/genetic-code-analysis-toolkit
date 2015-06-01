@@ -95,7 +95,6 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.EventListenerList;
-import javax.swing.filechooser.FileFilter;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.NumberFormatter;
@@ -114,8 +113,8 @@ import de.hsma.gentool.Configurable;
 import de.hsma.gentool.Option;
 import de.hsma.gentool.Parameter;
 import de.hsma.gentool.Utilities.DefiniteFuture;
+import de.hsma.gentool.Utilities.FileExtensionFileChooser;
 import de.hsma.gentool.Utilities.OperatingSystem;
-import de.hsma.gentool.Utilities.RememberFileChooser;
 import de.hsma.gentool.batch.Action;
 import de.hsma.gentool.batch.Action.Task;
 import de.hsma.gentool.batch.Action.TaskAttribute;
@@ -142,7 +141,9 @@ import de.hsma.gentool.operation.transformation.Transformation;
 public class GenTool extends JFrame implements ActionListener {
 	private static final long serialVersionUID = 1l;
 	
-	private static final String VERSION = "1.6";
+	public static final String FILE_EXTENSION = "gen", FILE_DESCRIPTION = "Genetic Sequence";
+
+	private static final String VERSION = "1.7";
 	private static final String
 		ACTION_NEW = "new",
 		ACTION_OPEN = "open",
@@ -609,7 +610,7 @@ public class GenTool extends JFrame implements ActionListener {
 		if(!confirmIfDirty())
 			return false;
 
-		JFileChooser chooser = new FileChooser();
+		JFileChooser chooser = new FileExtensionFileChooser(FILE_EXTENSION,FILE_DESCRIPTION);
 		chooser.setDialogTitle("Open");
 		if(chooser.showOpenDialog(this)!=JFileChooser.APPROVE_OPTION)
 			return false;
@@ -623,7 +624,10 @@ public class GenTool extends JFrame implements ActionListener {
 			currentFile = file;
 			getMenuItem(menu[0],ACTION_SAVE).setEnabled(true);
 			return true;
-		}	catch(IOException e) { return false; }
+		}	catch(IOException e) {
+			JOptionPane.showMessageDialog(this,"Could not open file:\n"+e.getMessage(),"Open File",JOptionPane.WARNING_MESSAGE);
+			return false;
+		}
 	}
 	public boolean saveFile() {
 		if(currentFile!=null)
@@ -631,7 +635,7 @@ public class GenTool extends JFrame implements ActionListener {
 		else return saveFileAs();
 	}
 	public boolean saveFileAs() {
-		JFileChooser chooser = new FileChooser();
+		JFileChooser chooser = new FileExtensionFileChooser(FILE_EXTENSION,FILE_DESCRIPTION);
 		chooser.setDialogTitle("Save As");
 		if(chooser.showSaveDialog(this)==JFileChooser.APPROVE_OPTION)
 			   return saveFile(chooser.getSelectedFile());
@@ -644,7 +648,10 @@ public class GenTool extends JFrame implements ActionListener {
 			currentFile = file;
 			getMenuItem(menu[0], ACTION_SAVE).setEnabled(true);
 			return true;
-		}	catch(IOException e) { return false; }
+		}	catch(IOException e) {
+			JOptionPane.showMessageDialog(this,"Could not save file:\n"+e.getMessage(),"Save File",JOptionPane.WARNING_MESSAGE);
+			return false;
+		}
 	}
 	protected boolean confirmIfDirty() {
 		if(editor.isDirty())
@@ -1464,33 +1471,6 @@ public class GenTool extends JFrame implements ActionListener {
 			while(!(parent instanceof JScrollPane));
 			return ((JScrollPane)parent).getVerticalScrollBar();
 		}
-	}
-	
-	public static class FileChooser extends RememberFileChooser {
-		private static final long serialVersionUID = 1l;
-		
-		public static final String FILE_EXTENSION = "gen";
-		private static File currentDirectory;
-		
-		public FileChooser() {
-			setFileFilter(new FileFilter() {
-				@Override	public String getDescription() { return "Genetic Sequence (*."+FILE_EXTENSION+")"; }
-				@Override	public boolean accept(File file) { return file.isDirectory()||file.getName().toLowerCase().endsWith('.'+FILE_EXTENSION); }
-			});
-		}
-		
-		@Override public void approveSelection() {
-  		File file = getSelectedFile();
-  		if(!file.getName().toLowerCase().endsWith('.'+FILE_EXTENSION))
-				setSelectedFile(file=new File(file.getAbsolutePath()+'.'+FILE_EXTENSION));
-  		if(getDialogType()==SAVE_DIALOG&&file!=null&&file.exists())
-  			if(JOptionPane.showOptionDialog(getParent(),String.format("%s already exists.\nDo you want to replace it?",file.getName()),"Confirm Overwrite",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE,null,null,null)==JOptionPane.NO_OPTION)
-  				return;
-  		currentDirectory = file.getParentFile();
-  		if(currentDirectory!=null&&!currentDirectory.isDirectory())
-  			currentDirectory = null;
-  		super.approveSelection();
-    }
 	}
 
 	public static void main(final String[] args) throws ParseException {

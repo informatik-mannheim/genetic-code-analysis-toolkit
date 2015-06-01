@@ -29,9 +29,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
+import javax.swing.filechooser.FileFilter;
 import javax.swing.text.Position;
 import sun.reflect.ConstructorAccessor;
 import sun.reflect.ReflectionFactory;
+import com.google.common.base.CaseFormat;
 import com.google.common.util.concurrent.ListenableFuture;
 import de.hsma.gentool.gui.GenTool;
 
@@ -170,10 +173,33 @@ public final class Utilities {
 			} else return null;
 		}
 		@Override public void approveSelection() {
-			super.approveSelection();
 			File selected = getSelectedFile();
 			if(!selected.isDirectory())
 				setConfiguration("directory",selected.getParentFile().toString());
+			super.approveSelection();
+		}
+	}
+	public static class FileExtensionFileChooser extends RememberFileChooser {
+		private static final long serialVersionUID = 1l;
+		
+		public final String extension, description;
+		
+		public FileExtensionFileChooser(String extension,String description) {
+			this.extension = extension; this.description = description;
+			setFileFilter(new FileFilter() {
+				@Override	public String getDescription() { return description+" (*."+extension+")"; }
+				@Override	public boolean accept(File file) { return file.isDirectory()||file.getName().toLowerCase().endsWith('.'+extension); }
+			});
+		}
+		
+		@Override public void approveSelection() {
+  		File selected = getSelectedFile();
+  		if(!selected.getName().toLowerCase().endsWith('.'+extension)&&!selected.exists())
+				setSelectedFile(selected=new File(selected.getAbsolutePath()+'.'+extension));
+  		if(getDialogType()==SAVE_DIALOG&&selected!=null&&selected.exists())
+  			if(JOptionPane.showOptionDialog(getParent(),String.format("%s already exists.\nDo you want to replace it?",selected.getName()),"Confirm Overwrite",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE,null,null,null)==JOptionPane.NO_OPTION)
+  				return;
+  		super.approveSelection();
 		}
 	}
 
@@ -303,6 +329,17 @@ public final class Utilities {
 			base *= base;
 		}
 		return result;
+	}
+	
+	public static String firstToUpper(String text) {
+		if(text==null||text.isEmpty())
+			return text;
+		else if(text.length()==1)
+			return text.toUpperCase();
+		else return Character.toUpperCase(text.charAt(0))+camelCase(text.substring(1).toLowerCase()); 
+	}
+	public static String camelCase(String text) {
+		return CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL,text);
 	}
 
 	public static enum Characters {
