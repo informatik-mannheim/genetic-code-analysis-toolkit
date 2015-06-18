@@ -256,17 +256,19 @@ public class GenBatch extends JFrame implements ActionListener, ListDataListener
 	}
 	
 	public void addOperation(Class<? extends Operation> operation) {
-		this.actionPanel.addOperation(operation);
+		actionPanel.addOperation(operation);
 	}
 	public void addOperation(Class<? extends Operation> operation,Object... values) {
-		this.actionPanel.addOperation(operation,values);
+		actionPanel.addOperation(operation,values);
 	}
 	
 	public void addSequence(Collection<Tuple> sequence) {
-		this.sequenceList.addSequence(sequence); updateStatus();
+		if(sequenceList.countSequences()==0)
+			sequenceList.setDefaultTupleLength(Tuple.tuplesLength(sequence));
+		sequenceList.addSequence(sequence); updateStatus();
 	}
 	public void addSequences(List<Collection<Tuple>> sequences) {
-		this.sequenceList.addSequences(sequences); updateStatus();
+		sequenceList.addSequences(sequences); updateStatus();
 	}
 	
 	@Override public void actionPerformed(ActionEvent event) {
@@ -834,7 +836,9 @@ public class GenBatch extends JFrame implements ActionListener, ListDataListener
 		
 		protected SequenceListModel items;
 		private JLabel label = new JLabel();
-
+		
+		private int defaultTupleLength;
+		
 		public SequenceList() {
 			super(new SequenceListModel());
 			items = (SequenceListModel)getModel();
@@ -857,6 +861,11 @@ public class GenBatch extends JFrame implements ActionListener, ListDataListener
 	    label.setOpaque(true);
 
 	    return label;
+		}
+		
+		public int getDefaultTupleLength() { return defaultTupleLength; }
+		public void setDefaultTupleLength(int defaultTupleLength) {
+			this.defaultTupleLength = defaultTupleLength; repaint();
 		}
 		
 		public int countSequences() { return items.getSize(); }
@@ -895,7 +904,6 @@ public class GenBatch extends JFrame implements ActionListener, ListDataListener
 		
 		@Override public void paint(Graphics graphics) {
 			super.paint(graphics);
-			int defaultTupleLength = 3;
 			if(defaultTupleLength>0) {
 				graphics.setColor(lineColor);
 				int width=getFontMetrics(getFont()).charWidth('0'), tupleWidth = width*defaultTupleLength;

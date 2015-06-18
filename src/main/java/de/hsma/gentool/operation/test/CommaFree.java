@@ -23,12 +23,11 @@ public class CommaFree implements Test {
 		if(tuples.isEmpty())
 			return true; //an empty set of tuples is comma-free
 		
-		int length = tuples.iterator().next().length();
-		for(Tuple tuple:tuples)
-			if(tuple.length()!=length) {
-				logger.log("Tuples of variable length, can't check for comma-free.");
-				return false; //tuples not all of same length
-			}
+		int length;
+		if((length=Tuple.tuplesLength(tuples))==0) {
+			logger.log("Tuples of variable length, can't check for comma-free.");
+			return false; //tuples not all of same length
+		}
 		
 		if(!DUPLICATE_FREE.test(tuples)) {
 			logger.log("Duplicate tuples in sequence, code not comma-free.");

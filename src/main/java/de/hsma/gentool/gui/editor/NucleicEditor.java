@@ -59,6 +59,7 @@ import de.hsma.gentool.gui.editor.display.GraphDisplay;
 import de.hsma.gentool.gui.helper.AttachedScrollPane;
 import de.hsma.gentool.gui.helper.BetterGlassPane;
 import de.hsma.gentool.gui.helper.VerticalLabelUI;
+import de.hsma.gentool.gui.helper.WrapEditorKit;
 import de.hsma.gentool.nucleic.Acid;
 import de.hsma.gentool.nucleic.Tuple;
 
@@ -107,6 +108,7 @@ public class NucleicEditor extends JRootPane {
 				}
 			}
 		};
+		textPane.setEditorKit(new WrapEditorKit());
 		textPane.setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));
 		textPane.setForeground(Color.BLACK);
 		textPane.addKeyListener(new KeyAdapter() {
@@ -480,10 +482,10 @@ public class NucleicEditor extends JRootPane {
 				return tuples.subMap(fixPosition(rowStartOffset), fixPosition(rowEndOffset+1)).size();
 			}	catch(BadLocationException e) { return -1; }
 		}
-		protected String tupleNumber(int position, int number) {
+		protected String tupleNumber(int tuplesBehind, int tuplesInRow) {
 			final String unknownNumber = new String(new char[digits]).replace("\0","?"),
-			  startNumber = position!=-1?String.format("%0"+digits+"d", position+1):unknownNumber,
-			  endNumber = position!=-1&&number!=-1?String.format("%0"+digits+"d", position+number):unknownNumber;
+			  startNumber = tuplesBehind!=-1?String.format("%0"+digits+"d", tuplesInRow!=0?tuplesBehind+1:tuplesBehind):unknownNumber,
+			  endNumber = tuplesBehind!=-1&&tuplesInRow!=-1?String.format("%0"+digits+"d", tuplesBehind+tuplesInRow):unknownNumber;
 			return startNumber+"-"+endNumber;
 		}
 		private int getOffsetY(int rowOffset,FontMetrics metrics) throws BadLocationException {

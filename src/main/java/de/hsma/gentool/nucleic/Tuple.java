@@ -116,6 +116,15 @@ public class Tuple implements Comparable<Tuple> {
 		} return acid!=null?acid:RNA;
 	}
 	
+	public static int tuplesLength(Collection<Tuple> tuples) {
+		if(tuples.isEmpty()) return 0;
+		Tuple firstTuple = tuples instanceof List?((List<Tuple>)tuples).get(0):tuples.iterator().next();
+		int length = firstTuple!=null?firstTuple.length():0;
+		for(Tuple tuple:tuples) if(tuple.length()!=length)
+			return 0;
+		return length;
+	}
+	
 	public static List<Tuple> normalizeTuples(Collection<Tuple> tuples) { return normalizeTuples(tuples,RNA); }
 	public static List<Tuple> normalizeTuples(Collection<Tuple> tuples, Acid acid) {
 		List<Tuple> uniformTuples = new ArrayList<>(tuples);

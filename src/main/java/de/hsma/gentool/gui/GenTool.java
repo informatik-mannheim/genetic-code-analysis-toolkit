@@ -194,6 +194,8 @@ public class GenTool extends JFrame implements ActionListener {
 	private FindDialog findDialog;
 	private ConsolePane consolePane;
 	
+	@SuppressWarnings("unused") private Option.Component optionLength, optionAcid, optionMode;
+	
 	private File currentFile;
 	
 	public GenTool() {
@@ -619,10 +621,21 @@ public class GenTool extends JFrame implements ActionListener {
 	}
 	public boolean openFile(File file) {
 		try {
+			editor.setDefaultTupleLength(0);
+			editor.setDefaultAcid(null);
+			
 			editor.setText(new String(readFile(file)));
 			editor.setClean();
+			
 			currentFile = file;
 			getMenuItem(menu[0],ACTION_SAVE).setEnabled(true);
+			
+			Collection<Tuple> tuples = editor.getTuples();
+			editor.setDefaultTupleLength(Tuple.tuplesLength(tuples));
+			optionLength.setValue(editor.getDefaultTupleLength());
+			editor.setDefaultAcid(Tuple.tuplesAcid(tuples));
+			optionAcid.setValue(editor.getDefaultAcid());
+			
 			return true;
 		}	catch(IOException e) {
 			JOptionPane.showMessageDialog(this,"Could not open file:\n"+e.getMessage(),"Open File",JOptionPane.WARNING_MESSAGE);
@@ -1003,7 +1016,7 @@ public class GenTool extends JFrame implements ActionListener {
 		
 		protected Component createInputOptions() {
 			JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-			addInputOption(panel,new Option("tupleLength", "Tuple Length", editor.getDefaultTupleLength(), 0, 10, 1)).addChangeListener(new ChangeListener() {
+			(optionLength=addInputOption(panel,new Option("tupleLength", "Tuple Length", editor.getDefaultTupleLength(), 0, 10, 1))).addChangeListener(new ChangeListener() {
 				@Override public void stateChanged(ChangeEvent event) {
 					int oldValue = editor.getDefaultTupleLength(), newValue = (Integer)((JSpinner)event.getSource()).getValue();
 					if(InputMode.SET.equals(editor.getInputMode())&&newValue!=0&&newValue<oldValue&&
@@ -1012,18 +1025,18 @@ public class GenTool extends JFrame implements ActionListener {
 					editor.setDefaultTupleLength(newValue);
 				}
 			});
-			addInputOption(panel,new Option("acid", "Default Acid", RNA,
+			(optionAcid=addInputOption(panel,new Option("acid", "Default Acid", RNA,
 				new Acid[]{null,RNA,DNA},
 				EMPTY,RNA.name(),DNA.name())
-			).addItemListener(new ItemListener() {
+			)).addItemListener(new ItemListener() {
 				@Override public void itemStateChanged(ItemEvent event) {
 					editor.setDefaultAcid(event.getStateChange()==ItemEvent.SELECTED?(Acid)event.getItem():null);
 				}
 			});
-			addInputOption(panel,new Option("inputMode", "Input Mode", InputMode.SEQUENCE,
+			(optionMode=addInputOption(panel,new Option("inputMode", "Input Mode", InputMode.SEQUENCE,
 				new InputMode[]{InputMode.SEQUENCE,InputMode.SET},
 				new String[]{"Sequence","Set"})
-			).addItemListener(new ItemListener() {
+			)).addItemListener(new ItemListener() {
 				@Override public void itemStateChanged(ItemEvent event) {
 					if(event.getStateChange()==ItemEvent.SELECTED)
 						editor.setInputMode((InputMode)event.getItem());

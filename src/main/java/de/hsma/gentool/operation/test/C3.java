@@ -21,12 +21,11 @@ public class C3 implements Test {
 		if(tuples.isEmpty())
 			return true; //an empty set of tuples is comma-free
 		
-		int length = tuples.iterator().next().length();
-		for(Tuple tuple:tuples)
-			if(tuple.length()!=length) {
-				logger.log("Tuples of variable length, can't check for c3-code.");
-				return false; //tuples not all of same length
-			}
+		int length;
+		if((length=Tuple.tuplesLength(tuples))==0) {
+			logger.log("Tuples of variable length, can't check for c3-code.");
+			return false; //tuples not all of same length
+		}
 		
 		Collection<Tuple> shifted = tuples;
 		for(int shift=0;shift<length;shift++)
