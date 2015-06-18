@@ -31,6 +31,7 @@ public class CompoundDisplay extends JPanel implements NucleicDisplay {
                          COLOR_POLAR = new Color(179,222,192),
                          COLOR_BASIC = new Color(187,191,224),
                         COLOR_ACIDIC = new Color(248,183,211),
+                       COLOR_TESSERA = new Color(179,222,192),
                        COLOR_SPECIAL = new Color(176,176,176);
 	private final int defaultCharWidth;
 	
@@ -96,7 +97,8 @@ public class CompoundDisplay extends JPanel implements NucleicDisplay {
 					case NONPOLAR: color = COLOR_NONPOLAR; break;
 					case POLAR: color = COLOR_POLAR; break;
 					case BASIC: color = COLOR_BASIC; break;
-					case ACIDIC: color = COLOR_ACIDIC; break; }
+					case ACIDIC: color = COLOR_ACIDIC; break; 
+					case TESSERA: color = COLOR_TESSERA; break; }
 				} else if(Compound.isStart(tuple)) text = "STA";
 					else if(Compound.isStop(tuple)) text = "STP";
 					else text = "UNK";

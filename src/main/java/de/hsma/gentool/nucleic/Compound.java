@@ -32,10 +32,11 @@ public enum Compound {
 	TYROSINE('Y', "Tyr", Property.POLAR, new String[]{"UAU", "TAT", "UAC", "TAC"}),
 	VALINE('V', "Val", Property.NONPOLAR, new String[]{"GUU", "GTT", "GUC", "GTC", "GUA", "GTA", "GUG", "GTG"}),
 	
+	TESSERA('4', "Tsr", Property.TESSERA, new String[]{"AAAA", "AAUU", "AAGG", "AACC", "UUUU", "UUAA", "UUCC", "UUGG", "CCCC", "CCGG", "CCUU", "CCAA", "GGGG", "GGCC", "GGAA", "GGUU", "AUUA", "AUAU", "AUCG", "AUGC", "UAAU", "UAUA", "UAGC", "UACG", "CGGC", "CGCG", "CGAU", "CGUA", "GCCG", "GCGC", "GCUA", "GCAU", "AGGA", "AGCU", "AGAG", "AGUC", "UCCU", "UCGA", "UCUC", "UCAG", "CUUC", "CUAG", "CUCU", "CUGA", "GAAG", "GAUC", "GAGA", "GACU", "ACCA", "ACGU", "ACUG", "ACAC", "UGGU", "UGCA", "UGAC", "UGUG", "CAAC", "CAUG", "CAGU", "CACA", "GUUG", "GUAC", "GUCA", "GUGU"}),
 	UNKNOWN('?', "Unknown", null, (Collection<Tuple>)null);
 	
 	public enum Property {
-		NONPOLAR, POLAR, BASIC, ACIDIC;
+		NONPOLAR, POLAR, BASIC, ACIDIC, TESSERA;
 	}
 	
 	public final char letter;
