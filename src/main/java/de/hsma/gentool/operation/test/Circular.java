@@ -57,7 +57,7 @@ public class Circular implements Test {
 				for(ICombinatoricsVector<Tuple> permutation:Factory.createPermutationGenerator(combination))
 					for(int shift=1;shift<length;shift++)
 						if(tuples.containsAll(shifted=SHIFT.transform(permutation.getVector(),shift))) {
-							logger.log("Partition "+permutation.getVector()+" and shifht "+shifted+" contained in sequence, code not "+n+"-circular.");
+							logger.log("Partition "+permutation.getVector()+" and shift "+shifted+" contained in sequence, code not "+n+"-circular.");
 							return false;
 						}
 		}
