@@ -98,9 +98,9 @@ import javax.swing.event.EventListenerList;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.NumberFormatter;
-import javax.swing.text.Style;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyledDocument;
+import javax.swing.text.html.HTMLDocument;
+import javax.swing.text.html.HTMLEditorKit;
+import javax.swing.text.html.StyleSheet;
 import org.reflections.Reflections;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -560,11 +560,11 @@ public class GenTool extends JFrame implements ActionListener {
 				if(Transformation.class.isAssignableFrom(operation)||Split.class.isAssignableFrom(operation))
 					editor.setTuples(tuples);
 				else if(Test.class.isAssignableFrom(operation))
-					consolePane.appendText(String.format("Sequence DOES apply to test \"%s\"", name),consolePane.success);
+					consolePane.appendText(String.format("Sequence <b>DOES</b> apply to test \"%s\"", name),consolePane.success);
 			}
 			@Override public void onFailure(Throwable thrown) {
 				if(Test.class.isAssignableFrom(operation)&&thrown instanceof Test.Failed)
-					   consolePane.appendText(String.format("Sequence does NOT apply to \"%s\"",name),consolePane.failure);
+					   consolePane.appendText(String.format("Sequence does <b>NOT</b> apply to \"%s\"",name),consolePane.failure);
 				else consolePane.appendText(String.format("Exception in operation \"%s\": %s",name,Optional.ofNullable(thrown.getMessage()).orElse("Unknown cause")),consolePane.failure);
 			}
 		});
@@ -1433,13 +1433,20 @@ public class GenTool extends JFrame implements ActionListener {
 	class ConsolePane extends JTextPane implements Logger {
 		private static final long serialVersionUID = 1l;
 		
-		private StyledDocument document;
-		private final Style success,failure;
+		public final String success = "success", failure = "failure";
+		
+		private HTMLDocument document;
+		private HTMLEditorKit kit;
 		
 		public ConsolePane() {
-			document = getStyledDocument();
-			success = addStyle("success",null); StyleConstants.setForeground(success,new Color(70,140,70));
-			failure = addStyle("failure",null); StyleConstants.setForeground(failure,new Color(200,50,50));
+			setContentType("text/html");
+			setEditorKit(kit=new HTMLEditorKit());
+			StyleSheet style = kit.getStyleSheet();
+			style.addRule("body { color:#000; font-family:monospace; font-size:10px; }");
+			style.addRule(".success { color:#468C46; }");
+			style.addRule(".failure { color:#C83232; }");
+			setDocument(document=(HTMLDocument)kit.createDefaultDocument());
+			
 			setEditable(false); setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));
 			addMouseListener(new PopupMouseAdapter(new JPopupMenu() {	private static final long serialVersionUID = 1l; {
 				add(new AbstractAction("Clear") {
@@ -1451,19 +1458,23 @@ public class GenTool extends JFrame implements ActionListener {
 			}}));
 		}
 		
-		public void insertText(String text) { insertText(text,null); }
-		public void insertText(String text,Style style) {			
-			try { document.insertString(document.getLength(),text,style); }
-			catch(BadLocationException e) { /* nothing to do here */ }
+		public void insertText(String text) {
+			try { kit.insertHTML(document,document.getLength(),text,0,0,null); }
+			catch(BadLocationException|IOException e) { /* nothing to do here */ }
+		}
+		public void insertText(String text, String styleClass) {
+			insertText(applyStyleClass(text,styleClass));
 		}
 		
-		public void appendText(String text) { appendText(text,null); }
-		public void appendText(String text,Style style) {
+		public void appendText(String text) {
 			boolean atBottom = isAtBottom();
 			if(document.getLength()!=0)
 				insertText(NEW_LINE);
-			insertText(text,style);
+			insertText(text);
 			if(atBottom) scrollToBottom();
+		}
+		public void appendText(String text, String styleClass) {
+			appendText(applyStyleClass(text,styleClass));
 		}
 		
 		public void clearText() { setText(null); }
@@ -1475,6 +1486,9 @@ public class GenTool extends JFrame implements ActionListener {
 			appendText(message,failure); appendText(throwable.getMessage(),failure);
 		}
 		
+		private String applyStyleClass(String text, String styleClass) {
+			return String.format("<span class=\"%s\">%s</span>",styleClass,text);
+		}
 		private boolean isAtBottom() {
 			JScrollBar scrollBar = getScrollBar(); if(scrollBar==null) return true;
 			return scrollBar.getValue()+scrollBar.getVisibleAmount()+scrollBar.getBlockIncrement()>scrollBar.getMaximum();
