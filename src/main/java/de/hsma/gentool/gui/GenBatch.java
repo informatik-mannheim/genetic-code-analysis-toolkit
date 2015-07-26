@@ -183,7 +183,7 @@ public class GenBatch extends JFrame implements ActionListener, ListDataListener
 		menu[0].add(createMenuItem("Export...", "table_save.png", ACTION_EXPORT, this));
 		menu[0].add(createMenuItem("Execute", "table_lightning.png", KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, InputEvent.CTRL_DOWN_MASK), ACTION_EXECUTE, this));
 		menu[0].add(createSeparator());
-		menu[0].add(createMenuItem("Close", "control-power.png", ACTION_CLOSE, this));
+		menu[0].add(createMenuItem("Close Window", "cross.png", ACTION_CLOSE, this));
 		menu[1].add(createMenuText("Actions:"));
 		menu[1].add(createMenuItem("Add", KeyStroke.getKeyStroke(KeyEvent.VK_A, InputEvent.CTRL_DOWN_MASK), ACTION_ACTION_ADD, this));
 		menu[1].add(createMenuItem("Edit...", KeyStroke.getKeyStroke(KeyEvent.VK_E, InputEvent.CTRL_DOWN_MASK), ACTION_ACTION_EDIT, this));

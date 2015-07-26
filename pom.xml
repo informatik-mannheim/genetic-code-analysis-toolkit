@@ -4,10 +4,33 @@
 
 	<groupId>de.hsma.gentool</groupId>
 	<artifactId>gentool</artifactId>
-	<version>1.7-SNAPSHOT</version>
+	<version>1.8-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>Genetic Code Tool (GenTool)</name>
+	<url>http://www.mbi.hs-mannheim.de/research/mathematics-of-the-genetic-information.html</url>
+
+	<developers>
+		<developer>
+			<name>Kristian Kraljic</name>
+			<email>kris@kra.lc</email>
+			<organization>Mannheim University of Applied Sciences</organization>
+			<roles>
+				<role>Developer</role>
+				<role>Administrator</role>
+			</roles>
+		</developer>
+		<developer>
+			<name>Markus Gumbel</name>
+			<email>m.gumbel@hs-mannheim.de</email>
+			<organization>Mannheim University of Applied Sciences</organization>
+			<roles>
+				<role>Developer</role>
+				<role>Administrator</role>
+			</roles>
+		</developer>
+	</developers>
+	<inceptionYear>2014</inceptionYear>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

@@ -119,7 +119,7 @@ public class GenBDA extends JFrame implements ActionListener, ListDataListener, 
 		menu[0].add(createMenuItem("Open...", "folder-horizontal-open.png", KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_DOWN_MASK), ACTION_OPEN, this));
 		menu[0].add(createMenuItem("Save As...", "disk--arrow.png", KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK), ACTION_SAVE_AS, this));
 		menu[0].add(createSeparator());
-		menu[0].add(createMenuItem("Close", "control-power.png", ACTION_CLOSE, this));
+		menu[0].add(createMenuItem("Close Window", "cross.png", ACTION_CLOSE, this));
 		menu[1].add(createMenuText("Binary Dichotomic Algorithm:"));
 		menu[1].add(createMenuItem("Add", KeyStroke.getKeyStroke(KeyEvent.VK_A, InputEvent.CTRL_DOWN_MASK), ACTION_BDA_ADD, this));
 		menu[1].add(createMenuItem("Edit...", KeyStroke.getKeyStroke(KeyEvent.VK_E, InputEvent.CTRL_DOWN_MASK), ACTION_BDA_EDIT, this));
