@@ -118,6 +118,11 @@ public class NucleicEditor extends JRootPane {
 					event.setKeyChar(Character.toUpperCase(key));
 			}
 		});
+		textPane.addComponentListener(new ComponentAdapter() {
+			@Override public void componentResized(ComponentEvent event) {
+				if(numberPanel!=null) numberPanel.repaint();
+			}
+		});
 		textPane.setDocument(document=new NucleicDocument());
 		document.addUndoableEditListener(edit=new UndoableEditListener());
 		document.setDefaultTupleLength(3);
