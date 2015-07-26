@@ -216,6 +216,8 @@ public class GenTool extends JFrame implements ActionListener {
 				if(TOOLS.isEmpty()) {
 					if(batch!=null)
 						batch.dispose();
+					if(bda!=null)
+						bda.dispose();
 				}
 			}
 		});
