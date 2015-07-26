@@ -125,6 +125,12 @@ public class Tuple implements Comparable<Tuple> {
 		return length;
 	}
 	
+	public static List<Tuple> condenseTuples(Collection<Tuple> tuples) {
+		List<Tuple> condensedTuples = new ArrayList<>(tuples);
+		condensedTuples.removeIf(tuple->tuple.length()==0);
+		return condensedTuples;
+	}
+	
 	public static List<Tuple> normalizeTuples(Collection<Tuple> tuples) { return normalizeTuples(tuples,RNA); }
 	public static List<Tuple> normalizeTuples(Collection<Tuple> tuples, Acid acid) {
 		List<Tuple> uniformTuples = new ArrayList<>(tuples);
