@@ -1,3 +1,0 @@
-This project contains the internal source code the genetic code project at the institute for mathematical biology. This repository might be of limited interest for people not working on this subject.
-
-Please refer to "project home page":http://www.mbi.hs-mannheim.de/research/mathematics-of-the-genetic-information.html for more information. 

@@ -1,3 +1,18 @@
+/*
+ * Copyright [2014] [Mannheim University of Applied Sciences]
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *  
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License. 
+ */
 package de.hsma.gentool.gui;
 
 import static de.hsma.gentool.Utilities.*;
@@ -904,7 +919,7 @@ public class GenTool extends JFrame implements ActionListener {
 		Border gap = new EmptyBorder(5,0,5,0); JLabel label;
 		about.add(label=new JLabel(new ImageIcon(getResource("gentool.png")), SwingConstants.CENTER));
 		label.setBorder(gap); label.setAlignmentX(CENTER_ALIGNMENT);
-		about.add(label=new JLabel("\u00A9 2014-2015 Hochschule Mannheim - Version "+VERSION));
+		about.add(label=new JLabel("\u00A9 2014-2015 Mannheim University of Applied Sciences - Version "+VERSION));
 		label.setBorder(gap); label.setAlignmentX(CENTER_ALIGNMENT);
 		label.setFont(label.getFont().deriveFont(Font.BOLD));
 		about.add(label=new JLabel("(Elena Fimmel, Lutz Str\u00FCngmann, Markus Gumbel, Kristian Kralji\u0107)"));
