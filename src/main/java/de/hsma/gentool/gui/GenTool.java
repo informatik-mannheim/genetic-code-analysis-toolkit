@@ -896,7 +896,7 @@ public class GenTool extends JFrame implements ActionListener {
 		about.add(label=new JLabel("\u00A9 2014-2015 Hochschule Mannheim - Version "+VERSION));
 		label.setBorder(gap); label.setAlignmentX(CENTER_ALIGNMENT);
 		label.setFont(label.getFont().deriveFont(Font.BOLD));
-		about.add(label=new JLabel("(Prof. Dr. Elena Fimmel, Prof. Dr. Lutz Str\u00FCngmann, Prof. Dr. Markus Gumbel, Kristian Kralji\u0107)"));
+		about.add(label=new JLabel("(Elena Fimmel, Lutz Str\u00FCngmann, Markus Gumbel, Kristian Kralji\u0107)"));
 		label.setBorder(gap);label.setAlignmentX(CENTER_ALIGNMENT);
 		about.add(label=new JLabel("http://am.informatik.hs-mannheim.de/GenTool/"));
 		label.setAlignmentX(CENTER_ALIGNMENT);
