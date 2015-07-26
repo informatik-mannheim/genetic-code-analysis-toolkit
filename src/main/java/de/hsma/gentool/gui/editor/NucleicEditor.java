@@ -323,11 +323,7 @@ public class NucleicEditor extends JRootPane {
 	public String getText(int offset, int length) throws BadLocationException { return textPane.getText(offset, length); }
 	public void setText(String text) { edit.startTransaction(); textPane.setText(text); edit.commitTransaction(); }
 	
-	public Collection<Tuple> getTuples() {
-		if(document.getLength()!=0)
-		     return Collections.unmodifiableCollection(tuples.values());
-		else return Collections.emptyList();
-	}
+	public Collection<Tuple> getTuples() { return Collections.unmodifiableCollection(tuples.values()); }
 	public NavigableMap<Position,Tuple> getTupleMap() { return tuples; }
 	public void setTuples(Collection<Tuple> tuples) {
 		invokeAppropriate(new Runnable() {
