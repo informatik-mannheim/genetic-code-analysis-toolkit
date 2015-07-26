@@ -29,7 +29,7 @@ import de.hsma.gentool.nucleic.Tuple;
 import de.hsma.gentool.operation.Cataloged;
 import de.hsma.gentool.operation.Named;
 
-@Named(name="audio") @Cataloged(group="Analyses")
+@Named(name="audio", icon="sound") @Cataloged(group="Analyses")
 public class Audio implements Analysis {
 	private static Map<Base,Note> notes = ImmutableMap.of(
 		ADENINE,Note.C4,

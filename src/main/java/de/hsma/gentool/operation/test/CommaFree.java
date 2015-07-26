@@ -25,7 +25,7 @@ import de.hsma.gentool.operation.Named;
 import de.hsma.gentool.operation.transformation.ShiftSequence;
 import de.hsma.gentool.operation.transformation.Transformation;
 
-@Named(name="comma-free?") @Cataloged(group="Tests")
+@Named(name="comma-free?", icon="comma_free") @Cataloged(group="Tests")
 public class CommaFree implements Test {
 	private static final Test
 		DUPLICATE_FREE = new DuplicateFree();

@@ -23,7 +23,7 @@ import de.hsma.gentool.nucleic.Tuple;
 import de.hsma.gentool.operation.Cataloged;
 import de.hsma.gentool.operation.Named;
 
-@Named(name="n-shift sequence") @Cataloged(group="Transformations")
+@Named(name="n-shift sequence", icon="text_indent") @Cataloged(group="Transformations")
 @Parameter.Annotation(key="shift",label="Shift",type=Type.NUMBER,value="1,10")
 public class ShiftSequence implements Transformation {
 	private static final Pattern

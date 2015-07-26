@@ -70,7 +70,6 @@ import javax.swing.BoxLayout;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -207,7 +206,7 @@ public class GenTool extends JFrame implements ActionListener {
 	
 	public GenTool() {
 		super("Genetic Code Tool (GenTool)"); TOOLS.add(this);
-		setIconImage(new ImageIcon(getResource("icon.png")).getImage());
+		setIconImage(getImage("icon").getImage());
 		setMinimumSize(new Dimension(800,600));
 		setPreferredSize(new Dimension(1120,680));
 		setSize(getPreferredSize());
@@ -344,19 +343,19 @@ public class GenTool extends JFrame implements ActionListener {
 		menubar.add(menu[3] = new JMenu("Help"));
 		setJMenuBar(menubar);
 
-		menu[0].add(createMenuItem("New", "document.png", KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_DOWN_MASK), ACTION_NEW, this));
-		menu[0].add(createMenuItem("Open...", "folder-horizontal-open.png", KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_DOWN_MASK), ACTION_OPEN, this));
-		menu[0].add(createMenuItem("Save", "disk.png", KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK), ACTION_SAVE, this));
-		menu[0].add(createMenuItem("Save As...", "disk--arrow.png", ACTION_SAVE_AS, this));
+		menu[0].add(createMenuItem("New", "document", KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_DOWN_MASK), ACTION_NEW, this));
+		menu[0].add(createMenuItem("Open...", "folder-horizontal-open", KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_DOWN_MASK), ACTION_OPEN, this));
+		menu[0].add(createMenuItem("Save", "disk", KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK), ACTION_SAVE, this));
+		menu[0].add(createMenuItem("Save As...", "disk--arrow", ACTION_SAVE_AS, this));
 		menu[0].add(createSeparator());
-		menu[0].add(createMenuItem("Exit", "control-power.png", ACTION_EXIT, this));
-		menu[1].add(createMenuItem("Undo", "arrow_undo.png", KeyStroke.getKeyStroke(KeyEvent.VK_Z, InputEvent.CTRL_DOWN_MASK), ACTION_UNDO, this));
-		menu[1].add(createMenuItem("Redo", "arrow_redo.png", KeyStroke.getKeyStroke(KeyEvent.VK_Y, InputEvent.CTRL_DOWN_MASK), ACTION_REDO, this));
+		menu[0].add(createMenuItem("Exit", "control-power", ACTION_EXIT, this));
+		menu[1].add(createMenuItem("Undo", "arrow_undo", KeyStroke.getKeyStroke(KeyEvent.VK_Z, InputEvent.CTRL_DOWN_MASK), ACTION_UNDO, this));
+		menu[1].add(createMenuItem("Redo", "arrow_redo", KeyStroke.getKeyStroke(KeyEvent.VK_Y, InputEvent.CTRL_DOWN_MASK), ACTION_REDO, this));
 		menu[1].add(createSeparator());
-		menu[1].add(createMenuItem("Cut", "cut.png", KeyStroke.getKeyStroke(KeyEvent.VK_X, InputEvent.CTRL_DOWN_MASK), ACTION_CUT, this));
-		menu[1].add(createMenuItem("Copy", "page_copy.png", KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_DOWN_MASK), ACTION_COPY, this));
-		menu[1].add(createMenuItem("Paste", "page_paste.png", KeyStroke.getKeyStroke(KeyEvent.VK_V, InputEvent.CTRL_DOWN_MASK), ACTION_PASTE, this));
-		menu[1].add(createMenuItem("Delete", "cross.png", KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), ACTION_DELETE, this));
+		menu[1].add(createMenuItem("Cut", "cut", KeyStroke.getKeyStroke(KeyEvent.VK_X, InputEvent.CTRL_DOWN_MASK), ACTION_CUT, this));
+		menu[1].add(createMenuItem("Copy", "page_copy", KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_DOWN_MASK), ACTION_COPY, this));
+		menu[1].add(createMenuItem("Paste", "page_paste", KeyStroke.getKeyStroke(KeyEvent.VK_V, InputEvent.CTRL_DOWN_MASK), ACTION_PASTE, this));
+		menu[1].add(createMenuItem("Delete", "cross", KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), ACTION_DELETE, this));
 		menu[1].add(createSeparator());
 		menu[1].add(createMenuItem("Find...", KeyStroke.getKeyStroke(KeyEvent.VK_F, InputEvent.CTRL_DOWN_MASK), ACTION_FIND, this));
 		menu[1].add(createMenuItem("Find Next", KeyStroke.getKeyStroke(KeyEvent.VK_F3, 0), ACTION_FIND_NEXT, this));
@@ -370,28 +369,28 @@ public class GenTool extends JFrame implements ActionListener {
 		menu[2].add(createMenuItem("Copy Window", ACTION_COPY_WINDOW, this));
 		menu[2].add(createMenuItem("Hide Toolbar", ACTION_TOGGLE_TOOLBAR, this));
 		menu[2].add(createSeparator());
-		menu[2].add(createMenuItem("Open GenBatch", "calculator.png", KeyStroke.getKeyStroke(KeyEvent.VK_B, InputEvent.CTRL_DOWN_MASK), ACTION_SHOW_BATCH, this));
-		menu[2].add(createMenuItem("Add Sequence", "calculator_add.png", ACTION_ADD_TO_BATCH, this));
-    menu[2].add(createMenuItem("BDA Editor", "application_osx_terminal.png", ACTION_SHOW_BDA, this));
+		menu[2].add(createMenuItem("Open GenBatch", "calculator", KeyStroke.getKeyStroke(KeyEvent.VK_B, InputEvent.CTRL_DOWN_MASK), ACTION_SHOW_BATCH, this));
+		menu[2].add(createMenuItem("Add Sequence", "calculator_add", ACTION_ADD_TO_BATCH, this));
+    menu[2].add(createMenuItem("BDA Editor", "application_osx_terminal", ACTION_SHOW_BDA, this));
     menu[2].add(createSeparator());
     menu[2].add(createMenuItem("Preferences", ACTION_PREFERENCES, this));
-		menu[3].add(createMenuItem("About GenTool", "icon.png", ACTION_ABOUT, this));
+		menu[3].add(createMenuItem("About GenTool", "icon", ACTION_ABOUT, this));
 		for(String action:new String[]{ACTION_SAVE,ACTION_UNDO,ACTION_REDO,ACTION_CUT,ACTION_COPY,ACTION_DELETE})
 			getMenuItem(menubar,action).setEnabled(false);
 		getMenuItem(menubar,ACTION_PREFERENCES).setEnabled(false);
 		
 		toolbar = new JToolBar[1];
 		toolbar[0] = new JToolBar("File");
-		toolbar[0].add(createToolbarButton("New File", "document.png", ACTION_NEW, this));
-		toolbar[0].add(createToolbarButton("Open File", "folder-horizontal-open.png", ACTION_OPEN, this));
-		toolbar[0].add(createToolbarButton("Save File", "disk.png", ACTION_SAVE, this));
-		toolbar[0].add(createToolbarButton("Save As File", "disk--arrow.png", ACTION_SAVE_AS, this));
+		toolbar[0].add(createToolbarButton("New File", "document", ACTION_NEW, this));
+		toolbar[0].add(createToolbarButton("Open File", "folder-horizontal-open", ACTION_OPEN, this));
+		toolbar[0].add(createToolbarButton("Save File", "disk", ACTION_SAVE, this));
+		toolbar[0].add(createToolbarButton("Save As File", "disk--arrow", ACTION_SAVE_AS, this));
 		toolbar[0].addSeparator();
-		toolbar[0].add(createToolbarButton("Open GenBatch", "calculator.png", ACTION_SHOW_BATCH, this));
-		toolbar[0].add(createToolbarButton("Add Sequence to GenBatch", "calculator_add.png", ACTION_ADD_TO_BATCH, this));
+		toolbar[0].add(createToolbarButton("Open GenBatch", "calculator", ACTION_SHOW_BATCH, this));
+		toolbar[0].add(createToolbarButton("Add Sequence to GenBatch", "calculator_add", ACTION_ADD_TO_BATCH, this));
 		toolbar[0].addSeparator();
-		toolbar[0].add(createToolbarButton("BDA Editor", "application_osx_terminal.png", ACTION_SHOW_BDA, this));
-		toolbar[0].add(createToolbarButton("Exit", "control-power.png", ACTION_EXIT, this));
+		toolbar[0].add(createToolbarButton("BDA Editor", "application_osx_terminal", ACTION_SHOW_BDA, this));
+		toolbar[0].add(createToolbarButton("Exit", "control-power", ACTION_EXIT, this));
 		
 		toolbars = new JPanel(new FlowLayout(FlowLayout.LEADING));
 		for(JToolBar bar:toolbar)
@@ -436,7 +435,7 @@ public class GenTool extends JFrame implements ActionListener {
 		status.setHorizontalAlignment(JLabel.RIGHT);
 		bottom.add(status);
 		
-		cancel = new JButton(new ImageIcon(getResource("cancel.png")));
+		cancel = new JButton(getImage("cancel"));
 		cancel.setFocusable(false); cancel.setBorderPainted(false);
 		cancel.setContentAreaFilled(false); cancel.setBorder(EMPTY_BORDER);
 		cancel.addActionListener(new ActionListener() {
@@ -486,9 +485,11 @@ public class GenTool extends JFrame implements ActionListener {
 		
 		final Parameter[] parameters = Operation.getParameters(operation);
 		final Map<Parameter,Option.Component> components = new HashMap<>();
-		final String name = Operation.getName(operation);
+		final String name = Operation.getName(operation), icon = Operation.getIcon(operation);
 		
 		JButton button = new JButton(name);
+		if(icon!=null&&!icon.isEmpty())
+			button.setIcon(getImage(icon));
 		button.addActionListener(new ActionListener() {
 			@Override public void actionPerformed(ActionEvent event) {
 				List<Object> values = new ArrayList<>(parameters!=null?parameters.length:0);
@@ -507,7 +508,7 @@ public class GenTool extends JFrame implements ActionListener {
 		}
 		panel.add(parameterBox, BorderLayout.CENTER);
 
-		JButton batch = new JButton(new ImageIcon(getResource("calculator_add_small.png")));
+		JButton batch = new JButton(getImage("calculator_add_small"));
 		batch.setToolTipText("Add operation to batch");
 		batch.setFocusable(false); batch.setBorderPainted(false);
 		batch.setContentAreaFilled(false); batch.setBorder(EMPTY_BORDER);
@@ -907,7 +908,7 @@ public class GenTool extends JFrame implements ActionListener {
 		((JPanel)about.getContentPane()).setBorder(new EmptyBorder(10,10,10,10));
 		
 		Border gap = new EmptyBorder(5,0,5,0); JLabel label;
-		about.add(label=new JLabel(new ImageIcon(getResource("gentool.png")), SwingConstants.CENTER));
+		about.add(label=new JLabel(getImage("gentool"), SwingConstants.CENTER));
 		label.setBorder(gap); label.setAlignmentX(CENTER_ALIGNMENT);
 		about.add(label=new JLabel("\u00A9 2014-2015 Mannheim University of Applied Sciences - Version "+VERSION));
 		label.setBorder(gap); label.setAlignmentX(CENTER_ALIGNMENT);
@@ -994,7 +995,7 @@ public class GenTool extends JFrame implements ActionListener {
 			);
 			
 			inputPanel.addInfo(inputCombo);
-			inputPanel.addInfo((inputPreferences=new AbstractAction(null,new ImageIcon(getResource("cog.png"))) {
+			inputPanel.addInfo((inputPreferences=new AbstractAction(null,getImage("cog")) {
 				private static final long serialVersionUID = 1l;
 				@Override public void actionPerformed(ActionEvent event) {
 					Input input = (Input)inputCombo.getSelectedItem();
@@ -1087,7 +1088,7 @@ public class GenTool extends JFrame implements ActionListener {
 				}
 			});
 			
-			findBatch = new JButton(new ImageIcon(getResource("calculator_add_small.png")));
+			findBatch = new JButton(getImage("calculator_add_small"));
 			findBatch.setToolTipText("Add test to batch");
 			findBatch.setEnabled(false);
 			findBatch.addActionListener(new ActionListener() {
@@ -1112,7 +1113,7 @@ public class GenTool extends JFrame implements ActionListener {
 				}
 			});
 			
-			replaceBatch = new JButton(new ImageIcon(getResource("calculator_add_small.png")));
+			replaceBatch = new JButton(getImage("calculator_add_small"));
 			replaceBatch.setToolTipText("Add replace operation to batch");
 			replaceBatch.setEnabled(false);
 			replaceBatch.addActionListener(new ActionListener() {
@@ -1129,7 +1130,7 @@ public class GenTool extends JFrame implements ActionListener {
 				}
 			});
 			
-			splitBatch = new JButton(new ImageIcon(getResource("calculator_add_small.png")));
+			splitBatch = new JButton(getImage("calculator_add_small"));
 			splitBatch.setToolTipText("Add split to batch");
 			splitBatch.setEnabled(false);
 			splitBatch.addActionListener(new ActionListener() {

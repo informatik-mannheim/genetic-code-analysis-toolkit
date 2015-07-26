@@ -49,7 +49,6 @@ import java.util.regex.Pattern;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
@@ -117,7 +116,7 @@ public class GenBDA extends JFrame implements ActionListener, ListDataListener, 
 	
 	public GenBDA() {		
 		super("Genetic Code BDA Editor (GenBDA)");
-		setIconImage(new ImageIcon(getResource("application_osx_terminal.png")).getImage());
+		setIconImage(getImage("application_osx_terminal").getImage());
 		setMinimumSize(new Dimension(660,400));
 		setPreferredSize(new Dimension(1020,400));
 		setSize(getPreferredSize());
@@ -131,10 +130,10 @@ public class GenBDA extends JFrame implements ActionListener, ListDataListener, 
 		menubar.add(menu[3] = new JMenu("Help"));
 		setJMenuBar(menubar);
 		
-		menu[0].add(createMenuItem("Open...", "folder-horizontal-open.png", KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_DOWN_MASK), ACTION_OPEN, this));
-		menu[0].add(createMenuItem("Save As...", "disk--arrow.png", KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK), ACTION_SAVE_AS, this));
+		menu[0].add(createMenuItem("Open...", "folder-horizontal-open", KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_DOWN_MASK), ACTION_OPEN, this));
+		menu[0].add(createMenuItem("Save As...", "disk--arrow", KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK), ACTION_SAVE_AS, this));
 		menu[0].add(createSeparator());
-		menu[0].add(createMenuItem("Close Window", "cross.png", ACTION_CLOSE, this));
+		menu[0].add(createMenuItem("Close Window", "cross", ACTION_CLOSE, this));
 		menu[1].add(createMenuText("Binary Dichotomic Algorithm:"));
 		menu[1].add(createMenuItem("Add", KeyStroke.getKeyStroke(KeyEvent.VK_A, InputEvent.CTRL_DOWN_MASK), ACTION_BDA_ADD, this));
 		menu[1].add(createMenuItem("Edit...", KeyStroke.getKeyStroke(KeyEvent.VK_E, InputEvent.CTRL_DOWN_MASK), ACTION_BDA_EDIT, this));
@@ -143,7 +142,7 @@ public class GenBDA extends JFrame implements ActionListener, ListDataListener, 
 		menu[1].add(seperateMenuItem(createMenuItem("Move Up", KeyStroke.getKeyStroke(KeyEvent.VK_UP, InputEvent.CTRL_DOWN_MASK), ACTION_BDA_MOVE_UP, this)));
 		menu[1].add(createMenuItem("Move Down", KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, InputEvent.CTRL_DOWN_MASK), ACTION_BDA_MOVE_DOWN, this));
 		menu[2].add(createMenuItem("Preferences", ACTION_PREFERENCES, this));
-		menu[3].add(createMenuItem("About GenBDA", "application_osx_terminal.png", ACTION_ABOUT, this));
+		menu[3].add(createMenuItem("About GenBDA", "application_osx_terminal", ACTION_ABOUT, this));
 		for(String action:new String[]{ACTION_BDA_EDIT,ACTION_BDA_REMOVE,ACTION_BDAS_CLEAR,ACTION_BDA_MOVE_UP,ACTION_BDA_MOVE_DOWN})
 			getMenuItem(menubar,action).setEnabled(false);
 		getMenuItem(menubar,ACTION_PREFERENCES).setEnabled(false);
@@ -156,8 +155,8 @@ public class GenBDA extends JFrame implements ActionListener, ListDataListener, 
 		
 		toolbar = new JToolBar[1];
 		toolbar[0] = new JToolBar("File");
-		toolbar[0].add(createToolbarButton("Open File", "folder-horizontal-open.png", ACTION_OPEN, this));
-		toolbar[0].add(createToolbarButton("Save As File", "disk--arrow.png", ACTION_SAVE_AS, this));
+		toolbar[0].add(createToolbarButton("Open File", "folder-horizontal-open", ACTION_OPEN, this));
+		toolbar[0].add(createToolbarButton("Save As File", "disk--arrow", ACTION_SAVE_AS, this));
 		
 		toolbars = new JPanel(new FlowLayout(FlowLayout.LEADING));
 		for(JToolBar toolbar:toolbar)

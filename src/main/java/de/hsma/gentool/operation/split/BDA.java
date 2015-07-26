@@ -29,7 +29,7 @@ import de.hsma.gentool.nucleic.Tuple;
 import de.hsma.gentool.operation.Cataloged;
 import de.hsma.gentool.operation.Named;
 
-@Named(name="binary dichotomic algorithm") @Cataloged(group="Splits")
+@Named(name="binary dichotomic algorithm", icon="application_osx_terminal") @Cataloged(group="Splits")
 @Parameter.Annotation(key="bda-file",label="BDA-File",type=Type.FILE,value="Binary Dichotomic Algorithm (*.bda)")
 public class BDA implements Split {
 	@Override public List<Collection<Tuple>> split(Collection<Tuple> tuples,Object... values) { return split(tuples,(File)values[0]); }

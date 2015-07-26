@@ -22,7 +22,7 @@ import de.hsma.gentool.nucleic.Tuple;
 import de.hsma.gentool.operation.Cataloged;
 import de.hsma.gentool.operation.Named;
 
-@Named(name="remove unknown compounds") @Cataloged(group="Transformations")
+@Named(name="remove unknown compounds", icon="bug_delete") @Cataloged(group="Transformations")
 public class RemoveUnknownCompounds implements Transformation {
 	@Override public Collection<Tuple> transform(Collection<Tuple> tuples,Object... values) {
 		List<Tuple> remove = new ArrayList<>(tuples);

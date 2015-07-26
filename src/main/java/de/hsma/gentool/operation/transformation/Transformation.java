@@ -29,11 +29,10 @@ public interface Transformation extends Operation {
 	public default Collection<Tuple> transform(Collection<Tuple> tuples) { return transform(tuples, Parameter.getValues(Operation.getParameters(this.getClass())));  }
 	public Collection<Tuple> transform(Collection<Tuple> tuples, Object... values);
 	
-	@Named(name="find & replace")
+	@Named(name="find & replace", icon="find")
 	@Parameter.Annotation(key="pattern",label="Term",type=Type.TEXT)
 	@Parameter.Annotation(key="replace",label="Replace",type=Type.TEXT)
 	@Parameter.Annotation(key="regex",label="Regex",type=Type.BOOLEAN,value=Utilities.TRUE)
-	
 	public class Expression implements Transformation {  	
   	@Override public Collection<Tuple> transform(Collection<Tuple> tuples,Object... values) { return transform(tuples, (String)values[0], (String)values[1], (Boolean)values[2]); }
   	public Collection<Tuple> transform(Collection<Tuple> tuples,String pattern,String replace,boolean regex) {

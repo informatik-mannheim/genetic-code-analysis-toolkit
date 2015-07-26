@@ -36,7 +36,7 @@ public interface Test extends Operation {
 	  public Test getTest() { return (Test)getOperation(); }
 	}
 	
-	@Named(name="match")
+	@Named(name="match", icon="magnifier_zoom_in")
 	@Parameter.Annotation(key="pattern",label="Term",type=Type.TEXT)
 	@Parameter.Annotation(key="regex",label="Regex",type=Type.BOOLEAN,value=Utilities.TRUE)
 	public class Expression implements Test {

@@ -25,7 +25,7 @@ import de.hsma.gentool.nucleic.Tuple;
 import de.hsma.gentool.operation.Cataloged;
 import de.hsma.gentool.operation.Named;
 
-@Named(name="amino acids") @Cataloged(group="Analyses")
+@Named(name="amino acids", icon="bricks") @Cataloged(group="Analyses")
 public class AminoAcids implements Analysis {
 	private static final String DELIMITER = ", ", TIMES = "x ";
 	

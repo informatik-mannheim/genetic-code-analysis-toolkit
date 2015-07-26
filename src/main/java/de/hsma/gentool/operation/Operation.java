@@ -29,12 +29,18 @@ import de.hsma.gentool.log.Logger;
 
 public interface Operation extends InjectionLogger.Injectable {
 	public default String getName() { return getName(this.getClass()); }
+	public default String getIcon() { return getIcon(this.getClass()); }
 	public default String getGroup() { return getGroup(this.getClass()); }
 	
 	public static String getName(Class<? extends Operation> operation) {
 		if(operation.isAnnotationPresent(Named.class))
 		     return operation.getAnnotation(Named.class).name();
 		else return operation.getSimpleName();
+	}
+	public static String getIcon(Class<? extends Operation> operation) {
+		if(operation.isAnnotationPresent(Named.class))
+		     return operation.getAnnotation(Named.class).icon();
+		else return null;
 	}
 	public static String getGroup(Class<? extends Operation> operation) {
 		if(operation.isAnnotationPresent(Cataloged.class))

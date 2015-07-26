@@ -31,7 +31,7 @@ import de.hsma.gentool.nucleic.Tuple;
 import de.hsma.gentool.operation.Cataloged;
 import de.hsma.gentool.operation.Named;
 
-@Named(name="common substitution") @Cataloged(group="Transformations")
+@Named(name="common substitution", icon="book_next") @Cataloged(group="Transformations")
 public class CommonSubstitution implements Transformation {
 	public static final Map<String,Map<Base,Base>> SUBSTITUTIONS;
 	

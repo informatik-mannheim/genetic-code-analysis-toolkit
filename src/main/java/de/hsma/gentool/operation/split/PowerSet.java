@@ -25,7 +25,7 @@ import de.hsma.gentool.nucleic.Tuple;
 import de.hsma.gentool.operation.Cataloged;
 import de.hsma.gentool.operation.Named;
 
-@Named(name="power set") @Cataloged(group="Splits")
+@Named(name="power set", icon="chart_organisation") @Cataloged(group="Splits")
 public class PowerSet implements Split {
  	@Override public List<Collection<Tuple>> split(Collection<Tuple> tuples,Object... values) { return new ArrayList<>(powerSet(new HashSet<>(tuples))); }
 	@SuppressWarnings("serial") private static <T> Set<Set<T>> powerSet(Set<T> originalSet) {

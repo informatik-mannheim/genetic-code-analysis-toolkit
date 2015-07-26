@@ -22,7 +22,7 @@ import de.hsma.gentool.nucleic.Tuple;
 import de.hsma.gentool.operation.Cataloged;
 import de.hsma.gentool.operation.Named;
 
-@Named(name="self-complementary?") @Cataloged(group="Tests")
+@Named(name="self-complementary?", icon="style_go") @Cataloged(group="Tests")
 public class SelfComplementary implements Test {
 	@Override public boolean test(Collection<Tuple> tuples,Object... values) {
 		Logger logger = getLogger();

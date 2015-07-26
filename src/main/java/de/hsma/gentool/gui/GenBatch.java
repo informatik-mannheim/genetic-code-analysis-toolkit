@@ -181,7 +181,7 @@ public class GenBatch extends JFrame implements ActionListener, ListDataListener
 	
 	public GenBatch() {		
 		super("Genetic Code Batch (GenBatch)");
-		setIconImage(new ImageIcon(getResource("calculator.png")).getImage());
+		setIconImage(getImage("calculator").getImage());
 		setMinimumSize(new Dimension(660,400));
 		setPreferredSize(new Dimension(1020,400));
 		setSize(getPreferredSize());
@@ -195,11 +195,11 @@ public class GenBatch extends JFrame implements ActionListener, ListDataListener
 		menubar.add(menu[3] = new JMenu("Help"));
 		setJMenuBar(menubar);
 		
-		menu[0].add(createMenuItem("Import...", "table_go.png", KeyStroke.getKeyStroke(KeyEvent.VK_I, InputEvent.CTRL_DOWN_MASK), ACTION_IMPORT, this));
-		menu[0].add(createMenuItem("Export...", "table_save.png", ACTION_EXPORT, this));
-		menu[0].add(createMenuItem("Execute", "table_lightning.png", KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, InputEvent.CTRL_DOWN_MASK), ACTION_EXECUTE, this));
+		menu[0].add(createMenuItem("Import...", "table_go", KeyStroke.getKeyStroke(KeyEvent.VK_I, InputEvent.CTRL_DOWN_MASK), ACTION_IMPORT, this));
+		menu[0].add(createMenuItem("Export...", "table_save", ACTION_EXPORT, this));
+		menu[0].add(createMenuItem("Execute", "table_lightning", KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, InputEvent.CTRL_DOWN_MASK), ACTION_EXECUTE, this));
 		menu[0].add(createSeparator());
-		menu[0].add(createMenuItem("Close Window", "cross.png", ACTION_CLOSE, this));
+		menu[0].add(createMenuItem("Close Window", "cross", ACTION_CLOSE, this));
 		menu[1].add(createMenuText("Actions:"));
 		menu[1].add(createMenuItem("Add", KeyStroke.getKeyStroke(KeyEvent.VK_A, InputEvent.CTRL_DOWN_MASK), ACTION_ACTION_ADD, this));
 		menu[1].add(createMenuItem("Edit...", KeyStroke.getKeyStroke(KeyEvent.VK_E, InputEvent.CTRL_DOWN_MASK), ACTION_ACTION_EDIT, this));
@@ -210,10 +210,10 @@ public class GenBatch extends JFrame implements ActionListener, ListDataListener
 		menu[1].add(createSeparator());
 		menu[1].add(createMenuText("Sequences:"));
 		menu[1].add(createMenuItem("Edit", ACTION_SEQUENCES_EDIT, this));
-		menu[1].add(createMenuItem("Remove", "table_row_delete.png", KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), ACTION_SEQUENCES_REMOVE, this));
+		menu[1].add(createMenuItem("Remove", "table_row_delete", KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), ACTION_SEQUENCES_REMOVE, this));
 		menu[1].add(createMenuItem("Clear", ACTION_SEQUENCES_CLEAR, this));
 		menu[2].add(createMenuItem("Preferences", ACTION_PREFERENCES, this));
-		menu[3].add(createMenuItem("About GenBatch", "calculator.png", ACTION_ABOUT, this));
+		menu[3].add(createMenuItem("About GenBatch", "calculator", ACTION_ABOUT, this));
 		for(String action:new String[]{ACTION_ACTION_EDIT,ACTION_ACTION_REMOVE,ACTION_ACTIONS_CLEAR,ACTION_ACTION_MOVE_UP,ACTION_ACTION_MOVE_DOWN,ACTION_SEQUENCES_EDIT,ACTION_SEQUENCES_REMOVE,ACTION_SEQUENCES_CLEAR})
 			getMenuItem(menubar,action).setEnabled(false);
 		getMenuItem(menubar,ACTION_PREFERENCES).setEnabled(false);
@@ -224,14 +224,14 @@ public class GenBatch extends JFrame implements ActionListener, ListDataListener
 			}
 		});
 		
-		JButton execute = createToolbarButton("Execute Batch", "table_lightning.png", ACTION_EXECUTE, this);
+		JButton execute = createToolbarButton("Execute Batch", "table_lightning", ACTION_EXECUTE, this);
 		execute.setText(execute.getToolTipText());
 		execute.setFont(execute.getFont().deriveFont(Font.ITALIC));
 		
 		toolbar = new JToolBar[1];
 		toolbar[0] = new JToolBar("File");
-		toolbar[0].add(createToolbarButton("Import", "table_go.png", ACTION_IMPORT, this));
-		toolbar[0].add(createToolbarButton("Export", "table_save.png", ACTION_EXPORT, this));
+		toolbar[0].add(createToolbarButton("Import", "table_go", ACTION_IMPORT, this));
+		toolbar[0].add(createToolbarButton("Export", "table_save", ACTION_EXPORT, this));
 		toolbar[0].addSeparator();
 		toolbar[0].add(execute);
 		
@@ -258,7 +258,7 @@ public class GenBatch extends JFrame implements ActionListener, ListDataListener
 		status.setHorizontalAlignment(JLabel.RIGHT);
 		bottom.add(status);
 		
-		cancel = new JButton(new ImageIcon(getResource("cancel.png")));
+		cancel = new JButton(getImage("cancel"));
 		cancel.setFocusable(false); cancel.setBorderPainted(false);
 		cancel.setContentAreaFilled(false); cancel.setBorder(EMPTY_BORDER);
 		cancel.addActionListener(new ActionListener() {
@@ -757,10 +757,10 @@ public class GenBatch extends JFrame implements ActionListener, ListDataListener
 		
 		private class OperationListCellRenderer implements ListCellRenderer<Class<? extends Operation>> {
 			private final ImageIcon
-				transformationIcon = new ImageIcon(getResource("wand.png")),
-				testIcon = new ImageIcon(getResource("magnifier.png")),
-				analysisIcon = new ImageIcon(getResource("chart_curve.png")),
-				splitIcon = new ImageIcon(getResource("cut_red.png"));
+				transformationIcon = getImage("wand"),
+				testIcon = getImage("magnifier"),
+				analysisIcon = getImage("chart_curve"),
+				splitIcon = getImage("cut_red");
 			
 			private JLabel label = new JLabel();
 			
@@ -800,14 +800,14 @@ public class GenBatch extends JFrame implements ActionListener, ListDataListener
 			private OperationListCellRenderer renderer = new OperationListCellRenderer();
 			
 			private final ImageIcon
-				testPositiveIcon = new ImageIcon(getResource("magnifier_zoom_in.png")),
-				testNegativeIcon = new ImageIcon(getResource("magnifier_zoom_out.png"));
+				testPositiveIcon = getImage("magnifier_zoom_in"),
+				testNegativeIcon = getImage("magnifier_zoom_out");
 			private final ImageIcon
-				splitFirstIcon = new ImageIcon(getResource("cut_red_first.png")),
-				splitLastIcon = new ImageIcon(getResource("cut_red_last.png")),
-				splitAnyIcon = new ImageIcon(getResource("cut_red_any.png")),
-				splitAllIcon = new ImageIcon(getResource("cut_red_all.png")),
-				splitRandomIcon = new ImageIcon(getResource("cut_red_random.png"));
+				splitFirstIcon = getImage("cut_red_first"),
+				splitLastIcon = getImage("cut_red_last"),
+				splitAnyIcon = getImage("cut_red_any"),
+				splitAllIcon = getImage("cut_red_all"),
+				splitRandomIcon = getImage("cut_red_random");
 			
 			@Override public Component getListCellRendererComponent(JList<? extends Action> list,Action action,int index,boolean isSelected,boolean cellHasFocus) {
 				Class<? extends Operation> operation = action.getOperation();

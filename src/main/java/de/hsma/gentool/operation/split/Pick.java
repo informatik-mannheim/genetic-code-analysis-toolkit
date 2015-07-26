@@ -28,7 +28,7 @@ import de.hsma.gentool.nucleic.Tuple;
 import de.hsma.gentool.operation.Cataloged;
 import de.hsma.gentool.operation.Named;
 
-@Named(name="pick") @Cataloged(group="Splits")
+@Named(name="pick", icon="basket_remove") @Cataloged(group="Splits")
 @Parameter.Annotation(key="pattern",label="Split",type=Type.TEXT)
 @Parameter.Annotation(key="regex",label="Regex",type=Type.BOOLEAN,value=Utilities.TRUE)
 public class Pick implements Split {	

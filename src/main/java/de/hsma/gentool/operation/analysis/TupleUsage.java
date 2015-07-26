@@ -32,7 +32,7 @@ import de.hsma.gentool.nucleic.Tuple;
 import de.hsma.gentool.operation.Cataloged;
 import de.hsma.gentool.operation.Named;
 
-@Named(name="tuple usage") @Cataloged(group="Analyses")
+@Named(name="tuple usage", icon="report") @Cataloged(group="Analyses")
 @Parameter.Annotation(key="file",label="File",type=Type.FILE)
 public class TupleUsage implements Analysis {	
 	private static final String DELIMITER = ", ", TIMES = "x ";

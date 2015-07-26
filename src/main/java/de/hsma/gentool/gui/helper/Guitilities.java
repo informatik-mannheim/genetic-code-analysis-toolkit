@@ -294,7 +294,7 @@ public class Guitilities {
 			item.setAccelerator(keyStroke);
 		}
 		if(icon!=null)
-			item.setIcon(new ImageIcon(Utilities.getResource(icon)));
+			item.setIcon(getImage(icon));
 		item.addActionListener(listener);
 		JComponent component = (listener instanceof JComponent)?(JComponent)listener:(listener instanceof JFrame)?((JFrame)listener).getRootPane():null;
 		if(component!=null)
@@ -415,12 +415,15 @@ public class Guitilities {
 		return container;
   }
   
-	public static ImageIcon createImageIcon(String name) { return createImageIcon(name,null); }
-	public static ImageIcon createImageIcon(String name,ImageIcon fallback) {
-		URL resource = Utilities.getResource(name);
-		if(resource!=null)
-			   return new ImageIcon(resource);
-		else return fallback!=null?fallback:null;
+	public static ImageIcon getImage(String name) { return getImage(name,null); }
+	public static ImageIcon getImage(String name, ImageIcon fallback) {
+		URL resource = Utilities.getResource(name=name+".png");
+		if(resource==null) {
+			if(fallback==null) {
+				System.err.println(String.format("Image %s not found!", name));
+				return null;
+			} else return fallback;
+		} else return new ImageIcon(resource); 
 	}
 	
 	
@@ -517,7 +520,7 @@ public class Guitilities {
 		button.addActionListener(listener);
 		button.setBorder(new EmptyBorder(5,5,5,5));
 		if(icon!=null)
-			button.setIcon(new ImageIcon(Utilities.getResource(icon)));
+			button.setIcon(getImage(icon));
 		return button;
 	}
 

@@ -23,7 +23,7 @@ import de.hsma.gentool.nucleic.Tuple;
 import de.hsma.gentool.operation.Cataloged;
 import de.hsma.gentool.operation.Named;
 
-@Named(name="n-shift all tuples") @Cataloged(group="Transformations")
+@Named(name="n-shift all tuples", icon="text_letterspacing") @Cataloged(group="Transformations")
 @Parameter.Annotation(key="shift",label="Shift",type=Type.NUMBER,value="1,10")
 public class ShiftTuples implements Transformation {
 	private static final Pattern PATTERN_ROTATE = Pattern.compile("(\\S)(\\S*)");

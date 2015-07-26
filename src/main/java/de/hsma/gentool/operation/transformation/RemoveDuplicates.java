@@ -21,7 +21,7 @@ import de.hsma.gentool.nucleic.Tuple;
 import de.hsma.gentool.operation.Cataloged;
 import de.hsma.gentool.operation.Named;
 
-@Named(name="remove duplicates") @Cataloged(group="Transformations")
+@Named(name="remove duplicates", icon="style_delete") @Cataloged(group="Transformations")
 public class RemoveDuplicates implements Transformation { 	
 	@Override public Collection<Tuple> transform(Collection<Tuple> tuples,Object... values) {
 		return new LinkedHashSet<>(tuples); //removing duplicates by adding it to a linked (preserving order) hash (removing duplicates) set

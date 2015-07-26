@@ -37,7 +37,7 @@ public interface Split extends Operation {
 	
 	@SafeVarargs public static List<Collection<Tuple>> asList(Collection<Tuple>... tuples) { return Arrays.asList(tuples); }
 	
-	@Named(name="split")
+	@Named(name="split", icon="application_split")
 	@Parameter.Annotation(key="pattern",label="Split",type=Type.TEXT)
 	@Parameter.Annotation(key="regex",label="Regex",type=Type.BOOLEAN,value=Utilities.TRUE)
 	@Parameter.Annotation(key="delimiter",label="Remove Delimiter",type=Type.BOOLEAN,value=Utilities.FALSE)
