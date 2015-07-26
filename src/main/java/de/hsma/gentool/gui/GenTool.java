@@ -18,7 +18,6 @@ package de.hsma.gentool.gui;
 import static de.hsma.gentool.Utilities.*;
 import static de.hsma.gentool.batch.Action.TaskAttribute.*;
 import static de.hsma.gentool.gui.helper.Guitilities.*;
-import static de.hsma.gentool.nucleic.Acid.*;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -89,7 +88,6 @@ import javax.swing.JPopupMenu;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
-import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
@@ -105,8 +103,6 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.EventListenerList;
@@ -136,7 +132,6 @@ import de.hsma.gentool.batch.Action.TaskAttribute;
 import de.hsma.gentool.gui.editor.NucleicAdapter;
 import de.hsma.gentool.gui.editor.NucleicDocument;
 import de.hsma.gentool.gui.editor.NucleicEditor;
-import de.hsma.gentool.gui.editor.NucleicEditor.InputMode;
 import de.hsma.gentool.gui.helper.FoldingPanel;
 import de.hsma.gentool.gui.helper.Guitilities;
 import de.hsma.gentool.gui.helper.PopupMouseAdapter;
@@ -144,7 +139,6 @@ import de.hsma.gentool.gui.input.CodonWheel;
 import de.hsma.gentool.gui.input.Input;
 import de.hsma.gentool.log.InjectionLogger;
 import de.hsma.gentool.log.Logger;
-import de.hsma.gentool.nucleic.Acid;
 import de.hsma.gentool.nucleic.Tuple;
 import de.hsma.gentool.operation.Operation;
 import de.hsma.gentool.operation.analysis.Analysis;
@@ -208,8 +202,6 @@ public class GenTool extends JFrame implements ActionListener {
 	private CatalogPanel catalogPanel;
 	private FindDialog findDialog;
 	private ConsolePane consolePane;
-	
-	@SuppressWarnings("unused") private Option.Component optionLength, optionAcid, optionMode;
 	
 	private File currentFile;
 	
@@ -658,9 +650,7 @@ public class GenTool extends JFrame implements ActionListener {
 			
 			Collection<Tuple> tuples = editor.getTuples();
 			editor.setDefaultTupleLength(Tuple.tuplesLength(tuples));
-			optionLength.setValue(editor.getDefaultTupleLength());
 			editor.setDefaultAcid(Tuple.tuplesAcid(tuples));
-			optionAcid.setValue(editor.getDefaultAcid());
 			
 			return true;
 		}	catch(IOException e) {
@@ -986,7 +976,6 @@ public class GenTool extends JFrame implements ActionListener {
 				try { inputs.add(input=inputClass.newInstance()); if(CodonWheel.class.equals(inputClass)) defaultInput = input; }
 				catch(InstantiationException|IllegalAccessException e) { /* nothing to do here */ }
 			inputPanel = addPage(new JPanel(new BorderLayout()),"Input",true);
-			inputPanel.add(createInputOptions(), BorderLayout.SOUTH);
 			
 			inputCombo = new JComboBox<Input>(inputs.toArray(new Input[0]));
 			inputCombo.setRenderer(new DefaultListCellRenderer() {
@@ -1040,44 +1029,6 @@ public class GenTool extends JFrame implements ActionListener {
 					inputPreferences.setEnabled(input instanceof Configurable);
 				}
 			});
-		}
-		
-		protected Component createInputOptions() {
-			JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-			(optionLength=addInputOption(panel,new Option("tupleLength", "Tuple Length", editor.getDefaultTupleLength(), 0, 10, 1))).addChangeListener(new ChangeListener() {
-				@Override public void stateChanged(ChangeEvent event) {
-					int oldValue = editor.getDefaultTupleLength(), newValue = (Integer)((JSpinner)event.getSource()).getValue();
-					if(InputMode.SET.equals(editor.getInputMode())&&newValue!=0&&newValue<oldValue&&
-						JOptionPane.showOptionDialog(GenTool.this,"<html><b>Warning:</b> Reducing the tuple length in set input mode, might lead\nto a loss of tuples, because duplicate tuples are beeing removed\nimmediately after the conversion was performed.",GenTool.this.getTitle(),JOptionPane.OK_CANCEL_OPTION,JOptionPane.WARNING_MESSAGE,null,new String[]{"Continue","Cancel"},JOptionPane.CANCEL_OPTION)!=JOptionPane.OK_OPTION) {
-						((JSpinner)event.getSource()).setValue(oldValue); return; }
-					editor.setDefaultTupleLength(newValue);
-				}
-			});
-			(optionAcid=addInputOption(panel,new Option("acid", "Default Acid", RNA,
-				new Acid[]{null,RNA,DNA},
-				EMPTY,RNA.name(),DNA.name())
-			)).addItemListener(new ItemListener() {
-				@Override public void itemStateChanged(ItemEvent event) {
-					editor.setDefaultAcid(event.getStateChange()==ItemEvent.SELECTED?(Acid)event.getItem():null);
-				}
-			});
-			(optionMode=addInputOption(panel,new Option("inputMode", "Input Mode", InputMode.SEQUENCE,
-				new InputMode[]{InputMode.SEQUENCE,InputMode.SET},
-				new String[]{"Sequence","Set"})
-			)).addItemListener(new ItemListener() {
-				@Override public void itemStateChanged(ItemEvent event) {
-					if(event.getStateChange()==ItemEvent.SELECTED)
-						editor.setInputMode((InputMode)event.getItem());
-				}
-			});
-			return panel;
-		}
-		private Option.Component addInputOption(Container container, final Option option) {
-			Option.Component component; 
-			if(option.type!=Parameter.Type.BOOLEAN)
-			container.add(new JLabel(option.label+":"));
-			container.add(component = option.new Component());
-			return component;
 		}
 	}
 	

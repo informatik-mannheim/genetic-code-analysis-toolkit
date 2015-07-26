@@ -17,11 +17,13 @@ package de.hsma.gentool.gui.editor;
 
 import static de.hsma.gentool.Utilities.*;
 import static de.hsma.gentool.gui.helper.Guitilities.*;
+import static de.hsma.gentool.nucleic.Acid.*;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
@@ -30,6 +32,8 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
@@ -44,9 +48,11 @@ import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.regex.Pattern;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRootPane;
 import javax.swing.JScrollPane;
+import javax.swing.JSpinner;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextPane;
 import javax.swing.SwingUtilities;
@@ -69,6 +75,7 @@ import javax.swing.undo.CompoundEdit;
 import javax.swing.undo.UndoManager;
 import javax.swing.undo.UndoableEdit;
 import org.reflections.Reflections;
+import de.hsma.gentool.Option;
 import de.hsma.gentool.gui.editor.NucleicListener.NucleicEvent;
 import de.hsma.gentool.gui.editor.display.GraphDisplay;
 import de.hsma.gentool.gui.helper.AttachedScrollPane;
@@ -79,7 +86,7 @@ import de.hsma.gentool.nucleic.Acid;
 import de.hsma.gentool.nucleic.Tuple;
 
 public class NucleicEditor extends JRootPane {
-	public static enum InputMode { SEQUENCE,SET }
+	public static enum EditorMode { SEQUENCE,SET }
 	
 	protected static final Pattern LINE_PATTERN = Pattern.compile("^(([A-Z_]+): *)?([A-Z]{3})( +([#%+\\-]?)(\\d+)| +([A-Z_]+))?( *//.*)?$"); //^(([A-Z_]+): *)?([A-Z]{3})( +([#%]?)(\d+)| +([A-Z_]+))?( *//.*)?$
 	
@@ -89,7 +96,9 @@ public class NucleicEditor extends JRootPane {
 	protected UndoManager undo = new UndoManager();
 	protected UndoableEditListener edit;
 	
-	protected InputMode inputMode;
+	protected EditorMode mode;
+	
+	private NavigableMap<Position,Tuple> tuples;
 	
 	private JTextPane textPane;
 	private NumberPanel numberPanel;
@@ -99,8 +108,9 @@ public class NucleicEditor extends JRootPane {
 	private List<NucleicDisplay> displays;
 	private MouseAdapter displayResize;
 	private int displaySize = 300;
-	
-	private NavigableMap<Position,Tuple> tuples;
+
+	private JPanel optionPanel;
+	private Option.Component optionLength, optionAcid, optionMode;
 	
 	private int cleanHash = EMPTY.hashCode();
 	
@@ -208,7 +218,7 @@ public class NucleicEditor extends JRootPane {
 		
 		addNucleicListener(new NucleicAdapter() {
 			@Override public void tuplesInsert(NucleicEvent event) {
-				if(InputMode.SET.equals(inputMode)) {
+				if(EditorMode.SET.equals(mode)) {
 					int defaultTupleLength = getDefaultTupleLength();
 					List<Tuple> tuples = new ArrayList<>();
 					for(Tuple tuple:event.getTuples())
@@ -224,13 +234,15 @@ public class NucleicEditor extends JRootPane {
 			}
 		});
 		
-		AttachedScrollPane scroll = new AttachedScrollPane(textPane, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-		scroll.setRowHeaderView(numberPanel = new NumberPanel()); addNucleicListener(numberPanel);
-		scroll.setRowFooterView(displayPane = new JTabbedPane(JTabbedPane.RIGHT));
+		AttachedScrollPane scrollPane = new AttachedScrollPane(textPane, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		scrollPane.setRowHeaderView(numberPanel = new NumberPanel()); addNucleicListener(numberPanel);
+		scrollPane.setRowFooterView(displayPane = new JTabbedPane(JTabbedPane.RIGHT));
+		scrollPane.setBorder(null);
+		
 		displayPane.setUI(new BasicTabbedPaneUI() {
 			@Override protected Insets getTabAreaInsets(int tabPlacement) {
-				int y = 20; if(scroll.getRowFooter().getViewPosition().y!=0)
-					y += scroll.getViewport().getViewPosition().y;
+				int y = 20; if(scrollPane.getRowFooter().getViewPosition().y!=0)
+					y += scrollPane.getViewport().getViewPosition().y;
 				return new Insets(y,0,2,3);
 			}
 			@Override protected Insets getTabInsets(int tabPlacement,int tabIndex) { return new Insets(20,3,20,3); }
@@ -293,7 +305,72 @@ public class NucleicEditor extends JRootPane {
 		});
 		displayPane.setSelectedIndex(displayPane.indexOfTab(GraphDisplay.LABEL));
 		
-		this.add(scroll, BorderLayout.CENTER);
+		optionPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		optionPanel.setBorder(new EmptyBorder(1,0,0,0) { //paint the border to the edge of NumberPanel
+			private static final long serialVersionUID = 1l;
+			@Override public void paintBorder(java.awt.Component component, Graphics graphics, int x, int y, int width, int height) {
+				Color oldColor = graphics.getColor();
+				graphics.setColor(Color.GRAY);
+				graphics.drawLine((numberPanel!=null?numberPanel.getPreferredSize().width:1)-1,0,width,0);
+				graphics.setColor(oldColor);
+			}
+		});
+		
+		optionPanel.add(new JLabel("Tuple Length:"));
+		optionPanel.add(optionLength=(new Option("tupleLength", "Tuple Length", getDefaultTupleLength(), 0, 10, 1)).new Component() {
+			private static final long serialVersionUID = 1l;
+			private boolean update; //prevent loop with event listeners of option
+			@Override public void setValue(Object value) {
+				if(update) return; else update = true;
+				super.setValue(value);
+				update = false;
+			}
+		});
+		optionLength.addChangeListener(new ChangeListener() {
+			@Override public void stateChanged(ChangeEvent event) {
+				int oldValue = getDefaultTupleLength(), newValue = (Integer)((JSpinner)event.getSource()).getValue();
+				if(EditorMode.SET.equals(getMode())&&newValue!=0&&newValue<oldValue&&
+					JOptionPane.showOptionDialog(NucleicEditor.this,"<html><b>Warning:</b> Reducing the tuple length in set editor mode, might lead\nto a loss of tuples, because duplicate tuples are beeing removed\nimmediately after the conversion was performed.","Change default tuple length.",JOptionPane.OK_CANCEL_OPTION,JOptionPane.WARNING_MESSAGE,null,new String[]{"Continue","Cancel"},JOptionPane.CANCEL_OPTION)!=JOptionPane.OK_OPTION) {
+					((JSpinner)event.getSource()).setValue(oldValue); return; }
+				setDefaultTupleLength(newValue);
+			}
+		});
+		
+		optionPanel.add(new JLabel("Default Acid:"));
+		optionPanel.add(optionAcid=(new Option("acid", "Default Acid", getDefaultAcid(), new Acid[]{null,RNA,DNA}, EMPTY, RNA.name(), DNA.name())).new Component() {
+			private static final long serialVersionUID = 1l;
+			private boolean update; //prevent loop with event listeners of option
+			@Override public void setValue(Object value) {
+				if(update) return; else update = true;
+				super.setValue(value);
+				update = false;
+			}
+		});
+		optionAcid.addItemListener(new ItemListener() {
+			@Override public void itemStateChanged(ItemEvent event) {
+				setDefaultAcid(event.getStateChange()==ItemEvent.SELECTED?(Acid)event.getItem():null);
+			}
+		});
+		
+		optionPanel.add(new JLabel("Editor Mode:"));
+		optionPanel.add(optionMode=(new Option("editorMode", "Editor Mode", EditorMode.SEQUENCE, new EditorMode[]{EditorMode.SEQUENCE,EditorMode.SET}, "Sequence", "Set")).new Component() {
+			private static final long serialVersionUID = 1l;
+			private boolean update; //prevent loop with event listeners of option
+			@Override public void setValue(Object value) {
+				if(update) return; else update = true;
+				super.setValue(value);
+				update = false;
+			}
+		});
+		optionMode.addItemListener(new ItemListener() {
+			@Override public void itemStateChanged(ItemEvent event) {
+				if(event.getStateChange()==ItemEvent.SELECTED)
+					setMode((EditorMode)event.getItem());
+			}
+		});
+		
+		this.add(scrollPane, BorderLayout.CENTER);
+		this.add(optionPanel, BorderLayout.SOUTH);
 	}
 
 	public List<NucleicDisplay> getDisplays() { return Collections.unmodifiableList(displays); }
@@ -367,19 +444,23 @@ public class NucleicEditor extends JRootPane {
 	
 	public int getDefaultTupleLength() { return document.getDefaultTupleLength(); }
 	public void setDefaultTupleLength(int defaultTupleLength) {
+		optionLength.setValue(defaultTupleLength);
 		document.setDefaultTupleLength(defaultTupleLength);
 		document.adaptText(); repaint();
 	}
 	
 	public Acid getDefaultAcid() { return document.getDefaultAcid(); }
 	public void setDefaultAcid(Acid defaultAcid) {
+		optionAcid.setValue(defaultAcid);
 		document.setDefaultAcid(defaultAcid);
 		if(defaultAcid!=null) document.adaptText();
 	}
 	
-	public void setInputMode(InputMode inputMode) {
-		this.inputMode = inputMode; document.adaptText(); }
-	public InputMode getInputMode() { return inputMode; }
+	public EditorMode getMode() { return mode; }
+	public void setMode(EditorMode mode) {
+		optionMode.setValue(mode);
+		this.mode = mode; document.adaptText();
+	}
 	
 	public void setDirty() { cleanHash = -1; }
 	public void setClean() { cleanHash = textPane.getText().hashCode(); }
@@ -471,6 +552,8 @@ public class NucleicEditor extends JRootPane {
 			dimension.setSize(insets.left+insets.right+(getFontMetrics(getFont()).charWidth('0')*(digits*2+1)), Integer.MAX_VALUE-Short.MAX_VALUE);
 			setPreferredSize(dimension);
 			setSize(dimension);
+			if(optionPanel!=null) //border is painted to the edge of NumberPanel, so repaint the OptionPanel
+				optionPanel.repaint();
 		}
 
 		@Override public void paintComponent(Graphics graphics) {
