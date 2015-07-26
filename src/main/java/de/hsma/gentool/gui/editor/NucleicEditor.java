@@ -324,6 +324,13 @@ public class NucleicEditor extends JRootPane {
 	public void setText(String text) { edit.startTransaction(); textPane.setText(text); edit.commitTransaction(); }
 	
 	public Collection<Tuple> getTuples() { return Collections.unmodifiableCollection(tuples.values()); }
+	public List<Tuple> getTupleList() {
+		List<Tuple> list = new ArrayList<>(tuples.values());
+		int last = list.size()-1;
+		if(last>=0&&list.get(last).length()==0)
+			list.remove(last);
+		return Collections.unmodifiableList(list);
+	}
 	public NavigableMap<Position,Tuple> getTupleMap() { return tuples; }
 	public void setTuples(Collection<Tuple> tuples) {
 		invokeAppropriate(new Runnable() {
