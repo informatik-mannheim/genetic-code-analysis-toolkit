@@ -104,12 +104,13 @@ public class GenBatch extends JFrame implements ActionListener, ListDataListener
 		ACTION_IMPORT = "import",
 		ACTION_EXPORT = "export",
 		ACTION_CLOSE = "exit",
-		ACTION_ACTION_ADD = "actions_add",
-		ACTION_ACTION_EDIT = "actions_edit",
-		ACTION_ACTION_REMOVE = "actions_remove",
+		ACTION_ACTION_ADD = "action_add",
+		ACTION_ACTION_EDIT = "action_edit",
+		ACTION_ACTION_REMOVE = "action_remove",
 		ACTION_ACTIONS_CLEAR = "actions_clear",
-		ACTION_ACTION_MOVE_UP = "actions_move_up",
-		ACTION_ACTION_MOVE_DOWN = "actions_move_down",
+		ACTION_ACTION_MOVE_UP = "action_move_up",
+		ACTION_ACTION_MOVE_DOWN = "action_move_down",
+		ACTION_SEQUENCES_EDIT = "sequences_edit",
 		ACTION_SEQUENCES_REMOVE = "sequences_remove",
 		ACTION_SEQUENCES_CLEAR = "sequences_clear",
 		ACTION_EXECUTE = "execute",
@@ -193,11 +194,12 @@ public class GenBatch extends JFrame implements ActionListener, ListDataListener
 		menu[1].add(createMenuItem("Move Down", KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, InputEvent.CTRL_DOWN_MASK), ACTION_ACTION_MOVE_DOWN, this));
 		menu[1].add(createSeparator());
 		menu[1].add(createMenuText("Sequences:"));
+		menu[1].add(createMenuItem("Edit", ACTION_SEQUENCES_EDIT, this));
 		menu[1].add(createMenuItem("Remove", "table_row_delete.png", KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), ACTION_SEQUENCES_REMOVE, this));
 		menu[1].add(createMenuItem("Clear", ACTION_SEQUENCES_CLEAR, this));
 		menu[2].add(createMenuItem("Preferences", ACTION_PREFERENCES, this));
 		menu[3].add(createMenuItem("About GenBatch", "calculator.png", ACTION_ABOUT, this));
-		for(String action:new String[]{ACTION_ACTION_EDIT,ACTION_ACTION_REMOVE,ACTION_ACTIONS_CLEAR,ACTION_ACTION_MOVE_UP,ACTION_ACTION_MOVE_DOWN,ACTION_SEQUENCES_REMOVE,ACTION_SEQUENCES_CLEAR})
+		for(String action:new String[]{ACTION_ACTION_EDIT,ACTION_ACTION_REMOVE,ACTION_ACTIONS_CLEAR,ACTION_ACTION_MOVE_UP,ACTION_ACTION_MOVE_DOWN,ACTION_SEQUENCES_EDIT,ACTION_SEQUENCES_REMOVE,ACTION_SEQUENCES_CLEAR})
 			getMenuItem(menubar,action).setEnabled(false);
 		getMenuItem(menubar,ACTION_PREFERENCES).setEnabled(false);
 		registerKeyStroke(getRootPane(),KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0),"remove",new ActionListener() {
@@ -283,6 +285,7 @@ public class GenBatch extends JFrame implements ActionListener, ListDataListener
 		case ACTION_ACTIONS_CLEAR: clearActions(); break;
 		case ACTION_ACTION_MOVE_UP: moveAction(true); break;
 		case ACTION_ACTION_MOVE_DOWN: moveAction(false); break;
+		case ACTION_SEQUENCES_EDIT: editSequences(); break;
 		case ACTION_SEQUENCES_REMOVE: removeSequences(); break;
 		case ACTION_SEQUENCES_CLEAR: clearSequences(); break;
 		case ACTION_EXECUTE: executeBatch(); break;
@@ -308,8 +311,8 @@ public class GenBatch extends JFrame implements ActionListener, ListDataListener
 		JList<Action> list = actionPanel.list;
 		ListModel<Action> actions = list.getModel();
 		int size = actions.getSize(), index = list.getSelectedIndex();
-		boolean selected = index!=-1,
-		  filled = size!=0;
+		boolean filled = size!=0,
+			selected = filled&&index!=-1;
 		if(selected&&index<size) {
 			Parameter[] parameters = getParameters(actions.getElementAt(index).getOperation());
 			getMenuItem(menubar,ACTION_ACTION_EDIT).setEnabled(parameters!=null&&parameters.length!=0);
@@ -349,14 +352,24 @@ public class GenBatch extends JFrame implements ActionListener, ListDataListener
 			e.printStackTrace();
 		}
 	}
+	
+	public void editSequences() {
+		for(SequenceListItem item:sequenceList.getSelectedValuesList()) {
+			GenTool tool = new GenTool();
+			tool.setTuples(item.tuples);
+			tool.setVisible(true);
+		}
+	}
 	public void removeSequences() { sequenceList.removeSequences(); updateStatus(); }
 	public void clearSequences() { sequenceList.clearSequences(); updateStatus(); }
+	
 	private void enableSequenceMenus() {
 		JList<SequenceListItem> list = sequenceList;
 		ListModel<SequenceListItem> items = list.getModel();
 		int size = items.getSize(), index = list.getSelectedIndex();
-		boolean selected = index!=-1,
-		  filled = size!=0;
+		boolean filled = size!=0,
+			selected = filled&&index!=-1;
+		getMenuItem(menubar,ACTION_SEQUENCES_EDIT).setEnabled(selected);
 		getMenuItem(menubar,ACTION_SEQUENCES_REMOVE).setEnabled(selected);
 		getMenuItem(menubar,ACTION_SEQUENCES_CLEAR).setEnabled(filled);
 	}
@@ -827,7 +840,7 @@ public class GenBatch extends JFrame implements ActionListener, ListDataListener
 		public Status status;
 		public Result result;
 		
-		public SequenceListItem(Collection<Tuple> tuples) { this.tuples = tuples; }
+		public SequenceListItem(Collection<Tuple> tuples) { this.tuples = new ArrayList<>(tuples); }
 	}
 	class SequenceList extends JList<SequenceListItem> implements ListCellRenderer<SequenceListItem> {
 		private static final long serialVersionUID = 1l;

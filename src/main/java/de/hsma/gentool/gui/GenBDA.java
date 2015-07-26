@@ -236,8 +236,8 @@ public class GenBDA extends JFrame implements ActionListener, ListDataListener, 
 		javax.swing.table.TableModel bdas = table.getModel();
 		int size = bdas.getRowCount(),
 			index = table.getSelectedRow();
-		boolean selected = index!=-1,
-		  filled = size!=0;
+		boolean filled = size!=0,
+			selected = filled&&index!=-1;
 		getMenuItem(menubar,ACTION_BDA_EDIT).setEnabled(selected&&index<size); //BinaryDichotomicAlgorithm bda = bdas.get(index); !isPredefined(bda);
 		getMenuItem(menubar,ACTION_BDA_MOVE_UP).setEnabled(index>0);
 		getMenuItem(menubar,ACTION_BDA_MOVE_DOWN).setEnabled(selected&&index<size-1);

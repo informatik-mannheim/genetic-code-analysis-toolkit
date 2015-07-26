@@ -446,6 +446,15 @@ public class GenTool extends JFrame implements ActionListener {
 		});
 	}
 	
+	public NucleicEditor getEditor() {
+		return editor;
+	}
+	
+	public void setTuples(Collection<Tuple> tuples) { editor.setTuples(tuples); }
+	public Collection<Tuple> getTuples() {
+		return editor.getTuples();
+	}
+	
 	protected CatalogPanel createCatalog() {
 		catalogPanel = new CatalogPanel();
 		
@@ -1496,16 +1505,16 @@ public class GenTool extends JFrame implements ActionListener {
 					switch(args[0]) {
 					case "-open":
 						if(args.length>=2) {
-							if(args[1].endsWith(".gen")) {
-								GenTool tool = new GenTool();
-								tool.openFile(new File(args[1]));
-								tool.setVisible(true);
-							}	else if(args[1].endsWith(".bda")) {
+							if(args[1].endsWith(".bda")) {
 								GenBDA bda = new GenBDA();
 								bda.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 								bda.openFile(new File(args[1]));
 								bda.setVisible(true);
-							} else System.out.println(String.format("Unknown file \"%s\"", args[1]));
+							} else {
+								GenTool tool = new GenTool();
+								tool.openFile(new File(args[1]));
+								tool.setVisible(true);
+							}
 						}	break;
 					default: System.out.println(String.format("Unknown argument \"%s\"", args[0])); }
 				else new GenTool().setVisible(true);
