@@ -938,6 +938,7 @@ public class GenTool extends JFrame implements ActionListener {
 		protected List<FoldingPanel> pagePanels = new ArrayList<>();
 		protected FoldingPanel inputPanel;
 		protected JComboBox<Input> inputCombo;
+		protected javax.swing.Action inputPreferences;
 		
 		protected List<Input> inputs;
 		
@@ -978,14 +979,14 @@ public class GenTool extends JFrame implements ActionListener {
 			);
 			
 			inputPanel.addInfo(inputCombo);
-			inputPanel.addInfo(new AbstractAction(null,new ImageIcon(getResource("cog.png"))) {
+			inputPanel.addInfo((inputPreferences=new AbstractAction(null,new ImageIcon(getResource("cog.png"))) {
 				private static final long serialVersionUID = 1l;
 				@Override public void actionPerformed(ActionEvent event) {
 					Input input = (Input)inputCombo.getSelectedItem();
 					if(input instanceof Configurable) {
 						((Configurable)input).showPreferencesDialog(GenTool.this,"Input Preferences"); setInput(input); }
 				}
-			});
+			}));
 			
 			setInput(defaultInput);
 		}
@@ -1010,6 +1011,7 @@ public class GenTool extends JFrame implements ActionListener {
 					JPanel panel = (JPanel)inputPanel.getChild();
 					panel.removeAll(); panel.add(input.getComponent(editor), BorderLayout.CENTER);
 					inputPanel.revalidate(); inputPanel.repaint();
+					inputPreferences.setEnabled(input instanceof Configurable);
 				}
 			});
 		}
