@@ -1,2 +1,5 @@
-/target/
-.cache
+/.cache
+.idea
+*.iml
+bin
+out
