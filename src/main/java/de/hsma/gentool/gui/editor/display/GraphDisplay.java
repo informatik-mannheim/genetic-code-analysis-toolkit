@@ -15,6 +15,7 @@
  */
 package de.hsma.gentool.gui.editor.display;
 
+import static de.hsma.gentool.gui.helper.Guitilities.*;
 import java.awt.Color;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
@@ -27,6 +28,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Map.Entry;
+import javax.swing.Icon;
 import javax.swing.border.MatteBorder;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.TreeMultimap;
@@ -43,6 +45,7 @@ public class GraphDisplay extends mxGraphComponent implements NucleicDisplay {
 	private static final long serialVersionUID = 1;
 	
 	public static final String LABEL = "Graph";
+	public static final Icon ICON = getImage("chart_organisation");
 	
 	private mxGraph graph;
 	private Object parent;
@@ -70,6 +73,7 @@ public class GraphDisplay extends mxGraphComponent implements NucleicDisplay {
 	}
 	
 	@Override public String getLabel() { return LABEL; }
+	@Override public Icon getIcon() { return ICON; }
 	
 	@Override public boolean hasPreferredSize() { return false; }
 	@Override public void setPreferredSize() { /* nothing to do here */ }

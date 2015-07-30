@@ -47,6 +47,7 @@ import java.util.List;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.regex.Pattern;
+import javax.swing.Icon;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -55,6 +56,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextPane;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.Border;
 import javax.swing.border.CompoundBorder;
@@ -104,6 +106,7 @@ public class NucleicEditor extends JRootPane {
 	private NumberPanel numberPanel;
 	
 	private JTabbedPane displayPane;
+	private List<JLabel> displayLabels;
 	private List<JRootPane> displayPanes;
 	private List<NucleicDisplay> displays;
 	private MouseAdapter displayResize;
@@ -236,21 +239,42 @@ public class NucleicEditor extends JRootPane {
 		
 		AttachedScrollPane scrollPane = new AttachedScrollPane(textPane, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		scrollPane.setRowHeaderView(numberPanel = new NumberPanel()); addNucleicListener(numberPanel);
-		scrollPane.setRowFooterView(displayPane = new JTabbedPane(JTabbedPane.RIGHT));
+		scrollPane.setRowFooterView(displayPane = new JTabbedPane(JTabbedPane.RIGHT) {
+			private static final long serialVersionUID = 1l;
+			@Override public Dimension getPreferredSize() {
+				Dimension size = new Dimension(super.getPreferredSize());
+				if(getSelectedIndex()==0)
+					size.width -= 46; //bug to reduce size to minimum
+				return size;
+			}
+		});
 		scrollPane.setBorder(null);
 		
 		displayPane.setUI(new BasicTabbedPaneUI() {
 			@Override protected Insets getTabAreaInsets(int tabPlacement) {
-				int y = 20; if(scrollPane.getRowFooter().getViewPosition().y!=0)
+				int y = 10; if(scrollPane.getRowFooter().getViewPosition().y!=0)
 					y += scrollPane.getViewport().getViewPosition().y;
 				return new Insets(y,0,2,3);
 			}
-			@Override protected Insets getTabInsets(int tabPlacement,int tabIndex) { return new Insets(20,3,20,3); }
+			@Override protected Insets getTabInsets(int tabPlacement,int tabIndex) { return tabIndex!=0?new Insets(20,3,20,3):new Insets(0,3,10,3); }
 			@Override protected Insets getContentBorderInsets(int tabPlacement) { return new Insets(0,0,0,super.getContentBorderInsets(tabPlacement).right); }			
 			
-			@Override protected void paintTabArea(Graphics g,int tabPlacement,int selectedIndex) {
+			@Override protected void paintTabArea(Graphics graphics,int tabPlacement,int selectedIndex) {
 				((TabbedPaneLayout)displayPane.getLayout()).layoutContainer(null);
-				super.paintTabArea(g,tabPlacement,selectedIndex);
+				super.paintTabArea(graphics,tabPlacement,selectedIndex);
+			}
+			
+			@Override protected void paintContentBorderRightEdge(Graphics graphics,int tabPlacement,int selectedIndex,int x,int y,int w,int h) {
+				super.paintContentBorderRightEdge(graphics,tabPlacement,selectedIndex!=0?selectedIndex:-1,x,y,w,h);
+			}
+			@Override protected void paintTabBorder(Graphics graphics,int tabPlacement,int tabIndex,int x,int y,int w,int h,boolean isSelected) {
+				if(tabIndex!=0) super.paintTabBorder(graphics,tabPlacement,tabIndex,x,y,w,h,isSelected);
+			}
+			@Override protected void paintFocusIndicator(Graphics graphics,int tabPlacement,Rectangle[] rects,int tabIndex,Rectangle iconRect,Rectangle textRect,boolean isSelected) {
+				if(tabIndex!=0) super.paintFocusIndicator(graphics,tabPlacement,rects,tabIndex,iconRect,textRect,isSelected);
+			}
+			@Override protected int getTabLabelShiftX(int tabPlacement,int tabIndex,boolean isSelected) {
+				return tabIndex!=0?super.getTabLabelShiftX(tabPlacement,tabIndex,isSelected):0;
 			}
 			
 			// do only paint right border edge
@@ -291,8 +315,9 @@ public class NucleicEditor extends JRootPane {
 			}
 		};
 		
-		displayPanes = new ArrayList<>();
-		displays = new ArrayList<NucleicDisplay>();
+		displayLabels = new ArrayList<>(); displayPanes = new ArrayList<>();
+		displays = new ArrayList<NucleicDisplay>();		
+		addDisplay(new NoDisplay());
 		for(Class<? extends NucleicDisplay> displayClass:new Reflections(NucleicDisplay.class.getPackage().getName()).getSubTypesOf(NucleicDisplay.class))
 			try { addDisplay(displayClass.getConstructor(new Class[]{NucleicEditor.class}).newInstance(this)); }
 			catch(InstantiationException|IllegalAccessException|IllegalArgumentException|InvocationTargetException|NoSuchMethodException|SecurityException e) { /* nothing to do here */ }
@@ -378,8 +403,9 @@ public class NucleicEditor extends JRootPane {
 		if(!(display instanceof Component))
 			throw new IllegalArgumentException();
 		
-		JLabel label = new JLabel(display.getLabel());
+		JLabel label = new JLabel(display.getLabel(), display.getIcon(), SwingConstants.LEFT);
 		label.setUI(new VerticalLabelUI(true));
+		label.setIconTextGap(8);
 		
 		JRootPane pane = new JRootPane() {
 			private static final long serialVersionUID = 1l;
@@ -400,8 +426,8 @@ public class NucleicEditor extends JRootPane {
 			glassPane.setVisible(true);
 		}
 		
-		displays.add(display); displayPanes.add(pane);
-		displayPane.addTab(display.getLabel(),pane);
+		displays.add(display); displayLabels.add(label); displayPanes.add(pane);
+		displayPane.addTab(display.getLabel(),display.getIcon(),pane);
 		displayPane.setTabComponentAt(displayPane.getTabCount()-1,label);
 		addNucleicListener(display);
 	}
@@ -634,5 +660,25 @@ public class NucleicEditor extends JRootPane {
 				fireTuplesChanged();
 			}
 		}
+	}
+	
+	class NoDisplay extends Component implements NucleicDisplay {
+		private static final long serialVersionUID = 1l;
+		
+		@Override public void paint(Graphics graphics) {
+			super.paint(graphics);
+			graphics.setColor(Color.RED);
+			graphics.fillRect(0,0,getWidth(),getHeight());
+		}
+		
+		@Override public void tuplesInsert(NucleicEvent event) { /* nothing to do here */ }
+		@Override public void tuplesRemoved(NucleicEvent event) { /* nothing to do here */ }
+		@Override public void tuplesChanged(NucleicEvent event) { /* nothing to do here */ }
+
+		@Override public String getLabel() { return null; }
+		@Override public Icon getIcon() { return getImage("application_side_contract"); }
+		
+		@Override public boolean hasPreferredSize() { return true; }
+		@Override public void setPreferredSize() { setPreferredSize(new Dimension(0,0)); }
 	}
 }

@@ -15,8 +15,11 @@
  */
 package de.hsma.gentool.gui.editor;
 
+import javax.swing.Icon;
+
 public interface NucleicDisplay extends NucleicListener {
 	public String getLabel();
+	public Icon getIcon();
 	
 	public boolean hasPreferredSize();
 	public void setPreferredSize();

@@ -25,6 +25,7 @@ import java.awt.Insets;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.geom.Rectangle2D;
+import javax.swing.Icon;
 import javax.swing.JPanel;
 import javax.swing.JTextPane;
 import javax.swing.border.Border;
@@ -41,6 +42,7 @@ public class CompoundDisplay extends JPanel implements NucleicDisplay {
 	private static final long serialVersionUID = 1l;
 
 	public static final String LABEL = "Compound";
+	public static final Icon ICON = getImage("color_swatch");
 	
 	private final Color COLOR_NONPOLAR = new Color(255,231,95),
                          COLOR_POLAR = new Color(179,222,192),
@@ -66,6 +68,7 @@ public class CompoundDisplay extends JPanel implements NucleicDisplay {
 	}
 
 	@Override public String getLabel() { return LABEL; }
+	@Override public Icon getIcon() { return ICON; }
 	
 	@Override public boolean hasPreferredSize() { return true; }
 	@Override public void setPreferredSize() {
