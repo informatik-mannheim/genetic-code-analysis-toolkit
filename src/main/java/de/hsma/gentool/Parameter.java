@@ -248,6 +248,8 @@ public class Parameter {
 	public static Parameter[] getParameters(Class<?> parameterized) {
 		if(parameterized.isAnnotationPresent(Annotation.class))
 			return getParameters(parameterized.getAnnotationsByType(Annotation.class));
+		else if(parameterized.isAnnotationPresent(Annotations.class))
+			return getParameters(parameterized.getAnnotation(Annotations.class).value());
 		else try {
 			Object parameters = parameterized.getMethod(GET_PARAMETERS).invoke(null);
 			return parameters instanceof Parameter[]?(Parameter[])parameters:null;
