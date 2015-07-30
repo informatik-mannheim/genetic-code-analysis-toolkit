@@ -98,7 +98,7 @@ public class NucleicEditor extends JRootPane {
 	protected UndoManager undo = new UndoManager();
 	protected UndoableEditListener edit;
 	
-	protected EditorMode mode;
+	protected EditorMode mode = EditorMode.SEQUENCE;
 	
 	private NavigableMap<Position,Tuple> tuples;
 	
@@ -221,7 +221,7 @@ public class NucleicEditor extends JRootPane {
 		
 		addNucleicListener(new NucleicAdapter() {
 			@Override public void tuplesInsert(NucleicEvent event) {
-				if(EditorMode.SET.equals(mode)) {
+				if(mode==EditorMode.SET) {
 					int defaultTupleLength = getDefaultTupleLength();
 					List<Tuple> tuples = new ArrayList<>();
 					for(Tuple tuple:event.getTuples())

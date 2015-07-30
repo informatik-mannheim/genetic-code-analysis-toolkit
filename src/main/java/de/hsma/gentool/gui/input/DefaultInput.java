@@ -22,6 +22,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -31,6 +32,7 @@ import javax.swing.JButton;
 import javax.swing.JPanel;
 import com.google.common.collect.ImmutableMap;
 import de.hsma.gentool.gui.editor.NucleicEditor;
+import de.hsma.gentool.gui.editor.NucleicEditor.EditorMode;
 import de.hsma.gentool.gui.editor.NucleicListener;
 import de.hsma.gentool.nucleic.Acid;
 import de.hsma.gentool.nucleic.Base;
@@ -82,7 +84,11 @@ public abstract class DefaultInput extends JPanel implements Input, NucleicListe
 			addActionListener(new ActionListener() {
 				@Override public void actionPerformed(ActionEvent event) {
 					if(editor!=null&&editor.getTextPane().isEditable())
-						editor.appendTuples(Arrays.asList(tuple));
+						if(editor.getMode()!=EditorMode.SET||!editor.getTuples().contains(tuple))
+							   editor.appendTuples(Arrays.asList(tuple));
+						else editor.setTuples(new ArrayList<Tuple>(editor.getTuples()) { private static final long serialVersionUID = 1l; {
+							remove(tuple);
+						}});
 				}
 			});
 		}
