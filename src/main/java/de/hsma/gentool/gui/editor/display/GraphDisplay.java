@@ -88,8 +88,9 @@ public class GraphDisplay extends mxGraphComponent implements NucleicDisplay {
 
 		Tuple tupleFrom,tupleTo;
 		for(Tuple tuple:tuples) {
+			int length = tuple.length();
+			if(length<2||length>5) continue;
 			String string = tuple.toString();
-			if(string.length()<2) continue;
 
 			vertices.add(tupleFrom=new Tuple(string.substring(0,1)));
 			vertices.add(tupleTo=new Tuple(string.substring(1)));

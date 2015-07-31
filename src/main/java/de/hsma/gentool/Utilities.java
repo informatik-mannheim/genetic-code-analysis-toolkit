@@ -35,7 +35,9 @@ import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLDecoder;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
@@ -46,6 +48,7 @@ import java.util.regex.Pattern;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.Position;
 import sun.reflect.ConstructorAccessor;
 import sun.reflect.ReflectionFactory;
@@ -194,29 +197,54 @@ public final class Utilities {
 			super.approveSelection();
 		}
 	}
-	public static class FileExtensionFileChooser extends RememberFileChooser {
+	public static class FileNameExtensionFileChooser extends RememberFileChooser {
 		private static final long serialVersionUID = 1l;
 		
-		public final String extension, description;
+		private final FileFilter supportedFileFilter;
 		
-		public FileExtensionFileChooser(String extension,String description) {
-			this.extension = extension; this.description = description;
-			setFileFilter(new FileFilter() {
-				@Override	public String getDescription() { return description+" (*."+extension+")"; }
-				@Override	public boolean accept(File file) { return file.isDirectory()||file.getName().toLowerCase().endsWith('.'+extension); }
-			});
+		public FileNameExtensionFileChooser(FileNameExtensionFilter... filters) { this(filters.length>1,filters); }
+		public FileNameExtensionFileChooser(boolean addSupportedFileFilter, FileNameExtensionFilter... filters) {
+			supportedFileFilter = supportedFileFilter(filters);
+			if(addSupportedFileFilter)
+				addChoosableFileFilter(supportedFileFilter);
+			for(FileNameExtensionFilter filter:filters)
+				addChoosableFileFilter(filter);
+			if(addSupportedFileFilter)
+				setFileFilter(supportedFileFilter);
+			else if(filters.length!=0)
+				setFileFilter(filters[0]);
+		}
+		
+		public FileFilter getSupportedFileFilter() { return supportedFileFilter; }
+		private static FileFilter supportedFileFilter(FileNameExtensionFilter... filters) {
+			StringBuilder description = new StringBuilder("All Supported Files (");
+			List<String> extensions = new ArrayList<>();
+			for(FileNameExtensionFilter filter:filters)
+				for(String extension:filter.getExtensions()) {
+					description.append("*.").append(extension).append(';');
+					extensions.add(extension);
+				}
+			description.deleteCharAt(description.length()-1);
+			if(filters.length!=0) description.append(')');
+			return new FileNameExtensionFilter(description.toString(),extensions.toArray(new String[0]));
+		}
+
+		public FileNameExtensionFilter getFileNameExtensionFilter() {
+			FileFilter filter; return (filter=getFileFilter()) instanceof FileNameExtensionFilter?
+				(FileNameExtensionFilter)filter:null;
 		}
 		
 		@Override public void approveSelection() {
-  		File selected = getSelectedFile();
-  		if(!selected.getName().toLowerCase().endsWith('.'+extension)&&!selected.exists())
-				setSelectedFile(selected=new File(selected.getAbsolutePath()+'.'+extension));
-  		if(getDialogType()==SAVE_DIALOG&&selected!=null&&selected.exists())
-  			if(JOptionPane.showOptionDialog(getParent(),String.format("%s already exists.\nDo you want to replace it?",selected.getName()),"Confirm Overwrite",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE,null,null,null)==JOptionPane.NO_OPTION)
+  		File file = getSelectedFile(); FileNameExtensionFilter filter = getFileNameExtensionFilter();
+  		if(filter!=null&&!supportedFileFilter.accept(file)&&!file.exists())
+				setSelectedFile(file=new File(file.getAbsolutePath()+'.'+filter.getExtensions()[0]));
+  		if(getDialogType()==SAVE_DIALOG&&file!=null&&file.exists())
+  			if(JOptionPane.showOptionDialog(getParent(),String.format("%s already exists.\nDo you want to replace it?",file.getName()),"Confirm Overwrite",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE,null,null,null)==JOptionPane.NO_OPTION)
   				return;
   		super.approveSelection();
 		}
 	}
+	
 
 	public static byte[] readFile(File file) throws IOException { return readStream(new FileInputStream(file)); }
   public static byte[] readStream(InputStream input) throws IOException { return readStream(input, -1, true); }

@@ -135,6 +135,8 @@ public class Tuple implements Comparable<Tuple> {
 		if(tuples.isEmpty()) return 0;
 		Tuple firstTuple = tuples instanceof List?((List<Tuple>)tuples).get(0):tuples.iterator().next();
 		int length = firstTuple!=null?firstTuple.length():0;
+		if(tuples.size()==1&&length>5)
+			return 0; //special case where all tuples are joined without any separation
 		for(Tuple tuple:tuples) if(tuple.length()!=length)
 			return 0;
 		return length;

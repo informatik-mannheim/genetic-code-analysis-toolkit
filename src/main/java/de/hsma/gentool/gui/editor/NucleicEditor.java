@@ -354,7 +354,6 @@ public class NucleicEditor extends JRootPane {
 		optionLength.addChangeListener(new ChangeListener() {
 			@Override public void stateChanged(ChangeEvent event) {
 				int oldValue = getDefaultTupleLength(), newValue = (Integer)((JSpinner)event.getSource()).getValue();
-				System.out.println("Old "+oldValue+", New "+newValue);
 				if(EditorMode.SET.equals(getMode())&&newValue!=0&&newValue<oldValue&&
 					JOptionPane.showOptionDialog(NucleicEditor.this,"<html><b>Warning:</b> Reducing the tuple length in set editor mode, might lead\nto a loss of tuples, because duplicate tuples are beeing removed\nimmediately after the conversion was performed.","Change default tuple length.",JOptionPane.OK_CANCEL_OPTION,JOptionPane.WARNING_MESSAGE,null,new String[]{"Continue","Cancel"},JOptionPane.CANCEL_OPTION)!=JOptionPane.OK_OPTION) {
 					((JSpinner)event.getSource()).setValue(oldValue);

@@ -93,6 +93,7 @@ import javax.swing.JTextPane;
 import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
 import javax.swing.ListCellRenderer;
+import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
@@ -105,12 +106,17 @@ import javax.swing.event.CaretListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.EventListenerList;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.NumberFormatter;
 import javax.swing.text.html.HTMLDocument;
 import javax.swing.text.html.HTMLEditorKit;
 import javax.swing.text.html.StyleSheet;
+import org.biojava3.core.sequence.AccessionID;
+import org.biojava3.core.sequence.DNASequence;
+import org.biojava3.core.sequence.io.FastaReaderHelper;
+import org.biojava3.core.sequence.io.FastaWriterHelper;
 import org.reflections.Reflections;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -123,7 +129,7 @@ import de.hsma.gentool.Configurable;
 import de.hsma.gentool.Option;
 import de.hsma.gentool.Parameter;
 import de.hsma.gentool.Utilities.DefiniteFuture;
-import de.hsma.gentool.Utilities.FileExtensionFileChooser;
+import de.hsma.gentool.Utilities.FileNameExtensionFileChooser;
 import de.hsma.gentool.Utilities.OperatingSystem;
 import de.hsma.gentool.batch.Action;
 import de.hsma.gentool.batch.Action.Task;
@@ -149,8 +155,12 @@ import de.hsma.gentool.operation.transformation.Transformation;
 public class GenTool extends JFrame implements ActionListener {
 	private static final long serialVersionUID = 1l;
 	
-	public static final String FILE_EXTENSION = "gen", FILE_DESCRIPTION = "Genetic Sequence";
-
+	public static final String GENETIC_EXTENSION = "gen";
+	public static final FileNameExtensionFilter
+		GENETIC_EXTENSION_FILTER = new FileNameExtensionFilter("Genetic Sequences (*."+GENETIC_EXTENSION+")", GENETIC_EXTENSION),
+		FASTA_EXTENSION_FILTER = new FileNameExtensionFilter("FASTA Files (*.fasta;*.fna,*.fa)","fasta","fna","fa"),
+		TEXT_EXTENSION_FILTER = new FileNameExtensionFilter("Text Documents (*.txt)", "txt");
+	
 	private static final String VERSION = "1.7";
 	private static final String
 		ACTION_NEW = "new",
@@ -254,6 +264,7 @@ public class GenTool extends JFrame implements ActionListener {
 					layout.setAutoCreateContainerGaps(true);
 					
 					JLabel label = new JLabel("Pick one or more (holding the "+(!OperatingSystem.MAC.equals(OperatingSystem.currentOperatingSystem())?"Ctrl":"Command")+" key) sequences from the list:");
+					JButton pick = new JButton(), cancel = new JButton("Cancel");
 					
 					@SuppressWarnings("unchecked") JList<Collection<Tuple>> list = new JList<Collection<Tuple>>(split.toArray((Collection<Tuple>[])new Collection<?>[0])) {
 						private static final long serialVersionUID = 1l;
@@ -288,18 +299,23 @@ public class GenTool extends JFrame implements ActionListener {
 					    return label;
 						}
 					});
-					list.setFont(new Font(Font.MONOSPACED,Font.PLAIN,12));
-					
-					JScrollPane scroll = new JScrollPane(list);
-					
-					JButton pick = new JButton("Pick");
-					pick.addActionListener(new ActionListener() {
-						@Override public void actionPerformed(ActionEvent e) {
-							future.set(Lists.newArrayList(Iterables.concat(list.getSelectedValuesList()))); dialog.dispose();
+					list.addMouseListener(new MouseAdapter() {
+						public void mouseClicked(MouseEvent event) {
+							if(event.getClickCount()==2&&list.locationToIndex(event.getPoint())!=-1)
+								pick.getAction().actionPerformed(null);
 						}
 					});
+					list.setFont(new Font(Font.MONOSPACED,Font.PLAIN,12));
+					JScrollPane scroll = new JScrollPane(list);
 					
-					JButton cancel = new JButton("Cancel");
+					pick.setAction(new AbstractAction("Pick") {
+						private static final long serialVersionUID = 1l;
+						@Override public void actionPerformed(ActionEvent e) {
+							if(!list.isSelectionEmpty())
+								future.set(Lists.newArrayList(Iterables.concat(list.getSelectedValuesList())));
+							dialog.dispose();
+						}
+					});
 					cancel.addActionListener(new ActionListener() {
 						@Override public void actionPerformed(ActionEvent e) { dialog.dispose(); }
 					});
@@ -631,12 +647,15 @@ public class GenTool extends JFrame implements ActionListener {
 		if(!confirmIfDirty())
 			return false;
 
-		JFileChooser chooser = new FileExtensionFileChooser(FILE_EXTENSION,FILE_DESCRIPTION);
+		JFileChooser chooser = new FileNameExtensionFileChooser(GENETIC_EXTENSION_FILTER,FASTA_EXTENSION_FILTER,TEXT_EXTENSION_FILTER);
 		chooser.setDialogTitle("Open");
 		if(chooser.showOpenDialog(this)!=JFileChooser.APPROVE_OPTION)
 			return false;
+		File file = chooser.getSelectedFile();
 		
-		return openFile(chooser.getSelectedFile());
+		if(chooser.getFileFilter()==FASTA_EXTENSION_FILTER||FASTA_EXTENSION_FILTER.accept(file))
+		     return openFastaFile(file);
+		else return openFile(file);
 	}
 	public boolean openFile(File file) {
 		try {
@@ -646,30 +665,142 @@ public class GenTool extends JFrame implements ActionListener {
 			editor.setText(new String(readFile(file)));
 			editor.setClean();
 			
-			currentFile = file;
-			getMenuItem(menu[0],ACTION_SAVE).setEnabled(true);
-			
-			Collection<Tuple> tuples = editor.getTuples();
-			editor.setDefaultTupleLength(Tuple.tuplesLength(tuples));
-			editor.setDefaultAcid(Tuple.tuplesAcid(tuples));
-			
+			openedFile(file);			
 			return true;
 		}	catch(IOException e) {
 			JOptionPane.showMessageDialog(this,"Could not open file:\n"+e.getMessage(),"Open File",JOptionPane.WARNING_MESSAGE);
 			return false;
 		}
 	}
+	public boolean openFastaFile(File file) {
+		try {
+			DefiniteFuture<DNASequence> future = new DefiniteFuture<DNASequence>();
+			Map<String,DNASequence> fastaFile = FastaReaderHelper.readFastaDNASequence(file);
+			if(fastaFile==null||fastaFile.isEmpty())
+				throw new Exception("FASTA file does not contain any sequences.");
+			else if(fastaFile.size()==1)
+				future.set(fastaFile.values().iterator().next());
+			else {				
+				JDialog dialog = new JDialog(GenTool.this,"Pick Sequence",true);
+				dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+				
+				GroupLayout layout = new GroupLayout(dialog.getContentPane());
+				dialog.getContentPane().setLayout(layout);
+				layout.setAutoCreateGaps(true);
+				layout.setAutoCreateContainerGaps(true);
+				
+				JLabel label = new JLabel("Pick one sequences from the list:");
+				JButton pick = new JButton(), cancel = new JButton("Cancel");
+				
+				@SuppressWarnings("unchecked") JList<Map.Entry<String,DNASequence>> list = new JList<Map.Entry<String,DNASequence>>(fastaFile.entrySet().toArray(new Map.Entry[0]));
+				list.setCellRenderer(new ListCellRenderer<Entry<String,DNASequence>>() {
+					private JLabel label = new JLabel();
+					@Override public Component getListCellRendererComponent(JList<? extends Entry<String,DNASequence>> list,Entry<String,DNASequence> entry,int index,boolean isSelected,boolean cellHasFocus) {						
+				    label.setText("<html><b>"+entry.getKey()+"</b>: "+entry.getValue());
+				    
+				    if(isSelected) {
+				    	label.setBackground(list.getSelectionBackground());
+				    	label.setForeground(list.getSelectionForeground());
+				    } else {
+				    	label.setBackground(list.getBackground());
+				    	label.setForeground(list.getForeground());
+				    }
+				    label.setEnabled(list.isEnabled());
+				    label.setFont(list.getFont());
+				    label.setOpaque(true);
+	
+				    return label;
+					}
+				});
+				list.addMouseListener(new MouseAdapter() {
+					public void mouseClicked(MouseEvent event) {
+						if(event.getClickCount()==2&&list.locationToIndex(event.getPoint())!=-1)
+							pick.getAction().actionPerformed(null);
+					}
+				});
+				list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+				list.setFont(new Font(Font.MONOSPACED,Font.PLAIN,12));
+				list.setSelectedIndex(0);
+				JScrollPane scroll = new JScrollPane(list);
+				
+				pick.setAction(new AbstractAction("Pick") {
+					private static final long serialVersionUID = 1l;
+					@Override public void actionPerformed(ActionEvent e) {
+						if(!list.isSelectionEmpty())
+							future.set(list.getSelectedValue().getValue());
+						dialog.dispose();
+					}
+				});				
+				cancel.addActionListener(new ActionListener() {
+					@Override public void actionPerformed(ActionEvent e) { dialog.dispose(); }
+				});
+				
+				layout.setHorizontalGroup(
+					layout.createParallelGroup(Alignment.TRAILING)
+						.addComponent(label)
+						.addComponent(scroll, 325, 325, GroupLayout.DEFAULT_SIZE)
+						.addGroup(layout.createSequentialGroup()
+							.addComponent(pick)
+							.addComponent(cancel)	
+						)
+				);
+				layout.linkSize(SwingConstants.HORIZONTAL, scroll, label);
+				layout.linkSize(SwingConstants.HORIZONTAL, pick, cancel);
+				
+				layout.setVerticalGroup(
+					layout.createSequentialGroup()
+						.addComponent(label)
+						.addComponent(scroll, 0, 125, GroupLayout.DEFAULT_SIZE)
+						.addGroup(layout.createParallelGroup()
+							.addComponent(pick)
+							.addComponent(cancel)
+						)
+				);
+				
+				dialog.pack();
+				dialog.setResizable(false);
+				dialog.setLocationRelativeTo(GenTool.this);
+				dialog.setVisible(true);
+			}
+			
+			DNASequence sequence = future.get();
+			if(sequence!=null) {
+				editor.setDefaultTupleLength(0);
+				editor.setDefaultAcid(null);
+				
+				editor.setText(new String(sequence.toString()));
+				
+				openedFile(null);
+				return true;
+			} else return false;
+		} catch(Error | Exception e) {
+			JOptionPane.showMessageDialog(this,"Could not open FASTA file:\n"+e.getMessage(),"Open File",JOptionPane.WARNING_MESSAGE);
+			return false;
+		}
+	}
+	private void openedFile(File file) {
+		getMenuItem(menu[0],ACTION_SAVE).setEnabled((currentFile=file)!=null);
+		
+		Collection<Tuple> tuples = editor.getTuples();
+		editor.setDefaultTupleLength(Tuple.tuplesLength(tuples));
+		editor.setDefaultAcid(Tuple.tuplesAcid(tuples));
+	}
+	
 	public boolean saveFile() {
 		if(currentFile!=null)
 			   return saveFile(currentFile);
 		else return saveFileAs();
 	}
 	public boolean saveFileAs() {
-		JFileChooser chooser = new FileExtensionFileChooser(FILE_EXTENSION,FILE_DESCRIPTION);
+		JFileChooser chooser = new FileNameExtensionFileChooser(false,GENETIC_EXTENSION_FILTER,FASTA_EXTENSION_FILTER,TEXT_EXTENSION_FILTER);
 		chooser.setDialogTitle("Save As");
-		if(chooser.showSaveDialog(this)==JFileChooser.APPROVE_OPTION)
-			   return saveFile(chooser.getSelectedFile());
-		else return false;
+		if(chooser.showOpenDialog(this)!=JFileChooser.APPROVE_OPTION)
+			return false;
+		File file = chooser.getSelectedFile();
+		
+		if(chooser.getFileFilter()==FASTA_EXTENSION_FILTER||FASTA_EXTENSION_FILTER.accept(file))
+		     return saveFastaFile(file);
+		else return saveFile(file);
 	}
 	public boolean saveFile(File file) {
 		try {
@@ -683,6 +814,18 @@ public class GenTool extends JFrame implements ActionListener {
 			return false;
 		}
 	}
+	public boolean saveFastaFile(File file) {
+		try {
+			DNASequence sequence = new DNASequence(editor.getText());
+			sequence.setAccession(new AccessionID(JOptionPane.showInputDialog(GenTool.this,"Please enter the sequence name:","Sequence Name",JOptionPane.QUESTION_MESSAGE)));
+			FastaWriterHelper.writeSequence(file,sequence);
+			return true;
+		}	catch(Error | Exception e) {
+			JOptionPane.showMessageDialog(this,"Could not save FASTA file:\n"+e.getMessage(),"Save File",JOptionPane.WARNING_MESSAGE);
+			return false;
+		}
+	}
+	
 	protected boolean confirmIfDirty() {
 		if(editor.isDirty())
 			switch(JOptionPane.showOptionDialog(this, currentFile==null?"Do you want to save changes?":"Do you want to save changes to "+currentFile.getName()+"?", this.getTitle(), 0, JOptionPane.QUESTION_MESSAGE, null, new String[]{"Save","Don't Save","Cancel"}, null)) {

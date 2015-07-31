@@ -38,6 +38,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -53,6 +55,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import javax.swing.DefaultListModel;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
@@ -85,6 +88,12 @@ import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import org.biojava3.core.sequence.AccessionID;
+import org.biojava3.core.sequence.DNASequence;
+import org.biojava3.core.sequence.io.FastaReaderHelper;
+import org.biojava3.core.sequence.io.FastaWriterHelper;
+import org.biojava3.core.sequence.template.Sequence;
 import com.google.common.collect.EnumMultiset;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Multiset.Entry;
@@ -95,7 +104,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import de.hsma.gentool.Option;
 import de.hsma.gentool.Parameter;
-import de.hsma.gentool.Utilities.FileExtensionFileChooser;
+import de.hsma.gentool.Utilities.FileNameExtensionFileChooser;
 import de.hsma.gentool.batch.Action;
 import de.hsma.gentool.batch.Action.TaskAttribute;
 import de.hsma.gentool.batch.Batch;
@@ -113,7 +122,11 @@ import de.hsma.gentool.operation.transformation.Transformation;
 public class GenBatch extends JFrame implements ActionListener, ListDataListener, ListSelectionListener {
 	private static final long serialVersionUID = 1l;
 
-	public static final String FILE_EXTENSION = "gens", FILE_DESCRIPTION = "Genetic Sequences";
+	public static final String GENETIC_EXTENSION = "gens";
+	public static final FileNameExtensionFilter
+		GENETIC_EXTENSION_FILTER = new FileNameExtensionFilter("Genetic Sequences (*."+GENETIC_EXTENSION+",*."+GenTool.GENETIC_EXTENSION+")", GENETIC_EXTENSION, GenTool.GENETIC_EXTENSION),
+		FASTA_EXTENSION_FILTER = new FileNameExtensionFilter("FASTA Files (*.fasta;*.fna,*.fa)","fasta","fna","fa"),
+		TEXT_EXTENSION_FILTER = new FileNameExtensionFilter("Text Documents (*.txt)", "txt");
 	
 	private static final String
 		ACTION_IMPORT = "import",
@@ -339,31 +352,53 @@ public class GenBatch extends JFrame implements ActionListener, ListDataListener
 	}
 
 	public void importSequences() {
-		JFileChooser chooser = new FileExtensionFileChooser(FILE_EXTENSION,FILE_DESCRIPTION);
+		JFileChooser chooser = new FileNameExtensionFileChooser(GENETIC_EXTENSION_FILTER,FASTA_EXTENSION_FILTER,TEXT_EXTENSION_FILTER);
 		chooser.setDialogTitle("Open");
 		if(chooser.showOpenDialog(this)!=JFileChooser.APPROVE_OPTION)
 			return;
+		File file = chooser.getSelectedFile();
 		
 		clearSequences();
-		try(BufferedReader reader = new BufferedReader(new FileReader(chooser.getSelectedFile()))) {
+		if(chooser.getFileFilter()==FASTA_EXTENSION_FILTER||FASTA_EXTENSION_FILTER.accept(file)) {
+			try {
+				for(DNASequence seuqence:FastaReaderHelper.readFastaDNASequence(file).values())
+					addSequence(Tuple.splitTuples(seuqence.toString()));
+			} catch(Error | Exception e) {
+				JOptionPane.showMessageDialog(GenBatch.this,"Could not import FASTA file:\n"+e.getMessage(),"Import File",JOptionPane.WARNING_MESSAGE);
+				e.printStackTrace();
+			}
+		} else try(BufferedReader reader = new BufferedReader(new FileReader(file))) {
 			String line; while((line=reader.readLine())!=null)
 				addSequence(Tuple.splitTuples(Tuple.tupleString(line)));
 		}	catch(IOException e) {
-			JOptionPane.showMessageDialog(GenBatch.this,"Could not open file:\n"+e.getMessage(),"Open File",JOptionPane.WARNING_MESSAGE);
+			JOptionPane.showMessageDialog(GenBatch.this,"Could not import file:\n"+e.getMessage(),"Import File",JOptionPane.WARNING_MESSAGE);
 			e.printStackTrace();
 		}
 	}
 	public void exportSequences() {
-		JFileChooser chooser = new FileExtensionFileChooser(FILE_EXTENSION,FILE_DESCRIPTION);
+		JFileChooser chooser = new FileNameExtensionFileChooser(false,GENETIC_EXTENSION_FILTER,FASTA_EXTENSION_FILTER,TEXT_EXTENSION_FILTER);
 		chooser.setDialogTitle("Save As");
 		if(chooser.showSaveDialog(this)!=JFileChooser.APPROVE_OPTION)
 			return;
+		File file = chooser.getSelectedFile();
 		
-		try(PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(chooser.getSelectedFile())))) {
+		if(chooser.getFileFilter()==FASTA_EXTENSION_FILTER||FASTA_EXTENSION_FILTER.accept(file)) {
+			try {
+				int sequenceNumber = 0;
+				Collection<Sequence<?>> sequences = this.sequenceList.getSequences().stream().map(tuples->new DNASequence(Tuple.joinTuples(tuples,EMPTY))).collect(Collectors.toList());
+				for(Sequence<?> sequence:sequences)
+					((DNASequence)sequence).setAccession(new AccessionID(Integer.toString(++sequenceNumber)));
+				FastaWriterHelper.writeSequences(new FileOutputStream(file),sequences);
+			} catch(Error | Exception e) {
+				JOptionPane.showMessageDialog(GenBatch.this,"Could not export to FASTA file:\n"+e.getMessage(),"Export File",JOptionPane.WARNING_MESSAGE);
+				e.printStackTrace();
+			}
+			
+		} else try(PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(chooser.getSelectedFile())))) {
 			for(Collection<Tuple> sequence:this.sequenceList.getSequences())
 				writer.println(Tuple.joinTuples(sequence));
 		}	catch(IOException e) {
-			JOptionPane.showMessageDialog(GenBatch.this,"Could not open file:\n"+e.getMessage(),"Open File",JOptionPane.WARNING_MESSAGE);
+			JOptionPane.showMessageDialog(GenBatch.this,"Could not export to file:\n"+e.getMessage(),"Export File",JOptionPane.WARNING_MESSAGE);
 			e.printStackTrace();
 		}
 	}

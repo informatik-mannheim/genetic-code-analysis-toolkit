@@ -74,13 +74,13 @@ import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableCellRenderer;
 import net.gumbix.geneticcode.dich.AntiCodonBDA$;
 import net.gumbix.geneticcode.dich.BinaryDichotomicAlgorithm;
 import net.gumbix.geneticcode.dich.ParityBDA$;
 import net.gumbix.geneticcode.dich.RumerBDA$;
 import org.apache.commons.math3.util.Pair;
-import de.hsma.gentool.Utilities.FileExtensionFileChooser;
 import de.hsma.gentool.gui.helper.Guitilities;
 import de.hsma.gentool.gui.helper.ListTableModel;
 import de.hsma.gentool.nucleic.Acid;
@@ -88,8 +88,10 @@ import de.hsma.gentool.nucleic.Base;
 
 public class GenBDA extends JFrame implements ActionListener, ListDataListener, ListSelectionListener {
 	private static final long serialVersionUID = 1l;
-	
-	public static final String FILE_EXTENSION = "bda", FILE_DESCRIPTION = "Binary Dichotomic Algorithm";
+
+	public static final String BDA_EXTENSION = "bda";
+	public static final FileNameExtensionFilter
+		BDA_EXTENSION_FILTER = new FileNameExtensionFilter("Binary Dichotomic Algorithm (*."+BDA_EXTENSION+")", BDA_EXTENSION);
 	
 	private static final String
 		ACTION_OPEN = "open",
@@ -207,7 +209,7 @@ public class GenBDA extends JFrame implements ActionListener, ListDataListener, 
 	}
 	
 	public boolean openFile() {
-		JFileChooser chooser = new FileExtensionFileChooser(FILE_EXTENSION,FILE_DESCRIPTION);
+		JFileChooser chooser = new FileNameExtensionFileChooser(BDA_EXTENSION_FILTER);
 		chooser.setDialogTitle("Open");
 		if(chooser.showOpenDialog(this)!=JFileChooser.APPROVE_OPTION)
 			return false;
@@ -224,7 +226,7 @@ public class GenBDA extends JFrame implements ActionListener, ListDataListener, 
 		}
 	}
 	public boolean saveFileAs() {
-		JFileChooser chooser = new FileExtensionFileChooser(FILE_EXTENSION,FILE_DESCRIPTION);
+		JFileChooser chooser = new FileNameExtensionFileChooser(false,BDA_EXTENSION_FILTER);
 		chooser.setDialogTitle("Save As");
 		if(chooser.showSaveDialog(this)==JFileChooser.APPROVE_OPTION)
 			   return saveFile(chooser.getSelectedFile());
