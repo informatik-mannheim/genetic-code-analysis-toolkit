@@ -20,8 +20,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
+import java.util.stream.Collectors;
 import de.hsma.gentool.Parameter;
 import de.hsma.gentool.Parameter.Type;
 import de.hsma.gentool.gui.GenBDA;
@@ -49,9 +48,7 @@ public class BDA implements Split {
     List<Collection<Tuple>> split = new ArrayList<>();
     for(scala.collection.immutable.List<net.gumbix.geneticcode.dich.Codon> codons:classTable.class2codons().values())
     	split.add(new ArrayList<Tuple>(tuples) { private static final long serialVersionUID = 1l; {
-    		retainAll(Collections2.transform(scala.collection.JavaConversions.asJavaCollection(codons.toList()),new Function<net.gumbix.geneticcode.dich.Codon,Tuple>() {
-  				@Override public Tuple apply(net.gumbix.geneticcode.dich.Codon codon) { return new Tuple(codon.toString()); }
-      	}));
+    		retainAll(scala.collection.JavaConversions.asJavaCollection(codons.toList()).stream().map(codon->new Tuple(codon.toString())).collect(Collectors.toList()));
     	}});
     
     split.removeIf(splitCandidate->splitCandidate.isEmpty());

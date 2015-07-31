@@ -50,7 +50,6 @@ import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.text.NumberFormatter;
 import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.ObjectArrays;
 
@@ -273,9 +272,7 @@ public class Parameter {
 					Arrays.fill(types,int.class); types[0] = types[1] = String.class;
 					return Parameter.class.getConstructor(types).newInstance(
 						ObjectArrays.concat(new Object[]{annotation.key(),annotation.label()},
-							Collections2.transform(Arrays.asList(values),new Function<String,Integer>() {
-								@Override public Integer apply(String input) { return Integer.parseInt(input); }
-							}).toArray(new Integer[0]),Object.class));
+							Arrays.stream(values).map(input->Integer.parseInt(input)).toArray(), Object.class));
 				}	catch(Exception e) { throw new RuntimeException(e); }
 			case DECIMAL:
 				try {
@@ -283,9 +280,7 @@ public class Parameter {
 					Arrays.fill(types,double.class); types[0] = types[1] = String.class;
 					return Parameter.class.getConstructor(types).newInstance(
 						ObjectArrays.concat(new Object[]{annotation.key(),annotation.label()},
-							Collections2.transform(Arrays.asList(values),new Function<String,Double>() {
-								@Override public Double apply(String input) { return Double.parseDouble(input); }
-							}).toArray(new Integer[0]),Object.class));
+							Arrays.stream(values).map(input->Double.parseDouble(input)).toArray(), Object.class));
 				}	catch(Exception e) { throw new RuntimeException(e); }
 			case BOOLEAN:
 				return new Parameter(annotation.key(),annotation.label(),Boolean.parseBoolean(value));
