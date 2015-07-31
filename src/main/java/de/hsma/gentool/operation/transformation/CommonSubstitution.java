@@ -21,10 +21,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import com.google.common.base.Function;
+import java.util.stream.Collectors;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import de.hsma.gentool.Parameter;
 import de.hsma.gentool.nucleic.Base;
 import de.hsma.gentool.nucleic.Tuple;
@@ -174,8 +172,8 @@ public class CommonSubstitution implements Transformation {
 	@Override public Collection<Tuple> transform(Collection<Tuple> tuples,Object... values) { return transform(tuples,(String)values[0]); }
 	public Collection<Tuple> transform(Collection<Tuple> tuples,String name) {
 		Map<Base,Base> substitution = SUBSTITUTIONS.get(name);
-		return substitution!=null?Lists.newArrayList(Iterables.transform(tuples,new Function<Tuple,Tuple>() {
-			@Override public Tuple apply(Tuple tuple) { return new Tuple(substitute(tuple.getBases(),substitution)); }
-		})):tuples;
+		return substitution!=null?tuples.stream().map(tuple->
+			new Tuple(substitute(tuple.getBases(),substitution)))
+				.collect(Collectors.toList()):tuples;
 	}
 }
