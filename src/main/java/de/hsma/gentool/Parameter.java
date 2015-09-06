@@ -194,6 +194,8 @@ public class Parameter {
 				((FileComponent)(component = new FileComponent(filter))).setFile((File)value);
 				break;
 			} add(component, BorderLayout.CENTER);
+			if(component instanceof JComponent)
+				((JComponent)component).setToolTipText(label);
 		}
 
 		public java.awt.Component getComponent() { return component; }
