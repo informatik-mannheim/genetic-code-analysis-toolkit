@@ -48,6 +48,10 @@ import java.awt.font.TextAttribute;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.attribute.UserDefinedFileAttributeView;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -189,6 +193,8 @@ public class GenTool extends JFrame implements ActionListener {
 		ACTION_ADD_TO_BATCH = "add_to_batch",
 		ACTION_PREFERENCES = "preferences",
 		ACTION_ABOUT = "about";
+	private static final String
+		FILE_ATTRIBUTE_LABEL = "gentool.label";
 	
 	private static final List<GenTool> TOOLS = new ArrayList<>();
 	private static GenBDA bda; private static GenBatch batch;
@@ -199,6 +205,7 @@ public class GenTool extends JFrame implements ActionListener {
 	protected int futureModifications;
 	
 	private NucleicEditor editor;
+	private Option.Component optionLabel;
 	
 	private JSplitPane[] split;
 	private JMenuBar menubar;
@@ -436,6 +443,13 @@ public class GenTool extends JFrame implements ActionListener {
 				getMenuItem(menubar,ACTION_REDO).setEnabled(editor.canRedo());
 			}
 		});
+		optionLabel = editor.addOption(new Option("label", "Sequence Label", Parameter.Type.TEXT));
+		((JTextField)optionLabel.getComponent()).getDocument().addDocumentListener(new DocumentListener() {
+			@Override public void insertUpdate(DocumentEvent event) { changedUpdate(event); }
+			@Override public void removeUpdate(DocumentEvent event) { changedUpdate(event); }
+			@Override public void changedUpdate(DocumentEvent event) { editor.setDirty(); }
+		});
+		optionLabel.setPreferredSize(new Dimension(100,optionLabel.getPreferredSize().height));
 		
 		findDialog = new FindDialog();
 		
@@ -661,8 +675,14 @@ public class GenTool extends JFrame implements ActionListener {
 		try {
 			editor.setDefaultTupleLength(0);
 			editor.setDefaultAcid(null);
-			
+
 			editor.setText(new String(readFile(file)));
+			UserDefinedFileAttributeView view = Files.getFileAttributeView(file.toPath(),UserDefinedFileAttributeView.class);
+			if(view.list().contains(FILE_ATTRIBUTE_LABEL)) {
+				ByteBuffer buffer = ByteBuffer.allocate(view.size(FILE_ATTRIBUTE_LABEL));
+				view.read(FILE_ATTRIBUTE_LABEL, buffer); buffer.flip();
+				optionLabel.setValue(Charset.defaultCharset().decode(buffer).toString());
+			} else optionLabel.setValue(null);
 			editor.setClean();
 			
 			openedFile(file);			
@@ -674,12 +694,12 @@ public class GenTool extends JFrame implements ActionListener {
 	}
 	public boolean openFastaFile(File file) {
 		try {
-			DefiniteFuture<DNASequence> future = new DefiniteFuture<DNASequence>();
+			DefiniteFuture<Entry<String,DNASequence>> future = new DefiniteFuture<Entry<String,DNASequence>>();
 			Map<String,DNASequence> fastaFile = FastaReaderHelper.readFastaDNASequence(file);
 			if(fastaFile==null||fastaFile.isEmpty())
 				throw new Exception("FASTA file does not contain any sequences.");
 			else if(fastaFile.size()==1)
-				future.set(fastaFile.values().iterator().next());
+				future.set(fastaFile.entrySet().iterator().next());
 			else {				
 				JDialog dialog = new JDialog(GenTool.this,"Pick Sequence",true);
 				dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
@@ -727,7 +747,7 @@ public class GenTool extends JFrame implements ActionListener {
 					private static final long serialVersionUID = 1l;
 					@Override public void actionPerformed(ActionEvent e) {
 						if(!list.isSelectionEmpty())
-							future.set(list.getSelectedValue().getValue());
+							future.set(list.getSelectedValue());
 						dialog.dispose();
 					}
 				});				
@@ -763,12 +783,13 @@ public class GenTool extends JFrame implements ActionListener {
 				dialog.setVisible(true);
 			}
 			
-			DNASequence sequence = future.get();
+			Entry<String,DNASequence> sequence = future.get();
 			if(sequence!=null) {
 				editor.setDefaultTupleLength(0);
 				editor.setDefaultAcid(null);
 				
-				editor.setText(new String(sequence.toString()));
+				editor.setText(new String(sequence.getValue().toString()));
+				optionLabel.setValue(sequence.getKey());
 				
 				openedFile(null);
 				return true;
@@ -805,6 +826,8 @@ public class GenTool extends JFrame implements ActionListener {
 	public boolean saveFile(File file) {
 		try {
 			writeFile(editor.getText(), file);
+			UserDefinedFileAttributeView view = Files.getFileAttributeView(file.toPath(), UserDefinedFileAttributeView.class);
+			view.write(FILE_ATTRIBUTE_LABEL, Charset.defaultCharset().encode((String)optionLabel.getValue()));
 			editor.setClean();
 			currentFile = file;
 			getMenuItem(menu[0], ACTION_SAVE).setEnabled(true);
@@ -817,7 +840,7 @@ public class GenTool extends JFrame implements ActionListener {
 	public boolean saveFastaFile(File file) {
 		try {
 			DNASequence sequence = new DNASequence(editor.getText());
-			sequence.setAccession(new AccessionID(JOptionPane.showInputDialog(GenTool.this,"Please enter the sequence name:","Sequence Name",JOptionPane.QUESTION_MESSAGE)));
+			sequence.setAccession(new AccessionID((String)optionLabel.getValue()));
 			FastaWriterHelper.writeSequence(file,sequence);
 			return true;
 		}	catch(Error | Exception e) {

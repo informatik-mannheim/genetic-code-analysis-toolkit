@@ -18,16 +18,19 @@ package de.hsma.gentool;
 import java.util.prefs.Preferences;
 
 public class Option extends Parameter {
-	public Option(String key,String label,Type type,Object value) {
+	public Option(String key, String label, Type type) {
+		super(key,label,type);
+	}
+	public Option(String key, String label, Type type, Object value) {
 		super(key,label,type,value);
 	}
-	public Option(String key,String label,double value,double minimum,double maximum,double step) {
+	public Option(String key, String label, double value, double minimum, double maximum, double step) {
 		super(key,label,minimum,value,maximum,step);
 	}
-	public Option(String key,String label,int value,int minimum,int maximum,int step) {
+	public Option(String key, String label, int value, int minimum, int maximum, int step) {
 		super(key,label,minimum,value,maximum,step);
 	}
-	public Option(String key,String label,Object value,Object[] options,String... labels) {
+	public Option(String key, String label, Object value, Object[] options, String... labels) {
 		super(key,label,value,options,labels);
 	}
 	

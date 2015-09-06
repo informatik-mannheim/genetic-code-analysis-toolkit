@@ -113,6 +113,7 @@ public class NucleicEditor extends JRootPane {
 	private int displaySize = 300;
 
 	private JPanel optionPanel;
+	private List<Option> options;
 	private Option.Component optionLength, optionAcid, optionMode;
 	
 	private int cleanHash = EMPTY.hashCode();
@@ -341,17 +342,7 @@ public class NucleicEditor extends JRootPane {
 			}
 		});
 		
-		optionPanel.add(new JLabel("Tuple Length:"));
-		optionPanel.add(optionLength=(new Option("tupleLength", "Tuple Length", getDefaultTupleLength(), 0, 10, 1)).new Component() {
-			private static final long serialVersionUID = 1l;
-			private boolean update; //prevent loop with event listeners of option
-			@Override public void setValue(Object value) {
-				if(update) return; else update = true;
-				super.setValue(value);
-				update = false;
-			}
-		});
-		optionLength.addChangeListener(new ChangeListener() {
+		(optionLength=addOption(new Option("tupleLength", "Tuple Length", getDefaultTupleLength(), 0, 10, 1))).addChangeListener(new ChangeListener() {
 			@Override public void stateChanged(ChangeEvent event) {
 				int oldValue = getDefaultTupleLength(), newValue = (Integer)((JSpinner)event.getSource()).getValue();
 				if(EditorMode.SET.equals(getMode())&&newValue!=0&&newValue<oldValue&&
@@ -360,34 +351,12 @@ public class NucleicEditor extends JRootPane {
 				} else setDefaultTupleLength(newValue);
 			}
 		});
-		
-		optionPanel.add(new JLabel("Default Acid:"));
-		optionPanel.add(optionAcid=(new Option("acid", "Default Acid", getDefaultAcid(), new Acid[]{null,RNA,DNA}, EMPTY, RNA.name(), DNA.name())).new Component() {
-			private static final long serialVersionUID = 1l;
-			private boolean update; //prevent loop with event listeners of option
-			@Override public void setValue(Object value) {
-				if(update) return; else update = true;
-				super.setValue(value);
-				update = false;
-			}
-		});
-		optionAcid.addItemListener(new ItemListener() {
+		(optionAcid=addOption(new Option("acid", "Default Acid", getDefaultAcid(), new Acid[]{null,RNA,DNA}, EMPTY, RNA.name(), DNA.name()))).addItemListener(new ItemListener() {
 			@Override public void itemStateChanged(ItemEvent event) {
 				setDefaultAcid(event.getStateChange()==ItemEvent.SELECTED?(Acid)event.getItem():null);
 			}
 		});
-		
-		optionPanel.add(new JLabel("Editor Mode:"));
-		optionPanel.add(optionMode=(new Option("editorMode", "Editor Mode", EditorMode.SEQUENCE, new EditorMode[]{EditorMode.SEQUENCE,EditorMode.SET}, "Sequence", "Set")).new Component() {
-			private static final long serialVersionUID = 1l;
-			private boolean update; //prevent loop with event listeners of option
-			@Override public void setValue(Object value) {
-				if(update) return; else update = true;
-				super.setValue(value);
-				update = false;
-			}
-		});
-		optionMode.addItemListener(new ItemListener() {
+		(optionMode=addOption(new Option("editorMode", "Editor Mode", EditorMode.SEQUENCE, new EditorMode[]{EditorMode.SEQUENCE,EditorMode.SET}, "Sequence", "Set"))).addItemListener(new ItemListener() {
 			@Override public void itemStateChanged(ItemEvent event) {
 				if(event.getStateChange()==ItemEvent.SELECTED)
 					setMode((EditorMode)event.getItem());
@@ -430,6 +399,22 @@ public class NucleicEditor extends JRootPane {
 		displayPane.addTab(display.getLabel(),display.getIcon(),pane);
 		displayPane.setTabComponentAt(displayPane.getTabCount()-1,label);
 		addNucleicListener(display);
+	}
+	
+	public List<Option> getOptions() { return Collections.unmodifiableList(options); }
+	public Option.Component addOption(Option option) {
+		Option.Component component;
+		optionPanel.add(new JLabel(option.label+":"));
+		optionPanel.add(component=option.new Component() {
+			private static final long serialVersionUID = 1l;
+			private boolean update; //prevent loop with event listeners of option
+			@Override public void setValue(Object value) {
+				if(update) return; else update = true;
+				super.setValue(value);
+				update = false;
+			}
+		}); return component;
+		
 	}
 	
 	public JTextPane getTextPane() { return textPane; }
