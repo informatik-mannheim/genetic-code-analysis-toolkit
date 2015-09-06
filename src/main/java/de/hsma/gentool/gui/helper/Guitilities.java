@@ -288,18 +288,23 @@ public class Guitilities {
 	public static JMenuItem createMenuItem(String text,String icon,KeyStroke keyStroke,String actionCommand,ActionListener listener) {
 		JMenuItem item = new JMenuItem(text);
 		item.setActionCommand(actionCommand);
-		item.setBorder(MENU_EMPTY_BORDER);
 		if(keyStroke!=null) {
 			item.setMnemonic(keyStroke.getKeyChar());
 			item.setAccelerator(keyStroke);
 		}
-		if(icon!=null)
-			item.setIcon(getImage(icon));
+		item.setIcon(getImage(icon!=null?icon:"dummy"));
 		item.addActionListener(listener);
 		JComponent component = (listener instanceof JComponent)?(JComponent)listener:(listener instanceof JFrame)?((JFrame)listener).getRootPane():null;
 		if(component!=null)
 			registerKeyStroke(component,keyStroke,actionCommand,listener);
 		return item;
+	}
+	
+	public static JMenu createSubmenu(String text) { return createSubmenu(text,null); }
+	public static JMenu createSubmenu(String text,String icon) {
+		JMenu menu = new JMenu(text);
+		menu.setIcon(getImage(icon!=null?icon:"dummy"));
+		return menu;
 	}
 	
 	public static JMenuItem seperateMenuItem(JMenuItem item) {
