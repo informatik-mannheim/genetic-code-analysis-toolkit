@@ -38,7 +38,6 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -289,7 +288,7 @@ public class NucleicEditor extends JRootPane {
 				previousTabIndex = currentTabIndex;
         currentTabIndex = displayPane.getSelectedIndex();
 				if(previousTabIndex!=-1) displayPanes.get(previousTabIndex).getContentPane().removeAll();
-				displayPanes.get(currentTabIndex).getContentPane().add((Component)displays.get(currentTabIndex));
+				if(currentTabIndex!=-1) displayPanes.get(currentTabIndex).getContentPane().add((Component)displays.get(currentTabIndex));
 			}
 		});
 		
@@ -320,8 +319,9 @@ public class NucleicEditor extends JRootPane {
 		displays = new ArrayList<NucleicDisplay>();		
 		addDisplay(new NoDisplay());
 		for(Class<? extends NucleicDisplay> displayClass:new Reflections(NucleicDisplay.class.getPackage().getName()).getSubTypesOf(NucleicDisplay.class))
-			try { addDisplay(displayClass.getConstructor(new Class[]{NucleicEditor.class}).newInstance(this)); }
-			catch(InstantiationException|IllegalAccessException|IllegalArgumentException|InvocationTargetException|NoSuchMethodException|SecurityException e) { /* nothing to do here */ }
+			if(displayClass!=NoDisplay.class) try {
+				addDisplay(displayClass.getConstructor(new Class[]{NucleicEditor.class}).newInstance(this));
+			}	catch(Exception e) { e.printStackTrace(); }
 		this.addComponentListener(new ComponentAdapter() {			
 			@Override public void componentResized(ComponentEvent e) {
 				NucleicDisplay display = displays.get(displayPane.getSelectedIndex());

@@ -17,8 +17,12 @@ package de.hsma.gentool.gui.editor.display;
 
 import static de.hsma.gentool.gui.helper.Guitilities.*;
 import java.awt.Color;
+import java.awt.Component;
+import java.awt.event.ActionEvent;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,10 +32,20 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Map.Entry;
+import javax.swing.AbstractAction;
 import javax.swing.Icon;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
 import javax.swing.border.MatteBorder;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.TreeMultimap;
+import com.mxgraph.layout.mxCircleLayout;
+import com.mxgraph.layout.mxFastOrganicLayout;
+import com.mxgraph.layout.mxGraphLayout;
+import com.mxgraph.layout.mxIGraphLayout;
+import com.mxgraph.layout.mxOrganicLayout;
+import com.mxgraph.layout.mxStackLayout;
+import com.mxgraph.layout.hierarchical.mxHierarchicalLayout;
 import com.mxgraph.model.mxIGraphModel;
 import com.mxgraph.swing.mxGraphComponent;
 import com.mxgraph.util.mxRectangle;
@@ -53,7 +67,9 @@ public class GraphDisplay extends mxGraphComponent implements NucleicDisplay {
 
 	private Map<Tuple, Object> vertices;
 	private Map<Entry<Tuple,Tuple>,Object> edges;
-
+	
+	private mxIGraphLayout layout;
+	
 	public GraphDisplay(NucleicEditor editor) {
 		super(new mxGraph());
 		
@@ -64,6 +80,45 @@ public class GraphDisplay extends mxGraphComponent implements NucleicDisplay {
 		vertices = new HashMap<>();
 		edges = new HashMap<>();
 		
+		getGraphControl().addMouseListener(new MouseAdapter() {
+			private JPopupMenu menu = new JPopupMenu() {
+				private static final long serialVersionUID = 1l; {
+					addLayout("Default Layout", null);
+					addLayout("Circle Layout", new mxCircleLayout(graph) {{ setX0(25); setY0(25); }});
+				//addLayout("Compact Tree Layout", new mxCompactTreeLayout(graph));
+				//addLayout("Edge Label Layout", new mxEdgeLabelLayout(graph));
+					addLayout("Hierarchical Layout", new mxHierarchicalLayout(graph));
+					addLayout("Organic Layout", new mxOrganicLayout(graph));
+					addLayout("Fast Organic Layout", new mxFastOrganicLayout(graph));
+				//addLayout("Orthogonal Layout", new mxOrthogonalLayout(graph));
+				//addLayout("Parallel Edge Layout", new mxParallelEdgeLayout(graph));
+				//addLayout("Partition Layout", new mxPartitionLayout(graph));
+					addLayout("Stack Layout", new mxStackLayout(graph, false, 25, 25, 0, 0));
+					((JMenuItem)getComponent(0)).getAction().setEnabled(false);
+				}
+				private void addLayout(String name, final mxIGraphLayout layout) { //class name to name "((?<!^)\\p{Lu})"
+					if(layout instanceof mxGraphLayout)
+						((mxGraphLayout)layout).setUseBoundingBox(true);
+					add(new AbstractAction(name) {
+						private static final long serialVersionUID = 1l;
+						@Override public void actionPerformed(ActionEvent e) {
+							GraphDisplay.this.layout = layout; layoutGraph();
+							for(Component component:getComponents()) if(component instanceof JMenuItem)
+								((JMenuItem)component).getAction().setEnabled(true);
+							setEnabled(false);
+						}
+					});
+				};
+			};
+			
+			@Override public void mousePressed(MouseEvent event) { popUp(event); }
+			@Override public void mouseReleased(MouseEvent event) { popUp(event); }
+			private void popUp(MouseEvent event) {
+				if(!event.isPopupTrigger())
+					return;
+				menu.show(GraphDisplay.this.getGraphControl(), event.getX(), event.getY());
+			}
+		});
 		setBorder(new MatteBorder(0,2,0,0,Color.LIGHT_GRAY));
 		getViewport().setOpaque(true); getViewport().setBackground(Color.WHITE);
 		addComponentListener(new ComponentAdapter() {
@@ -121,32 +176,42 @@ public class GraphDisplay extends mxGraphComponent implements NucleicDisplay {
 	}
 	private void layoutGraph() {
 		if(vertices.isEmpty()) return;
-		
-		TreeMultimap<Integer,Tuple> vertices = TreeMultimap.create(Comparator.reverseOrder(), Comparator.naturalOrder());
-		for(Tuple vertex:this.vertices.keySet())
-			vertices.put(vertex.getBases().length,vertex);
-		
-		model.beginUpdate();
-		try {
-			LinkedList<Integer> lengths = new LinkedList<Integer>(vertices.keySet());
-			int width = this.getWidth(),last = lengths.getLast(),columns = Math.max(2,lengths.size()*2-1),
-				columnGap = width/(columns+1),rowGap = 80,left = -columnGap/2+10, topInset = -50;
-			for(Integer length:lengths) {
-				int top;
-				ArrayList<Tuple> verticesWithLength = new ArrayList<Tuple>(vertices.get(length));
-				if(columns==2||length!=last) {
-					int half = (int)Math.ceil((double)verticesWithLength.size()/2.);
-					left += columnGap; top = topInset;
-					for(Tuple vertex : verticesWithLength.subList(0,half))
-						this.positionVertexAt(vertex,left,top+=rowGap);
-					top = topInset;
-					for(Tuple vertex:verticesWithLength.subList(half,verticesWithLength.size()))
-						this.positionVertexAt(vertex,width-left,top+=rowGap);
-				} else {
-					left = width / 2; top = topInset;
-					for(Tuple vertex:verticesWithLength)
-						this.positionVertexAt(vertex,left,top+=rowGap);
+		model.beginUpdate(); try {
+			for(Object vertex:vertices.values()) for(Object edge:graph.getEdges(vertex))
+				graph.resetEdge(edge); // reset all edges of th egraph
+
+			if(layout==null) {
+				TreeMultimap<Integer,Tuple> vertices = TreeMultimap.create(Comparator.reverseOrder(), Comparator.naturalOrder());
+				for(Tuple vertex:this.vertices.keySet())
+					vertices.put(vertex.getBases().length,vertex);
+
+				LinkedList<Integer> lengths = new LinkedList<Integer>(vertices.keySet());
+				int width = this.getWidth(),last = lengths.getLast(),columns = Math.max(2,lengths.size()*2-1),
+					columnGap = width/(columns+1),rowGap = 80,left = -columnGap/2+10, topInset = -50;
+				for(Integer length:lengths) {
+					int top;
+					ArrayList<Tuple> verticesWithLength = new ArrayList<Tuple>(vertices.get(length));
+					if(columns==2||length!=last) {
+						int half = (int)Math.ceil((double)verticesWithLength.size()/2.);
+						left += columnGap; top = topInset;
+						for(Tuple vertex : verticesWithLength.subList(0,half))
+							this.positionVertexAt(vertex,left,top+=rowGap);
+						top = topInset;
+						for(Tuple vertex:verticesWithLength.subList(half,verticesWithLength.size()))
+							this.positionVertexAt(vertex,width-left,top+=rowGap);
+					} else {
+						left = width / 2; top = topInset;
+						for(Tuple vertex:verticesWithLength)
+							this.positionVertexAt(vertex,left,top+=rowGap);
+					}
 				}
+			} else {
+				int width = this.getWidth();
+				if(layout instanceof mxCircleLayout)
+					((mxCircleLayout)layout).setRadius(width/2-50);
+				else if(layout instanceof mxHierarchicalLayout)
+					((mxHierarchicalLayout)layout).setParentBorder(50);
+				layout.execute(parent);
 			}
 		} finally { model.endUpdate(); }
 	}
@@ -157,8 +222,7 @@ public class GraphDisplay extends mxGraphComponent implements NucleicDisplay {
 			vertex = this.graph.insertVertex(this.parent,null,tuple,.0,.0,.0,.0);
 			graph.updateCellSize(vertex);
 			vertices.put(tuple,vertex);
-		}
-		return vertex;
+		} return vertex;
 	}
 	private Object removeVertex(Tuple tuple) {
 		Object vertex = vertices.get(tuple);
@@ -166,8 +230,7 @@ public class GraphDisplay extends mxGraphComponent implements NucleicDisplay {
 			this.vertices.remove(tuple);
 			this.edges.keySet().removeIf(edge->((Tuple)edge.getKey()).equals(tuple)||((Tuple)edge.getValue()).equals(tuple));
 			this.model.remove(vertex);
-		}
-		return vertex;
+		} return vertex;
 	}
 
 	@SuppressWarnings("unused") private Object addEdge(Tuple tupleFrom,Tuple tupleTo) {
@@ -192,8 +255,8 @@ public class GraphDisplay extends mxGraphComponent implements NucleicDisplay {
 	}
 
 	private void positionVertexAt(Tuple tuple, int x, int y) {
-		Object vertex = this.vertices.get(tuple);
-		mxRectangle bounds = this.graph.getCellBounds(vertex);
+		Object vertex = vertices.get(tuple);
+		mxRectangle bounds = graph.getCellBounds(vertex);
 		graph.resizeCell(vertex,new mxRectangle((double)x-bounds.getWidth()/2.,y,bounds.getWidth(),bounds.getHeight()));
 	}
 }
