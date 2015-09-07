@@ -56,7 +56,7 @@ import com.google.common.base.CaseFormat;
 import com.google.common.util.concurrent.ListenableFuture;
 import de.hsma.gentool.gui.GenTool;
 
-public final class Utilities {	
+@SuppressWarnings("restriction") public final class Utilities {	
 	public static final String EMPTY = "", SPACE = " ", NEW_LINE = "\n", WHITESPACE = " \t\n\r\f", TRUE = "true", FALSE = "false";
 	public static final double TWO_PI = PI*2, HALF_PI = PI/2, QUARTER_PI = PI/4, EIGHTH_PI = PI/8, SIXTEENTH_PI = PI/16;
 	
