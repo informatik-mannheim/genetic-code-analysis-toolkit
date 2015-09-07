@@ -169,7 +169,7 @@ public class GenTool extends JFrame implements ActionListener {
 		FASTA_EXTENSION_FILTER = new FileNameExtensionFilter("FASTA Files (*.fasta;*.fna,*.fa)","fasta","fna","fa"),
 		TEXT_EXTENSION_FILTER = new FileNameExtensionFilter("Text Documents (*.txt)", "txt");
 	
-	private static final String VERSION = "1.9";
+	private static final String NAME = "Genetic Code Tool (GenTool)", VERSION = "1.9";
 	
 	private static final int
 		MENU_FILE = 0,
@@ -241,7 +241,8 @@ public class GenTool extends JFrame implements ActionListener {
 	private File currentFile;
 	
 	public GenTool() {
-		super("Genetic Code Tool (GenTool)"); TOOLS.add(this);
+		TOOLS.add(this);
+		updateTitle();
 		setIconImage(getImage("icon").getImage());
 		setMinimumSize(new Dimension(800,600));
 		setPreferredSize(new Dimension(1120,680));
@@ -249,9 +250,7 @@ public class GenTool extends JFrame implements ActionListener {
 		setLocationByPlatform(true);
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		addWindowListener(new WindowAdapter() {
-			@Override public void windowClosing(WindowEvent event) {
-				closeTool();
-			}
+			@Override public void windowClosing(WindowEvent event) { closeTool(); }
 			@Override public void windowClosed(WindowEvent event) {
 				service.shutdownNow();
 				TOOLS.remove(GenTool.this);
@@ -437,6 +436,8 @@ public class GenTool extends JFrame implements ActionListener {
 		toolbar[TOOLBAR_FILE].addSeparator();
 		toolbar[TOOLBAR_FILE].add(createToolbarButton("BDA Editor", "application_osx_terminal", ACTION_SHOW_BDA, this));
 		toolbar[TOOLBAR_FILE].add(createToolbarButton("Exit", "control-power", ACTION_EXIT, this));
+		for(String action:new String[]{ACTION_SAVE})
+			getToolbarButton(toolbar,action).setEnabled(false);
 		
 		toolbars = new JPanel(new FlowLayout(FlowLayout.LEADING));
 		for(JToolBar bar:toolbar)
@@ -458,6 +459,7 @@ public class GenTool extends JFrame implements ActionListener {
 				boolean empty = editor.getText().isEmpty();
 				for(String action:new String[]{ACTION_FIND,ACTION_FIND_NEXT,ACTION_REPLACE,ACTION_SPLIT})
 					getMenuItem(menubar,action).setEnabled(!empty);
+				updateTitle();
 			}
 		});
 		editor.addNucleicListener(new NucleicAdapter() {
@@ -470,7 +472,7 @@ public class GenTool extends JFrame implements ActionListener {
 		((JTextField)optionLabel.getComponent()).getDocument().addDocumentListener(new DocumentListener() {
 			@Override public void insertUpdate(DocumentEvent event) { changedUpdate(event); }
 			@Override public void removeUpdate(DocumentEvent event) { changedUpdate(event); }
-			@Override public void changedUpdate(DocumentEvent event) { editor.setDirty(); }
+			@Override public void changedUpdate(DocumentEvent event) { editor.setDirty(); updateTitle(); }
 		});
 		optionLabel.setPreferredSize(new Dimension(140,optionLabel.getPreferredSize().height));
 		
@@ -676,8 +678,7 @@ public class GenTool extends JFrame implements ActionListener {
 			return false;
 		editor.setText(EMPTY);
 		editor.setClean();
-		currentFile = null;
-		getMenuItem(menu[0],ACTION_SAVE).setEnabled(false);
+		setCurrentFile(null);
 		return true;
 	}
 	public boolean openFile() {
@@ -825,30 +826,11 @@ public class GenTool extends JFrame implements ActionListener {
 		}
 	}
 	private void openedFile(File file) {
-		getMenuItem(menu[0],ACTION_SAVE).setEnabled((currentFile=file)!=null);
+		setCurrentFile(file);
 		
 		Collection<Tuple> tuples = editor.getTuples();
 		editor.setDefaultTupleLength(Tuple.tuplesLength(tuples));
 		editor.setDefaultAcid(Tuple.tuplesAcid(tuples));
-	}
-	
-	private void recentFile(File file) {
-		String path = file.getAbsolutePath();
-		List<String> paths = new ArrayList<>(Arrays.asList(getConfiguration(CONFIGURATION_RECENT,EMPTY).split("\\|")));
-		paths.remove(path); while(paths.size()>9) paths.remove(9);
-		paths.add(0,path); setConfiguration(CONFIGURATION_RECENT,paths.stream().collect(Collectors.joining("|")));
-		updateRecent();
-	}
-	private void updateRecent() {
-		submenu[SUBMENU_RECENT].removeAll();
-		String[] paths = getConfiguration(CONFIGURATION_RECENT,EMPTY).split("\\|");
-		for(String path:paths) {
-			final File file = new File(path);
-			if(file.isFile()) submenu[SUBMENU_RECENT].add(new JMenuItem(new AbstractAction(file.getName()) {
-				private static final long serialVersionUID = 1l;
-				@Override public void actionPerformed(ActionEvent e) { openFile(file); }
-			}));
-		}
 	}
 	
 	public boolean saveFile() {
@@ -875,9 +857,7 @@ public class GenTool extends JFrame implements ActionListener {
 			UserDefinedFileAttributeView view = Files.getFileAttributeView(file.toPath(), UserDefinedFileAttributeView.class);
 			view.write(ATTRIBUTE_LABEL, Charset.defaultCharset().encode((String)optionLabel.getValue()));
 			editor.setClean();
-			currentFile = file;
-			getMenuItem(menu[0], ACTION_SAVE).setEnabled(true);
-			recentFile(file);
+			recentFile(file); setCurrentFile(file);
 			return true;
 		}	catch(IOException e) {
 			JOptionPane.showMessageDialog(this,"Could not save file:\n"+e.getMessage(),"Save File",JOptionPane.WARNING_MESSAGE);
@@ -889,7 +869,8 @@ public class GenTool extends JFrame implements ActionListener {
 			DNASequence sequence = new DNASequence(editor.getText());
 			sequence.setAccession(new AccessionID((String)optionLabel.getValue()));
 			FastaWriterHelper.writeSequence(file,sequence);
-			recentFile(file);
+			editor.setClean();
+			recentFile(file); setCurrentFile(file);
 			return true;
 		}	catch(Error | Exception e) {
 			JOptionPane.showMessageDialog(this,"Could not save FASTA file:\n"+e.getMessage(),"Save File",JOptionPane.WARNING_MESSAGE);
@@ -897,7 +878,14 @@ public class GenTool extends JFrame implements ActionListener {
 		}
 	}
 	
-	protected boolean confirmIfDirty() {
+	private void setCurrentFile(File file) {
+		currentFile = file; updateTitle();
+		boolean hasCurrentFile = currentFile!=null;
+		getMenuItem(menu[0],ACTION_SAVE).setEnabled(hasCurrentFile);
+		getToolbarButton(toolbar[0],ACTION_SAVE).setEnabled(hasCurrentFile);
+	}
+	
+	private boolean confirmIfDirty() {
 		if(editor.isDirty())
 			switch(JOptionPane.showOptionDialog(this, currentFile==null?"Do you want to save changes?":"Do you want to save changes to "+currentFile.getName()+"?", this.getTitle(), 0, JOptionPane.QUESTION_MESSAGE, null, new String[]{"Save","Don't Save","Cancel"}, null)) {
 			case JOptionPane.YES_OPTION:
@@ -908,6 +896,33 @@ public class GenTool extends JFrame implements ActionListener {
 			case JOptionPane.CANCEL_OPTION: default:
 				return false;
 		} else return true;
+	}
+	private void recentFile(File file) {
+		String path = file.getAbsolutePath();
+		List<String> paths = new ArrayList<>(Arrays.asList(getConfiguration(CONFIGURATION_RECENT,EMPTY).split("\\|")));
+		paths.remove(path); while(paths.size()>9) paths.remove(9);
+		paths.add(0,path); setConfiguration(CONFIGURATION_RECENT,paths.stream().collect(Collectors.joining("|")));
+		updateRecent();
+	}
+	private void updateRecent() {
+		submenu[SUBMENU_RECENT].removeAll();
+		String[] paths = getConfiguration(CONFIGURATION_RECENT,EMPTY).split("\\|");
+		for(String path:paths) {
+			final File file = new File(path);
+			if(file.isFile()) submenu[SUBMENU_RECENT].add(new JMenuItem(new AbstractAction(file.getName()) {
+				private static final long serialVersionUID = 1l;
+				@Override public void actionPerformed(ActionEvent e) { openFile(file); }
+			}));
+		}
+	}
+	private void updateTitle() {
+		StringBuilder title = new StringBuilder();
+		if(currentFile!=null) {
+			title.append(currentFile.getName());
+			if(editor.isDirty())
+				title.append('*');
+			title.append(" - ");
+		} setTitle(title.append(NAME).toString());
 	}
 	
 	public void undoEdit() {

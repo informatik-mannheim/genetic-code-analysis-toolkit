@@ -72,6 +72,7 @@ import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JSplitPane;
+import javax.swing.JToolBar;
 import javax.swing.JViewport;
 import javax.swing.KeyStroke;
 import javax.swing.Scrollable;
@@ -258,28 +259,34 @@ public class Guitilities {
 		label.revalidate();
 	}
 	
-	public static JMenuItem getMenuItem(JMenuBar menubar, String key) {
+	public static JMenuItem getMenuItem(JMenuBar menubar, String action) {
 		JMenuItem item = null;
 		for(int index=0;index<menubar.getMenuCount();index++)
-			if((item=getMenuItem(menubar.getMenu(index), key))!=null)
+			if((item=getMenuItem(menubar.getMenu(index), action))!=null)
 				return item;
 		return null;
 	}
-	public static JMenuItem getMenuItem(JMenu menu, String key) {
+	public static JMenuItem getMenuItem(JMenu menu, String action) {
 		JMenuItem item;
 		for(int position=0;position<menu.getItemCount();position++)
-			if((item=menu.getItem(position))!=null&&key.equals(item.getActionCommand()))
+			if((item=menu.getItem(position))!=null&&action.equals(item.getActionCommand()))
 				return item;
 		return null;
 	}
-	public static void fireKeyStroke(JMenuBar menubar, KeyStroke keyStroke) {
-		for(int menu=0;menu<menubar.getMenuCount();menu++)
-			for(Component component:menubar.getMenu(menu).getMenuComponents())
-				if(component instanceof JMenuItem)
-					for(KeyStroke compareKeyStroke:((JMenuItem)component).getRegisteredKeyStrokes())
-						if(keyStroke.equals(compareKeyStroke))
-							for(ActionListener listener:((JMenuItem)component).getActionListeners())
-								listener.actionPerformed(new ActionEvent(keyStroke, 0, ((JMenuItem)component).getActionCommand()));
+	
+	public static JButton getToolbarButton(JToolBar[] toolbars, String action) {
+		JButton button;
+		for(JToolBar toolbar:toolbars)
+			if((button=getToolbarButton(toolbar,action))!=null)
+				return button;
+		return null;
+	}
+	public static JButton getToolbarButton(JToolBar toolbar, String action) {
+		JButton button;
+		for(Component component:toolbar.getComponents())
+			if(component instanceof JButton&&action.equals((button=(JButton)component).getActionCommand()))
+				return button;
+		return null;
 	}
 	
 	public static JMenuItem createMenuItem(String text,String actionCommand,ActionListener listener) { return createMenuItem(text,(String)null,actionCommand,listener); }
@@ -320,6 +327,15 @@ public class Guitilities {
 		return label;
 	}
 	
+	public static void fireKeyStroke(JMenuBar menubar, KeyStroke keyStroke) {
+		for(int menu=0;menu<menubar.getMenuCount();menu++)
+			for(Component component:menubar.getMenu(menu).getMenuComponents())
+				if(component instanceof JMenuItem)
+					for(KeyStroke compareKeyStroke:((JMenuItem)component).getRegisteredKeyStrokes())
+						if(keyStroke.equals(compareKeyStroke))
+							for(ActionListener listener:((JMenuItem)component).getActionListeners())
+								listener.actionPerformed(new ActionEvent(keyStroke, 0, ((JMenuItem)component).getActionCommand()));
+	}
 	public static void registerKeyStroke(JComponent component, KeyStroke keyStroke, final String actionCommand, final ActionListener listener) {
 		if(keyStroke==null||actionCommand==null)
 			return;
