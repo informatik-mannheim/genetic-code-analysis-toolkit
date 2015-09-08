@@ -2,6 +2,7 @@ package de.hsma.gentool.nucleic.helper;
 
 import static de.hsma.gentool.Utilities.*;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -9,11 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.biojava3.core.sequence.DNASequence;
 import org.biojava3.core.sequence.compound.DNACompoundSet;
 import org.biojava3.core.sequence.compound.NucleotideCompound;
@@ -96,9 +93,8 @@ public class GenBank {
 			.addParameter(PARAMETER_RETSTART, String.valueOf(start)).addParameter(PARAMETER_RETMAX, String.valueOf(max))
 			.addParameter(PARAMETER_RETMODE, RETMODE_JSON);
 		
-		CloseableHttpClient client = HttpClients.createSystem();
-		try(CloseableHttpResponse response = client.execute(new HttpGet(builder.build()))) {
-			return jsonArrayAsList(Json.parse(new InputStreamReader(response.getEntity().getContent(), CHARSET)).asObject()
+		try(InputStream input = builder.build().toURL().openStream()) {
+			return jsonArrayAsList(Json.parse(new InputStreamReader(input, CHARSET)).asObject()
 				.get("esearchresult").asObject().get("idlist").asArray()).stream().map(object->object.toString()).collect(Collectors.toList());
 		}
 	}
@@ -108,10 +104,9 @@ public class GenBank {
 			.addParameter(PARAMETER_DATABASE, database).addParameter(PARAMETER_ID, ids.stream().collect(Collectors.joining(",")))
 			.addParameter(PARAMETER_RETMODE, RETMODE_JSON);
 		
-		CloseableHttpClient client = HttpClients.createSystem();
-		try(CloseableHttpResponse response = client.execute(new HttpGet(builder.build()))) {
+		try(InputStream input = builder.build().toURL().openStream()) {
 			List<Map<String,Object>> summary = new ArrayList<>(ids.size());
-			JsonObject results = Optional.ofNullable(Json.parse(new InputStreamReader(response.getEntity().getContent(), CHARSET)).asObject().get("result")).orElse(new JsonObject()).asObject();
+			JsonObject results = Optional.ofNullable(Json.parse(new InputStreamReader(input, CHARSET)).asObject().get("result")).orElse(new JsonObject()).asObject();
 			for(String name:results.names()) if(!"uids".equals(name))
 				summary.add(jsonObjectAsMap(results.get(name).asObject()));
 			return summary;
