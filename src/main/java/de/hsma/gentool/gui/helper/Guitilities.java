@@ -38,6 +38,7 @@ import java.awt.Transparency;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.font.FontRenderContext;
 import java.awt.font.LineMetrics;
@@ -69,6 +70,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JSplitPane;
@@ -515,7 +517,11 @@ public class Guitilities {
 		return BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),title);
 	}
   
-  public static JSeparator createSeparator() { return new JSeparator(); }
+  public static JSeparator createSeparator() {
+  	JSeparator separator = new JSeparator();
+  	separator.setPreferredSize(new Dimension(separator.getPreferredSize().width,6));
+  	return separator;
+  }
 	public static JSplitPane createSplitPane(int orientation, boolean continuous, boolean expandable, double loactionAndResizeWeight, Component componentA, Component componentB) {
 		JSplitPane split = createSplitPane(orientation,continuous,expandable,componentA,componentB);
 		split.setDividerLocation(loactionAndResizeWeight);
@@ -535,16 +541,35 @@ public class Guitilities {
 	}
 	
 	public static JButton createToolbarButton(String text, String icon, String action, ActionListener listener) {
-		JButton button = new JButton();   
+		JButton button = new JButton(getImage(icon));
 		button.setToolTipText(text);
+		button.setBorderPainted(false);
+		button.addMouseListener(new MouseAdapter() {
+			@Override public void mouseEntered(MouseEvent e) { button.setBorderPainted(true); }
+			@Override public void mouseExited(MouseEvent e) { button.setBorderPainted(false); }
+		});
 		button.setActionCommand(action);
-		button.addActionListener(listener);
-		button.setBorder(new EmptyBorder(5,5,5,5));
-		if(icon!=null)
-			button.setIcon(getImage(icon));
+		button.addActionListener(listener);		
 		return button;
 	}
-
+	public static JButton createToolbarMenuButton(String text, String icon, JMenuItem[] items) {
+		JButton button = new JButton("\u25BE", getImage(icon));
+		button.setToolTipText(text);
+		JPopupMenu menu = new JPopupMenu();
+		for(JMenuItem item:items) menu.add(item);
+		button.setBorderPainted(false);
+		button.addMouseListener(new MouseAdapter() {
+			@Override public void mouseEntered(MouseEvent e) { if(!menu.isShowing()) button.setBorderPainted(true); }
+			@Override public void mouseExited(MouseEvent e) { button.setBorderPainted(false); }
+		});
+		button.addActionListener(new ActionListener() {
+			@Override public void actionPerformed(ActionEvent event) {
+				button.setBorderPainted(false);
+				menu.show(button.getParent(), button.getX(), button.getY()+button.getHeight()); }
+		});
+		return button;
+	}
+	
 	public static <Type extends Component> Type addGridPairLine(Container panel,int gridy,Component left,Type right) { return addGridPairLine(panel,gridy,left,right,null); }
 	public static <Type extends Component> Type addGridPairLine(Container panel,int gridy,Component left,Type right,Component additional) {
 		pairLeftConstraint.gridy = pairRightConstraint.gridy = pairAdditionalConstraint.gridy = gridy;

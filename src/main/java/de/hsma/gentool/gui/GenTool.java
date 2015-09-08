@@ -18,6 +18,7 @@ package de.hsma.gentool.gui;
 import static de.hsma.gentool.Utilities.*;
 import static de.hsma.gentool.batch.Action.TaskAttribute.*;
 import static de.hsma.gentool.gui.helper.Guitilities.*;
+import static de.hsma.gentool.nucleic.helper.GenBank.*;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -74,6 +75,7 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListCellRenderer;
+import javax.swing.DefaultListModel;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.JButton;
@@ -145,6 +147,7 @@ import de.hsma.gentool.batch.Action.TaskAttribute;
 import de.hsma.gentool.gui.editor.NucleicAdapter;
 import de.hsma.gentool.gui.editor.NucleicDocument;
 import de.hsma.gentool.gui.editor.NucleicEditor;
+import de.hsma.gentool.gui.editor.NucleicEditor.EditorMode;
 import de.hsma.gentool.gui.helper.FoldingPanel;
 import de.hsma.gentool.gui.helper.Guitilities;
 import de.hsma.gentool.gui.helper.PopupMouseAdapter;
@@ -152,7 +155,9 @@ import de.hsma.gentool.gui.input.CodonWheel;
 import de.hsma.gentool.gui.input.Input;
 import de.hsma.gentool.log.InjectionLogger;
 import de.hsma.gentool.log.Logger;
+import de.hsma.gentool.nucleic.Acid;
 import de.hsma.gentool.nucleic.Tuple;
+import de.hsma.gentool.nucleic.helper.GenBank;
 import de.hsma.gentool.operation.Operation;
 import de.hsma.gentool.operation.analysis.Analysis;
 import de.hsma.gentool.operation.analysis.Analysis.Result;
@@ -177,12 +182,16 @@ public class GenTool extends JFrame implements ActionListener {
 		MENU_WINDOW = 2,
 		MENU_HELP = 3;
 	private static final int
-		SUBMENU_RECENT = 0;
+		SUBMENU_IMPORT = 0,
+		SUBMENU_RECENT = 1;
 	private static final String
 		ACTION_NEW = "new",
 		ACTION_OPEN = "open",
 		ACTION_SAVE = "save",
 		ACTION_SAVE_AS = "save_as",
+		ACTION_IMPORT = "import",
+		ACTION_GENBANK = "genbank",
+		ACTION_EXPORT = "export",
 		ACTION_EXIT = "close",
 		ACTION_UNDO = "undo",
 		ACTION_REDO = "redo",
@@ -206,8 +215,11 @@ public class GenTool extends JFrame implements ActionListener {
 		ACTION_PREFERENCES = "preferences",
 		ACTION_ABOUT = "about";
 	
-	private static final int
-		TOOLBAR_FILE = 0;
+	@SuppressWarnings("unused") private static final int
+		TOOLBAR_FILE = 0,
+		TOOLBAR_EDIT = 1,
+		TOOLBAR_WINDOW = 2,
+		TOOLBAR_HELP = 3;
 	
 	private static final String
 		CONFIGURATION_RECENT = "recent";
@@ -384,11 +396,16 @@ public class GenTool extends JFrame implements ActionListener {
 		menubar.add(menu[MENU_HELP]=new JMenu("Help"));
 		setJMenuBar(menubar);
 		
-		submenu = new JMenu[1];
+		submenu = new JMenu[2];
 		menu[MENU_FILE].add(createMenuItem("New", "document", KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_DOWN_MASK), ACTION_NEW, this));
 		menu[MENU_FILE].add(createMenuItem("Open...", "folder-horizontal-open", KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_DOWN_MASK), ACTION_OPEN, this));
 		menu[MENU_FILE].add(createMenuItem("Save", "disk", KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK), ACTION_SAVE, this));
 		menu[MENU_FILE].add(createMenuItem("Save As...", "disk--arrow", ACTION_SAVE_AS, this));
+		menu[MENU_FILE].add(createSeparator());
+		menu[MENU_FILE].add(submenu[SUBMENU_IMPORT]=createSubmenu("Import", "door_in"));
+		submenu[SUBMENU_IMPORT].add(createMenuItem("FASTA File", ACTION_IMPORT, this));
+		submenu[SUBMENU_IMPORT].add(createMenuItem("GenBank...", ACTION_GENBANK, this));
+		menu[MENU_FILE].add(createMenuItem("Export...", "door_out", ACTION_EXPORT, this));
 		menu[MENU_FILE].add(createSeparator());
 		menu[MENU_FILE].add(submenu[SUBMENU_RECENT]=createSubmenu("Recent Files"));
 		menu[MENU_FILE].add(createSeparator());
@@ -424,24 +441,29 @@ public class GenTool extends JFrame implements ActionListener {
 		getMenuItem(menubar,ACTION_PREFERENCES).setEnabled(false);
 		updateRecent();
 		
-		toolbar = new JToolBar[1];
+		toolbar = new JToolBar[4];
 		toolbar[TOOLBAR_FILE] = new JToolBar("File");
 		toolbar[TOOLBAR_FILE].add(createToolbarButton("New File", "document", ACTION_NEW, this));
 		toolbar[TOOLBAR_FILE].add(createToolbarButton("Open File", "folder-horizontal-open", ACTION_OPEN, this));
 		toolbar[TOOLBAR_FILE].add(createToolbarButton("Save File", "disk", ACTION_SAVE, this));
 		toolbar[TOOLBAR_FILE].add(createToolbarButton("Save As File", "disk--arrow", ACTION_SAVE_AS, this));
 		toolbar[TOOLBAR_FILE].addSeparator();
-		toolbar[TOOLBAR_FILE].add(createToolbarButton("Open GenBatch", "calculator", ACTION_SHOW_BATCH, this));
-		toolbar[TOOLBAR_FILE].add(createToolbarButton("Add Sequence to GenBatch", "calculator_add", ACTION_ADD_TO_BATCH, this));
-		toolbar[TOOLBAR_FILE].addSeparator();
-		toolbar[TOOLBAR_FILE].add(createToolbarButton("BDA Editor", "application_osx_terminal", ACTION_SHOW_BDA, this));
-		toolbar[TOOLBAR_FILE].add(createToolbarButton("Exit", "control-power", ACTION_EXIT, this));
+		toolbar[TOOLBAR_FILE].add(createToolbarMenuButton("Import", "door_in", new JMenuItem[]{
+			createMenuItem("FASTA File", ACTION_IMPORT, this),
+			createMenuItem("GenBank...", ACTION_GENBANK, this)
+		}));
+		toolbar[TOOLBAR_FILE].add(createToolbarButton("Export", "door_out", ACTION_EXPORT, this));
+		
+		toolbar[TOOLBAR_WINDOW] = new JToolBar("Window");
+		toolbar[TOOLBAR_WINDOW].add(createToolbarButton("Open GenBatch", "calculator", ACTION_SHOW_BATCH, this));
+		toolbar[TOOLBAR_WINDOW].add(createToolbarButton("Add Sequence to GenBatch", "calculator_add", ACTION_ADD_TO_BATCH, this));
+		toolbar[TOOLBAR_WINDOW].add(createToolbarButton("BDA Editor", "application_osx_terminal", ACTION_SHOW_BDA, this));
 		for(String action:new String[]{ACTION_SAVE})
 			getToolbarButton(toolbar,action).setEnabled(false);
 		
 		toolbars = new JPanel(new FlowLayout(FlowLayout.LEADING));
 		for(JToolBar bar:toolbar)
-			toolbars.add(bar);
+			if(bar!=null) toolbars.add(bar);
 		add(toolbars,BorderLayout.NORTH);
 		
 		editor = new NucleicEditor();
@@ -590,6 +612,9 @@ public class GenTool extends JFrame implements ActionListener {
 		case ACTION_OPEN: openFile(); break;
 		case ACTION_SAVE: saveFile(); break;
 		case ACTION_SAVE_AS: saveFileAs(); break;
+		case ACTION_IMPORT: importFile(); break;
+		case ACTION_GENBANK: importGenBank(); break;
+		case ACTION_EXPORT: exportFile(); break;
 		case ACTION_EXIT: closeTools(); break;
 		case ACTION_UNDO: undoEdit(); break;
 		case ACTION_REDO: redoEdit(); break;
@@ -673,54 +698,71 @@ public class GenTool extends JFrame implements ActionListener {
 		});
 	}
 	
-	public boolean newFile() {
+	public void newFile() {
 		if(!confirmIfDirty())
-			return false;
-		editor.setText(EMPTY);
-		editor.setClean();
-		setCurrentFile(null);
-		return true;
+			return;
+		
+		newText(EMPTY);
+		
+		editor.setClean(); //clean on open, dirty on import
+		currentFile(null);
 	}
-	public boolean openFile() {
+	public void newText(String text) {
+		editor.setMode(EditorMode.SEQUENCE);
+		editor.setDefaultTupleLength(0);
+		editor.setDefaultAcid(null);
+		editor.setText(text);
+		
+		boolean emptyText = text==null||text.isEmpty();
+		Collection<Tuple> tuples = editor.getTuples();
+		editor.setDefaultTupleLength(emptyText?3:Tuple.tuplesLength(tuples));
+		editor.setDefaultAcid(emptyText?Acid.RNA:Tuple.tuplesAcid(tuples));
+		optionLabel.setValue(null);
+		
+		editor.getTextPane().setCaretPosition(0); //scroll to top
+	}
+	
+	public void openFile() {
 		if(!confirmIfDirty())
-			return false;
+			return;
 
-		JFileChooser chooser = new FileNameExtensionFileChooser(GENETIC_EXTENSION_FILTER,FASTA_EXTENSION_FILTER,TEXT_EXTENSION_FILTER);
-		chooser.setDialogTitle("Open");
-		if(chooser.showOpenDialog(this)!=JFileChooser.APPROVE_OPTION)
-			return false;
-		return openFile(chooser.getSelectedFile(), chooser.getFileFilter());
+		JFileChooser chooser = new FileNameExtensionFileChooser(GENETIC_EXTENSION_FILTER,TEXT_EXTENSION_FILTER);
+		if(chooser.showOpenDialog(this)==JFileChooser.APPROVE_OPTION)
+			openFile(chooser.getSelectedFile());
 	}
-	public boolean openFile(File file) { return openFile(file, null); }
-	public boolean openFile(File file, FileFilter fileFilter) {
-		if(fileFilter==FASTA_EXTENSION_FILTER||FASTA_EXTENSION_FILTER.accept(file))
-		     return openFastaFile(file);
-		else return openNormalFile(file);		
-	}
-	public boolean openNormalFile(File file) {
+	public void openFile(File file) {
 		try {
-			editor.setDefaultTupleLength(0);
-			editor.setDefaultAcid(null);
-
-			editor.setText(new String(readFile(file)));
+			newText(new String(readFile(file)));
 			UserDefinedFileAttributeView view = Files.getFileAttributeView(file.toPath(),UserDefinedFileAttributeView.class);
 			if(view.list().contains(ATTRIBUTE_LABEL)) {
 				ByteBuffer buffer = ByteBuffer.allocate(view.size(ATTRIBUTE_LABEL));
 				view.read(ATTRIBUTE_LABEL, buffer); buffer.flip();
 				optionLabel.setValue(Charset.defaultCharset().decode(buffer).toString());
-			} else optionLabel.setValue(null);
-			editor.setClean();
+			}
 			
-			recentFile(file); openedFile(file);
-			return true;
-		}	catch(IOException e) {
-			JOptionPane.showMessageDialog(this,"Could not open file:\n"+e.getMessage(),"Open File",JOptionPane.WARNING_MESSAGE);
-			return false;
-		}
+			editor.setClean(); //clean on open, dirty on import
+			currentFile(file);
+			recentFile(file);
+		}	catch(IOException e) { JOptionPane.showMessageDialog(this,"Could not open file:\n\n"+e.getMessage(),"Open",JOptionPane.WARNING_MESSAGE); }
 	}
-	public boolean openFastaFile(File file) {
+	
+	public void importFile() {
+		if(!confirmIfDirty())
+			return;
+
+		JFileChooser chooser = new FileNameExtensionFileChooser(FASTA_EXTENSION_FILTER);
+		if(chooser.showOpenDialog(this)==JFileChooser.APPROVE_OPTION)
+			importFile(chooser.getSelectedFile(), chooser.getFileFilter());
+	}
+	public void importFile(File file) { importFile(file, null); }
+	public void importFile(File file, FileFilter filter) {
+		if(filter==FASTA_EXTENSION_FILTER||FASTA_EXTENSION_FILTER.accept(file))
+			importFastaFile(file);
+		else JOptionPane.showMessageDialog(this,String.format("File format of %s not recognized.",file.getName()),"Import",JOptionPane.WARNING_MESSAGE);
+	}
+	protected void importFastaFile(File file) {
 		try {
-			DefiniteFuture<Entry<String,DNASequence>> future = new DefiniteFuture<Entry<String,DNASequence>>();
+			DefiniteFuture<Entry<String,DNASequence>> future = new DefiniteFuture<>();
 			Map<String,DNASequence> fastaFile = FastaReaderHelper.readFastaDNASequence(file);
 			if(fastaFile==null||fastaFile.isEmpty())
 				throw new Exception("FASTA file does not contain any sequences.");
@@ -738,7 +780,7 @@ public class GenTool extends JFrame implements ActionListener {
 				JLabel label = new JLabel("Pick one sequences from the list:");
 				JButton pick = new JButton(), cancel = new JButton("Cancel");
 				
-				@SuppressWarnings("unchecked") JList<Map.Entry<String,DNASequence>> list = new JList<Map.Entry<String,DNASequence>>(fastaFile.entrySet().toArray(new Map.Entry[0]));
+				@SuppressWarnings("unchecked") JList<Map.Entry<String,DNASequence>> list = new JList<>(fastaFile.entrySet().toArray(new Map.Entry[0]));
 				list.setCellRenderer(new ListCellRenderer<Entry<String,DNASequence>>() {
 					private JLabel label = new JLabel();
 					@Override public Component getListCellRendererComponent(JList<? extends Entry<String,DNASequence>> list,Entry<String,DNASequence> entry,int index,boolean isSelected,boolean cellHasFocus) {						
@@ -811,26 +853,151 @@ public class GenTool extends JFrame implements ActionListener {
 			
 			Entry<String,DNASequence> sequence = future.get();
 			if(sequence!=null) {
-				editor.setDefaultTupleLength(0);
-				editor.setDefaultAcid(null);
-				
-				editor.setText(new String(sequence.getValue().toString()));
+				newText(sequence.getValue().getSequenceAsString());
 				optionLabel.setValue(sequence.getKey());
-				
-				recentFile(file); openedFile(null); //null because FASTA will overwrite other entires in FASTA file
-				return true;
-			} else return false;
-		} catch(Error | Exception e) {
-			JOptionPane.showMessageDialog(this,"Could not open FASTA file:\n"+e.getMessage(),"Open File",JOptionPane.WARNING_MESSAGE);
-			return false;
-		}
+
+				editor.setDirty(); //clean on open, dirty on import
+				currentFile(null); //null because FASTA will overwrite other entires in FASTA file
+				recentFile(file);
+			}
+		} catch(Error | Exception e) { JOptionPane.showMessageDialog(this,"Could not open FASTA file:\n\n"+e.getMessage(),"Import FASTA",JOptionPane.WARNING_MESSAGE); }
 	}
-	private void openedFile(File file) {
-		setCurrentFile(file);
+	
+	public void importGenBank() {
+		if(!confirmIfDirty())
+			return;
 		
-		Collection<Tuple> tuples = editor.getTuples();
-		editor.setDefaultTupleLength(Tuple.tuplesLength(tuples));
-		editor.setDefaultAcid(Tuple.tuplesAcid(tuples));
+		JDialog dialog = new JDialog(GenTool.this,"Search GenBank",true);
+		dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+		
+		GroupLayout layout = new GroupLayout(dialog.getContentPane());
+		dialog.getContentPane().setLayout(layout);
+		layout.setAutoCreateGaps(true);
+		layout.setAutoCreateContainerGaps(true);
+		
+		JLabel label = new JLabel("Search Term:");
+		JButton search = new JButton(), pick = new JButton(), cancel = new JButton("Cancel");
+		
+		JTextField term = new JTextField();
+		term.addKeyListener(new KeyAdapter() {
+			@Override public void keyPressed(KeyEvent event) {
+				if(event.getKeyCode()==KeyEvent.VK_ENTER)
+					search.getAction().actionPerformed(null);
+			}
+		});
+		
+		DefaultListModel<Map<String,Object>> model = new DefaultListModel<>();
+		JList<Map<String,Object>> list = new JList<>(model);
+		list.setCellRenderer(new ListCellRenderer<Map<String,Object>>() {
+			private JLabel label = new JLabel();
+			@Override public Component getListCellRendererComponent(JList<? extends Map<String,Object>> list,Map<String,Object> entry,int index,boolean isSelected,boolean cellHasFocus) {						
+		    label.setText("<html><b>"+entry.get("caption")+"</b>: "+entry.get("title"));
+		    
+		    if(isSelected) {
+		    	label.setBackground(list.getSelectionBackground());
+		    	label.setForeground(list.getSelectionForeground());
+		    } else {
+		    	label.setBackground(list.getBackground());
+		    	label.setForeground(list.getForeground());
+		    }
+		    label.setEnabled(list.isEnabled());
+		    label.setFont(list.getFont());
+		    label.setOpaque(true);
+
+		    return label;
+			}
+		});
+		list.addMouseListener(new MouseAdapter() {
+			public void mouseClicked(MouseEvent event) {
+				if(event.getClickCount()==2&&list.locationToIndex(event.getPoint())!=-1)
+					pick.getAction().actionPerformed(null);
+			}
+		});
+		list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		list.setFont(new Font(Font.MONOSPACED,Font.PLAIN,12));
+		list.setSelectedIndex(0);
+		JScrollPane scroll = new JScrollPane(list);
+		
+		search.setAction(new AbstractAction("Search", getImage("magnifier")) {
+			private static final long serialVersionUID = 1l;
+			@Override public void actionPerformed(ActionEvent event) {
+				search.setEnabled(false); search.setText("Searching...");
+				new Thread(new Runnable() {
+					@Override public void run() {
+						try {
+							List<Map<String,Object>> summary = GenBank.summary(DATABASE_NUCLEOTIDE, GenBank.search(DATABASE_NUCLEOTIDE, term.getText()));
+							SwingUtilities.invokeLater(new Runnable() { @Override public void run() {
+								model.removeAllElements(); summary.forEach(element->model.addElement(element));
+							}});
+						} catch(Exception e) {
+							SwingUtilities.invokeLater(new Runnable() { @Override public void run() {
+								model.removeAllElements();
+								JOptionPane.showMessageDialog(dialog,"Could not search GenBank:\n\n"+e.getMessage(),"Search GenBank",JOptionPane.WARNING_MESSAGE);
+							}});
+						} finally { search.setEnabled(true); search.setText("Search"); }
+					}
+				}).start();
+			}
+		});
+		
+		pick.setAction(new AbstractAction("Pick") {
+			private static final long serialVersionUID = 1l;
+			@Override public void actionPerformed(ActionEvent event) {
+				if(!list.isSelectionEmpty())
+					importGenBank(list.getSelectedValue().get("uid").toString());
+				dialog.dispose();
+			}
+		});
+		cancel.addActionListener(new ActionListener() {
+			@Override public void actionPerformed(ActionEvent e) { dialog.dispose(); }
+		});
+		
+		layout.setHorizontalGroup(
+			layout.createParallelGroup(Alignment.TRAILING)
+				.addGroup(layout.createSequentialGroup()
+					.addComponent(label)
+					.addComponent(term)
+					.addComponent(search)
+				)
+				.addComponent(scroll, 325, 325, GroupLayout.DEFAULT_SIZE)
+				.addGroup(layout.createSequentialGroup()
+					.addComponent(pick)
+					.addComponent(cancel)	
+				)
+		);
+		layout.linkSize(SwingConstants.HORIZONTAL, pick, cancel);
+		
+		layout.setVerticalGroup(
+			layout.createSequentialGroup()
+				.addGroup(layout.createParallelGroup()
+					.addComponent(label)
+					.addComponent(term)
+					.addComponent(search)
+				)
+				.addComponent(scroll, 0, 125, GroupLayout.DEFAULT_SIZE)
+				.addGroup(layout.createParallelGroup()
+					.addComponent(pick)
+					.addComponent(cancel)
+				)
+		);
+		layout.linkSize(SwingConstants.VERTICAL, label, term, search);
+		
+		dialog.pack();
+		dialog.setMinimumSize(dialog.getSize());
+		dialog.setSize(500, 300);
+		dialog.setLocationRelativeTo(GenTool.this);
+		dialog.setVisible(true);
+	}
+	public void importGenBank(String accessionID) {
+		try {
+			DNASequence sequence = GenBank.sequence(accessionID);
+			
+			newText(sequence.getSequenceAsString());
+			optionLabel.setValue(sequence.getAccession().toString());
+			
+			editor.setDirty(); //clean on open, dirty on import
+			currentFile(null);
+		} catch(Error | Exception e) { JOptionPane.showMessageDialog(this,"Could not import "+accessionID+" from GenBank:\n\n"+e.getMessage(),"Import FASTA",JOptionPane.WARNING_MESSAGE); }
 	}
 	
 	public boolean saveFile() {
@@ -839,50 +1006,63 @@ public class GenTool extends JFrame implements ActionListener {
 		else return saveFileAs();
 	}
 	public boolean saveFileAs() {
-		JFileChooser chooser = new FileNameExtensionFileChooser(false,GENETIC_EXTENSION_FILTER,FASTA_EXTENSION_FILTER,TEXT_EXTENSION_FILTER);
-		chooser.setDialogTitle("Save As");
-		if(chooser.showOpenDialog(this)!=JFileChooser.APPROVE_OPTION)
-			return false;
-		return saveFile(chooser.getSelectedFile(), chooser.getFileFilter());
+		JFileChooser chooser = new FileNameExtensionFileChooser(false,GENETIC_EXTENSION_FILTER,FASTA_EXTENSION_FILTER,TEXT_EXTENSION_FILTER); chooser.setDialogTitle("Save As");
+		if(chooser.showOpenDialog(this)==JFileChooser.APPROVE_OPTION)
+		     return saveFile(chooser.getSelectedFile(), chooser.getFileFilter());
+		else return false;
 	}
 	public boolean saveFile(File file) { return saveFile(file, null); }
 	public boolean saveFile(File file, FileFilter fileFilter) {
 		if(fileFilter==FASTA_EXTENSION_FILTER||FASTA_EXTENSION_FILTER.accept(file))
-	       return saveFastaFile(file);
+		     return saveFastaFile(file);
 		else return saveNormalFile(file);
 	}
-	public boolean saveNormalFile(File file) {
+	protected boolean saveNormalFile(File file) {
+		if(!exportNormalFile(file))
+			return false;
+		
+		editor.setClean(); //clean on save, unchanged on export
+		currentFile(file);
+		recentFile(file);
+		return true;
+	}
+	protected boolean saveFastaFile(File file) {
+		if(!exportFastaFile(file))
+			return false;
+		
+		editor.setClean(); //clean on save, unchanged on export
+		currentFile(file);
+		recentFile(file);
+		return true;
+	}
+	
+	public boolean exportFile() {
+		JFileChooser chooser = new FileNameExtensionFileChooser(false,FASTA_EXTENSION_FILTER); chooser.setDialogTitle("Export");
+		if(chooser.showOpenDialog(this)==JFileChooser.APPROVE_OPTION)
+		     return exportFile(chooser.getSelectedFile(), chooser.getFileFilter());
+		else return false;
+	}
+	public boolean exportFile(File file) { return exportFile(file, null); }
+	public boolean exportFile(File file, FileFilter fileFilter) {
+		if(fileFilter==FASTA_EXTENSION_FILTER||FASTA_EXTENSION_FILTER.accept(file))
+         return exportFastaFile(file);
+		else return exportNormalFile(file);
+	}
+	protected boolean exportNormalFile(File file) {
 		try {
 			writeFile(editor.getText(), file);
 			UserDefinedFileAttributeView view = Files.getFileAttributeView(file.toPath(), UserDefinedFileAttributeView.class);
 			view.write(ATTRIBUTE_LABEL, Charset.defaultCharset().encode((String)optionLabel.getValue()));
-			editor.setClean();
-			recentFile(file); setCurrentFile(file);
 			return true;
-		}	catch(IOException e) {
-			JOptionPane.showMessageDialog(this,"Could not save file:\n"+e.getMessage(),"Save File",JOptionPane.WARNING_MESSAGE);
-			return false;
-		}
+		}	catch(IOException e) { JOptionPane.showMessageDialog(this,"Could not write file:\n\n"+e.getMessage(),"Save File",JOptionPane.WARNING_MESSAGE); return false; }
 	}
-	public boolean saveFastaFile(File file) {
+	protected boolean exportFastaFile(File file) {
 		try {
 			DNASequence sequence = new DNASequence(editor.getText());
 			sequence.setAccession(new AccessionID((String)optionLabel.getValue()));
 			FastaWriterHelper.writeSequence(file,sequence);
-			editor.setClean();
-			recentFile(file); setCurrentFile(file);
 			return true;
-		}	catch(Error | Exception e) {
-			JOptionPane.showMessageDialog(this,"Could not save FASTA file:\n"+e.getMessage(),"Save File",JOptionPane.WARNING_MESSAGE);
-			return false;
-		}
-	}
-	
-	private void setCurrentFile(File file) {
-		currentFile = file; updateTitle();
-		boolean hasCurrentFile = currentFile!=null;
-		getMenuItem(menu[0],ACTION_SAVE).setEnabled(hasCurrentFile);
-		getToolbarButton(toolbar[0],ACTION_SAVE).setEnabled(hasCurrentFile);
+		}	catch(Error | Exception e) { JOptionPane.showMessageDialog(this,"Could not write FASTA file:\n\n"+e.getMessage(),"Save File",JOptionPane.WARNING_MESSAGE); return false; }
 	}
 	
 	private boolean confirmIfDirty() {
@@ -896,6 +1076,13 @@ public class GenTool extends JFrame implements ActionListener {
 			case JOptionPane.CANCEL_OPTION: default:
 				return false;
 		} else return true;
+	}
+	
+	private void currentFile(File file) {
+		currentFile = file; updateTitle();
+		boolean hasCurrentFile = currentFile!=null;
+		getMenuItem(menu[0],ACTION_SAVE).setEnabled(hasCurrentFile);
+		getToolbarButton(toolbar[0],ACTION_SAVE).setEnabled(hasCurrentFile);
 	}
 	private void recentFile(File file) {
 		String path = file.getAbsolutePath();
@@ -1708,9 +1895,34 @@ public class GenTool extends JFrame implements ActionListener {
 			return ((JScrollPane)parent).getVerticalScrollBar();
 		}
 	}
-
-	public static void main(final String[] args) throws ParseException {
+	
+	public static void main(final String[] args) {
+		// Set to use system proxies
+		System.setProperty("java.net.useSystemProxies", "true"); /*try {
+			List<Proxy> proxies = ProxySelector.getDefault().select(new URI("http://www.hs-mannheim.de/"));
+			if(!proxies.isEmpty()) {
+				System.setProperty("java.net.useSystemProxies", "false");
+				Proxy proxy = proxies.get(0); InetSocketAddress address = (InetSocketAddress)proxy.address();
+				switch(proxy.type()) {
+				case DIRECT: break;
+				case HTTP:
+					System.setProperty("java.net.useSystemProxies", "false");
+		      System.setProperty("http.proxyHost", address.getHostName());
+		      System.setProperty("http.proxyPort", Integer.toString(address.getPort()));
+		      break;
+				case SOCKS:
+					System.setProperty("java.net.useSystemProxies", "false");
+					System.setProperty("socksProxyHost", address.getHostName());
+		      System.setProperty("socksProxyPort", Integer.toString(address.getPort()));
+		      break;
+				}
+			}
+		} catch (URISyntaxException e) { /* nothing to do here *//* }*/
+		
+		// Prepare Look and Feel
 		Guitilities.prepareLookAndFeel();
+		
+		// Open GenTool or GenBatch
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override public void run() {
 				if(args.length>=1)
@@ -1724,7 +1936,7 @@ public class GenTool extends JFrame implements ActionListener {
 								bda.setVisible(true);
 							} else {
 								GenTool tool = new GenTool();
-								tool.openNormalFile(new File(args[1]));
+								tool.openFile(new File(args[1]));
 								tool.setVisible(true);
 							}
 						}	break;

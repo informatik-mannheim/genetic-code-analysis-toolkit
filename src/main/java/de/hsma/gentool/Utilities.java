@@ -37,9 +37,12 @@ import java.net.URLConnection;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -52,12 +55,15 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.Position;
 import sun.reflect.ConstructorAccessor;
 import sun.reflect.ReflectionFactory;
+import com.eclipsesource.json.JsonArray;
+import com.eclipsesource.json.JsonObject;
+import com.eclipsesource.json.JsonValue;
 import com.google.common.base.CaseFormat;
 import com.google.common.util.concurrent.ListenableFuture;
 import de.hsma.gentool.gui.GenTool;
 
-@SuppressWarnings("restriction") public final class Utilities {	
-	public static final String EMPTY = "", SPACE = " ", NEW_LINE = "\n", WHITESPACE = " \t\n\r\f", TRUE = "true", FALSE = "false";
+public final class Utilities {	
+	public static final String EMPTY = "", SPACE = " ", NEW_LINE = "\n", WHITESPACE = " \t\n\r\f", TRUE = "true", FALSE = "false", CHARSET = "UTF-8";
 	public static final double TWO_PI = PI*2, HALF_PI = PI/2, QUARTER_PI = PI/4, EIGHTH_PI = PI/8, SIXTEENTH_PI = PI/16;
 	
   private static final int BUFFER_SIZE = 8192;
@@ -246,7 +252,38 @@ import de.hsma.gentool.gui.GenTool;
 		}
 	}
 	
-
+	public static Object jsonValueAsObject(JsonValue value) {
+		if(value.isBoolean())
+			return value.asBoolean();
+		else if(value.isNumber())
+			return value.asInt();
+		else if(value.isString())
+			return value.asString();
+		else if(value.isArray())
+			return jsonArrayAsList(value.asArray());
+		else if(value.isObject())
+			return jsonObjectAsMap(value.asObject());
+		else return null;
+	}
+	public static Set<Object> jsonArrayAsSet(JsonArray array) {
+		Set<Object> set = new HashSet<>();
+		for(JsonValue value:array)
+			set.add(jsonValueAsObject(value));
+		return set;
+	}
+	public static List<Object> jsonArrayAsList(JsonArray array) {
+		List<Object> list = new ArrayList<>();
+		for(JsonValue value:array)
+			list.add(jsonValueAsObject(value));
+		return list;
+	}
+	public static Map<String,Object> jsonObjectAsMap(JsonObject object) {
+		Map<String,Object> map = new HashMap<>();
+		for(JsonObject.Member member:object)
+			map.put(member.getName(), jsonValueAsObject(member.getValue()));
+		return map;		
+	}
+	
 	public static byte[] readFile(File file) throws IOException { return readStream(new FileInputStream(file)); }
   public static byte[] readStream(InputStream input) throws IOException { return readStream(input, -1, true); }
   public static byte[] readStream(InputStream input, int length, boolean readAll) throws IOException {
