@@ -8,7 +8,7 @@ import de.hsma.gentool.operation.Named;
 import de.hsma.gentool.operation.transformation.CommonSubstitution;
 import de.hsma.gentool.operation.transformation.Transformation;
 
-@Named(name="common test", icon="book_next") @Cataloged(group="Tests")
+@Named(name="invariant to", icon="book_next") @Cataloged(group="Tests")
 public class CommonTest implements Test {
 	private static final Transformation
 		COMMON = new CommonSubstitution();

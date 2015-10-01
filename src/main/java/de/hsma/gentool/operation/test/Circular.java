@@ -28,7 +28,7 @@ import de.hsma.gentool.operation.Named;
 import de.hsma.gentool.operation.transformation.ShiftSequence;
 import de.hsma.gentool.operation.transformation.Transformation;
 
-@Named(name="n-circular?", icon="arrow_rotate_clockwise") @Cataloged(group="Tests")
+@Named(name="n-circular", icon="arrow_rotate_clockwise") @Cataloged(group="Tests")
 @Parameter.Annotation(key="n",label="n-Circular",type=Type.NUMBER,value="1,10")
 public class Circular implements Test {	
 	private static final Test

@@ -565,6 +565,8 @@ public class GenTool extends JFrame implements ActionListener {
 		final String name = Operation.getName(operation), icon = Operation.getIcon(operation);
 		
 		JButton button = new JButton(name);
+		if(Test.class.isAssignableFrom(operation)&&!name.endsWith("?"))
+			button.setText(name+"?");
 		if(icon!=null&&!icon.isEmpty())
 			button.setIcon(getImage(icon));
 		button.addActionListener(new ActionListener() {
@@ -645,17 +647,17 @@ public class GenTool extends JFrame implements ActionListener {
 	protected ListenableFuture<Collection<Tuple>> submitAction(Action action) {
 		Class<? extends Operation> operation = action.getOperation(); String name = Operation.getName(operation); 
 		ListenableFuture<Collection<Tuple>> future = submitTask(action.new Task(editor.getTuples()));
-		Futures.addCallback(future,new FutureCallback<Collection<Tuple>>() {
+		Futures.addCallback(future, new FutureCallback<Collection<Tuple>>() {
 			@Override public void onSuccess(Collection<Tuple> tuples) {
 				if(Transformation.class.isAssignableFrom(operation)||Split.class.isAssignableFrom(operation))
 					editor.setTuples(tuples);
 				else if(Test.class.isAssignableFrom(operation))
-					consolePane.appendText(String.format("Sequence <b>DOES</b> apply to test \"%s\"", name),consolePane.success);
+					consolePane.appendText(String.format("Sequence <b>IS</b> \"%s\"", name),consolePane.success);
 			}
 			@Override public void onFailure(Throwable thrown) {
 				if(Test.class.isAssignableFrom(operation)&&thrown instanceof Test.Failed)
-					   consolePane.appendText(String.format("Sequence does <b>NOT</b> apply to \"%s\"",name),consolePane.failure);
-				else consolePane.appendText(String.format("Exception in operation \"%s\": %s",name,Optional.ofNullable(thrown.getMessage()).orElse("Unknown cause")),consolePane.failure);
+					   consolePane.appendText(String.format("Sequence is <b>NOT</b> \"%s\"", name),consolePane.failure);
+				else consolePane.appendText(String.format("Exception in operation \"%s\": %s", name, Optional.ofNullable(thrown.getMessage()).orElse("Unknown cause")),consolePane.failure);
 			}
 		});
 		if(Transformation.class.isAssignableFrom(operation)||Split.class.isAssignableFrom(operation)) {

@@ -23,7 +23,7 @@ import de.hsma.gentool.operation.Named;
 import de.hsma.gentool.operation.transformation.ShiftTuples;
 import de.hsma.gentool.operation.transformation.Transformation;
 
-@Named(name="c3-code?", icon="c3") @Cataloged(group="Tests")
+@Named(name="c3", icon="c3") @Cataloged(group="Tests")
 public class C3 implements Test {
 	private static final Test
 		CIRCULAR = new Circular();
