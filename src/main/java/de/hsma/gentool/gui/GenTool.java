@@ -432,7 +432,7 @@ public class GenTool extends JFrame implements ActionListener {
 		menu[MENU_WINDOW].add(createSeparator());
 		menu[MENU_WINDOW].add(createMenuItem("Open GenBatch", "calculator", KeyStroke.getKeyStroke(KeyEvent.VK_B, InputEvent.CTRL_DOWN_MASK), ACTION_SHOW_BATCH, this));
 		menu[MENU_WINDOW].add(createMenuItem("Add Sequence", "calculator_add", ACTION_ADD_TO_BATCH, this));
-    menu[MENU_WINDOW].add(createMenuItem("BDA Editor", "application_osx_terminal", ACTION_SHOW_BDA, this));
+    menu[MENU_WINDOW].add(createMenuItem("BDA Editor", "bda", ACTION_SHOW_BDA, this));
     menu[MENU_WINDOW].add(createSeparator());
     menu[MENU_WINDOW].add(createMenuItem("Preferences", ACTION_PREFERENCES, this));
 		menu[MENU_HELP].add(createMenuItem("About GenTool", "icon", ACTION_ABOUT, this));
@@ -457,7 +457,7 @@ public class GenTool extends JFrame implements ActionListener {
 		toolbar[TOOLBAR_WINDOW] = new JToolBar("Window");
 		toolbar[TOOLBAR_WINDOW].add(createToolbarButton("Open GenBatch", "calculator", ACTION_SHOW_BATCH, this));
 		toolbar[TOOLBAR_WINDOW].add(createToolbarButton("Add Sequence to GenBatch", "calculator_add", ACTION_ADD_TO_BATCH, this));
-		toolbar[TOOLBAR_WINDOW].add(createToolbarButton("BDA Editor", "application_osx_terminal", ACTION_SHOW_BDA, this));
+		toolbar[TOOLBAR_WINDOW].add(createToolbarButton("BDA Editor", "bda", ACTION_SHOW_BDA, this));
 		for(String action:new String[]{ACTION_SAVE})
 			getToolbarButton(toolbar,action).setEnabled(false);
 		

@@ -118,7 +118,7 @@ public class GenBDA extends JFrame implements ActionListener, ListDataListener, 
 	
 	public GenBDA() {		
 		super("Genetic Code BDA Editor (GenBDA)");
-		setIconImage(getImage("application_osx_terminal").getImage());
+		setIconImage(getImage("bda").getImage());
 		setMinimumSize(new Dimension(660,400));
 		setPreferredSize(new Dimension(1020,400));
 		setSize(getPreferredSize());
@@ -144,7 +144,7 @@ public class GenBDA extends JFrame implements ActionListener, ListDataListener, 
 		menu[1].add(seperateMenuItem(createMenuItem("Move Up", KeyStroke.getKeyStroke(KeyEvent.VK_UP, InputEvent.CTRL_DOWN_MASK), ACTION_BDA_MOVE_UP, this)));
 		menu[1].add(createMenuItem("Move Down", KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, InputEvent.CTRL_DOWN_MASK), ACTION_BDA_MOVE_DOWN, this));
 		menu[2].add(createMenuItem("Preferences", ACTION_PREFERENCES, this));
-		menu[3].add(createMenuItem("About GenBDA", "application_osx_terminal", ACTION_ABOUT, this));
+		menu[3].add(createMenuItem("About GenBDA", "bda", ACTION_ABOUT, this));
 		for(String action:new String[]{ACTION_BDA_EDIT,ACTION_BDA_REMOVE,ACTION_BDAS_CLEAR,ACTION_BDA_MOVE_UP,ACTION_BDA_MOVE_DOWN})
 			getMenuItem(menubar,action).setEnabled(false);
 		getMenuItem(menubar,ACTION_PREFERENCES).setEnabled(false);

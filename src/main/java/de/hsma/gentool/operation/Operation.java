@@ -60,7 +60,9 @@ public interface Operation extends InjectionLogger.Injectable {
 	public static Set<Class<? extends Operation>> getOperations(boolean onlyCataloged) {
 		Set<Class<? extends Operation>> operations = new TreeSet<>(new Comparator<Class<? extends Operation>>() {
 			@Override public int compare(Class<? extends Operation> operationA,Class<? extends Operation> operationB) {
-				return Operation.getName(operationA).compareTo(Operation.getName(operationB));
+				String nameA = Operation.getName(operationA), nameB = Operation.getName(operationB);
+				if(nameA.equals(nameB)) { nameA = operationA.getName(); nameB = operationB.getName(); }
+				return nameA.compareTo(nameB);
 			}
 		});
 		operations.addAll(new Reflections(Operation.class.getPackage().getName()).getSubTypesOf(Operation.class));
