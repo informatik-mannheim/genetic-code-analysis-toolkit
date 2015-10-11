@@ -15,6 +15,7 @@ Copyright 2011 the original author or authors.
 */
 package net.gumbix.util
 
+import java.io.File
 import java.util.logging._
 import scala.transient
 

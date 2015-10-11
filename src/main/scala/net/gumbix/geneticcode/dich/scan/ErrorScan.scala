@@ -14,8 +14,7 @@ import net.gumbix.geneticcode.dich.ct.ClassTable
  */
 trait ErrorConstraints[T <: ClassTable] extends ScanConstraint[T] {
 
-  val minClassSize: Int
-  val maxClassSize: Int
+  val classSize: Int
   val errorD: Double
 
   /**
@@ -25,12 +24,12 @@ trait ErrorConstraints[T <: ClassTable] extends ScanConstraint[T] {
    */
   override def isValidConfig(t: T, w: Int) = {
     t.classes.size > w &&
-      t.classes.size <= maxClassSize &&
-      t.errorC <= errorD
+      t.classes.size <= classSize + t.errorC &&
+      t.relErrorC <= errorD
   }
 
   override def isSolution(t: T) =
-    minClassSize <= t.classes.size && t.classes.size <= maxClassSize
+    classSize <= t.classes.size && t.classes.size <=classSize + t.errorC
 }
 
 /**
@@ -51,9 +50,6 @@ class ErrorScan(bdas: List[Classifier[Int]] = List(),
   override def newClassTable(bda: List[Classifier[Int]]) = {
     new ClassTable(bda, iupacNumber, codonProperty)
   }
-
-  val minClassSize = classSize
-  val maxClassSize = classSize + 4
 
   override def startMessage = "Error sequentially with E_d = " + errorD +
     ", k_d = " + size + ", |M| = " + classSize + ", code table = " + iupacNumber +

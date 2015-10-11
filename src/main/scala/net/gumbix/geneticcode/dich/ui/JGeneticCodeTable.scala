@@ -18,6 +18,8 @@ import javax.swing.border.EmptyBorder
 class JGeneticCodeTable(ct: ClassTable) extends JPanel
 with AAImplicitDefs {
 
+  private var selClass = List[Int]()
+
   val selectedCodons = new util.HashSet[Codon]()
   val errorCodons = {
     // ct.
@@ -27,10 +29,10 @@ with AAImplicitDefs {
 
   def borderLabel(c: Compound) = {
     def color(c: Compound) = c match {
-      case Uracil => new Color(160, 160, 160)
-      case Cytosine => new Color(180, 180, 180)
-      case Adenine => new Color(150, 150, 150)
-      case Guanine => new Color(170, 170, 170)
+      case Uracil => new Color(210, 210, 210)
+      case Cytosine => new Color(220, 220, 220)
+      case Adenine => new Color(200, 200, 200)
+      case Guanine => new Color(220, 220, 220)
     }
     val l = new JLabel(c.toString)
     l.setOpaque(true);
@@ -61,9 +63,13 @@ with AAImplicitDefs {
     l2.addMouseListener(new MouseAdapter() {
       override def mouseClicked(e: MouseEvent) {
         val c = l2.getClientProperty("codon").asInstanceOf[Codon]
-        val sel = ct.class2codons(ct.codon2class(c))
+        val clazz = ct.codon2class(c)
+        val sel = ct.class2codonList(clazz)
         selectedCodons.clear()
-        selectedCodons.addAll(sel)
+        if (clazz != selClass) {
+          selClass = clazz
+          selectedCodons.addAll(sel)
+        }
         refreshBins()
       }
     })

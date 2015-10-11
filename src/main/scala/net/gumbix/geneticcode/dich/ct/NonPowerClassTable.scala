@@ -13,7 +13,7 @@ class NonPowerClassTable(bdas: List[Classifier[Int]], iupacNumber: Int)
   val npbs = new NonPowerBinString(IUPAC.EUPLOTID_NUCLEAR, 1)
 
   def classesMkString(idx: Int) = {
-    val sorted = class2codons.toList.sortBy(x => x._1.toString)
+    val sorted = class2codonList.toList.sortBy(x => x._1.toString)
     sorted.map {
       e =>
         val npr = npbs.prefixL(idx)(e._1.mkString(""))

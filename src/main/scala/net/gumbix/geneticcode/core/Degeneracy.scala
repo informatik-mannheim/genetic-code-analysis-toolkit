@@ -15,7 +15,7 @@ class Degeneracy(val t: ClassTable) {
 
   def degeneracy = {
     val hist = new Frequency()
-    t.class2codons.foreach(e => hist.addValue(e._2.size))
+    t.class2codonList.foreach(e => hist.addValue(e._2.size))
     val d = (1 to 64).map(n => (n, hist.getCount(n).asInstanceOf[Int])).toMap
     require {
       val sum = d.map {

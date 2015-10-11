@@ -46,7 +46,7 @@ public class BDA implements Split {
 				new net.gumbix.geneticcode.dich.IdAminoAcidProperty(1));
 
     List<Collection<Tuple>> split = new ArrayList<>();
-    for(scala.collection.immutable.List<net.gumbix.geneticcode.dich.Codon> codons:classTable.class2codons().values())
+    for(scala.collection.immutable.List<net.gumbix.geneticcode.dich.Codon> codons:classTable.class2codonList().values())
     	split.add(new ArrayList<Tuple>(tuples) { private static final long serialVersionUID = 1l; {
     		retainAll(scala.collection.JavaConversions.asJavaCollection(codons.toList()).stream().map(codon->new Tuple(codon.toString())).collect(Collectors.toList()));
     	}});

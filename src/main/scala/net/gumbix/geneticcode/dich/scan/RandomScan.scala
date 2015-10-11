@@ -50,8 +50,8 @@ class RandomScan(repeats: Int, bdas: List[Classifier[Int]], depthFrom: Int, dept
       i += 1
       val ct = pickRandomClassTable()
       if (ct.classes.size == classSize) {
-        println(ct.errorC)
-        errorFile.println(ct.errorC)
+        println(ct.relErrorC)
+        errorFile.println(ct.relErrorC)
         errorFile.flush()
         r += 1
       }

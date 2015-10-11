@@ -1,12 +1,14 @@
 package net.gumbix.geneticcode.dich.ct
 
+import java.util
+
 import net.gumbix.geneticcode.dich.Nucleotides._
 import net.gumbix.geneticcode.dich._
 
 // Not supported by db4o:
 // import collection.immutable.{HashMap,HashSet}
 
-import net.gumbix.geneticcode.core.{Degeneracy, CodonMapping}
+import net.gumbix.geneticcode.core.{CodonMapping, Degeneracy}
 import java.util.{HashMap, HashSet}
 import scala.collection.JavaConversions._
 
@@ -50,10 +52,30 @@ class ClassTable(val bdas: List[Classifier[Int]],
   }
 
   /**
+   * Generic mapper. In beta-version.
+   * @param c
+   * @tparam A Type from
+   * @tparam B Type to
+   * @return
+   */
+  private def a2bList[A, B](c: util.Map[B, A]) = {
+    val m = new HashMap[A, List[B]]()
+    c.foreach {
+      e =>
+        val (u, v) = (e._1, e._2) // A, B
+        val prev = if (m.contains(v)) m(v) else Nil
+        m(v) = u :: prev
+    }
+    m
+  }
+
+  /**
    * Map a dichotomic class to a list of codons.
    * Note: codons cannot be duplicates, thus a list is used.
    */
-  lazy val class2codons = {
+  lazy val class2codonList = a2bList[List[Int], Codon](codon2class)
+
+  lazy val class2codonList2 = { // original impl.
     val m = new HashMap[List[Int], List[Codon]]()
     codon2class.foreach {
       e =>
@@ -64,9 +86,24 @@ class ClassTable(val bdas: List[Classifier[Int]],
     m
   }
 
+  /**
+   * Map a dichotomic class to a list of properties.
+   * Note: codons cannot be duplicates, thus a list is used.
+   */
+  lazy val class2propsList = {
+    val m = new HashMap[List[Int], List[String]]()
+    codon2class.foreach {
+      e =>
+        val (codon, clazz) = (e._1, e._2)
+        val prev = if (m.contains(clazz)) m(clazz) else Nil
+        m(clazz) = codonProperty.property(codon) :: prev
+    }
+    m
+  }
+
   lazy val class2AAList = {
     val m = new HashMap[List[Int], List[CodonMapping]]()
-    class2codons.foreach {
+    class2codonList.foreach {
       e =>
         val (clazz, codons) = (e._1, e._2)
         m(clazz) = codons.map(c => codon2AA(c)).toList.sortBy(c => c.toString)
@@ -80,7 +117,7 @@ class ClassTable(val bdas: List[Classifier[Int]],
    */
   lazy val class2AASet = {
     val m = new HashMap[List[Int], HashSet[CodonMapping]]()
-    class2codons.foreach {
+    class2codonList.foreach {
       e =>
         val (clazz, codons) = (e._1, e._2)
         m(clazz) = new HashSet(codons.map(c => codon2AA(c)).toSet)
@@ -103,14 +140,6 @@ class ClassTable(val bdas: List[Classifier[Int]],
     }
     m
   }
-
-  /**
-   * If an amino acid has more than one classes the mapping is not
-   * compatible anymore. Stop codons are ignored.
-   * @return
-   */
-  def isAACompatible =
-    aa2classes.filter(e => !e._1.isStop).filter(e => e._2.size > 1).size == 0
 
   /**
    * Create a list of classes for each property.
@@ -143,14 +172,42 @@ class ClassTable(val bdas: List[Classifier[Int]],
   }
 
   /**
-   * Error indicating if this code table is compatible to the property.
+   * Relative error indicating if this code table is compatible to the property.
    */
-  lazy val errorC = {
-    val sum = prop2Error.map(e => e._2).sum
-    sum / 64.0
+  val relErrorC = errorC / 64.0
+
+  /**
+   * Absolute error indicating if this code table is compatible to the property.
+   */
+  lazy val errorC = prop2Error.map(e => e._2).sum
+
+  val errorA = {
+    def h(c: List[Int]) = {
+      val p = class2propsList(c) // all amino acids for a class.
+      // Group properties to sets, identify the max. set size:
+      def m(l: List[String]) = l.groupBy(e => e).map(e => e._2.size).max
+
+      p.size - m(p)
+    }
+    // Sum over all classes:
+    classes.map(c => h(c)).sum
   }
 
+  val relErrorA = errorA / 64.0
+
+  val error = errorA + errorC
+
+  val relError = (errorA + errorC) / 64.0
+
   def isPropertyCompatible = errorC == 0
+
+  /**
+   * If an amino acid has more than one classes the mapping is not
+   * compatible anymore. Stop codons are ignored.
+   * @return
+   */
+  def isAACompatible =
+    aa2classes.filter(e => !e._1.isStop).filter(e => e._2.size > 1).size == 0
 
   /**
    * The degeneracy of the genetic code (according to Gonzalez et al.)
@@ -158,13 +215,14 @@ class ClassTable(val bdas: List[Classifier[Int]],
    */
   def degeneracy = new Degeneracy(this)
 
-  def classes = class2codons.keySet
+  def classes = class2codonList.keySet
 
   def mkFullString() = {
     "\nBDAs:" +
       "\n" + bdaMkString +
       "\n\n|classes| = " + classes.size +
-      "\n\nerror = " + errorC + " = " + (errorC * 64).toString + " / 64" +
+      "\n\nerror = " + error + " / 64 ("+ relError + "), (errorA =  " + errorA +
+      ", errorC = " + errorC  + ")" +
       "\n\nclass table:" +
       "\n" + mkString() +
       "\ndeg. = " + degeneracy.mkString +

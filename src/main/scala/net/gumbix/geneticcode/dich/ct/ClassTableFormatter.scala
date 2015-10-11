@@ -14,7 +14,7 @@ trait ClassTableFormatter extends GeneticCodeTableFormatter {
   val codons: List[Codon]
   val bdas: List[Classifier[Int]]
   val codonProperty: CodonProperty
-  val class2codons: HashMap[List[Int], List[Codon]]
+  val class2codonList: HashMap[List[Int], List[Codon]]
   val codon2class: HashMap[Codon, List[Int]]
   val aa2classes: HashMap[CodonMapping, HashSet[List[Int]]]
 

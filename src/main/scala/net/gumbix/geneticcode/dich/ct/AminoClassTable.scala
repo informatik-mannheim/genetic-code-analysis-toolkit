@@ -63,7 +63,7 @@ class AminoClassTable(bdas: List[Classifier[Int]], iupacNumber: Int)
    * @return
    */
   override def classesMkStringSize = {
-    val sorted = class2codons.toList.sortBy(x => x._2.size)
+    val sorted = class2codonList.toList.sortBy(x => x._2.size)
     sorted.map {
       e =>
         val o = e._2.toList.sortBy(c => codon2AA(c).toString).map {

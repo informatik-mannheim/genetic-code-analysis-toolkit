@@ -52,7 +52,7 @@ trait PlainTextFormatter extends ClassTableFormatter with AAImplicitDefs {
    * @return
    */
   def classesMkString = {
-    val sorted = class2codons.toList.sortBy(x => x._1.toString)
+    val sorted = class2codonList.toList.sortBy(x => x._1.toString)
     sorted.map {
       e =>
         val o = e._2.map {
@@ -81,7 +81,7 @@ trait PlainTextFormatter extends ClassTableFormatter with AAImplicitDefs {
    * @return
    */
   def classesMkStringSize = {
-    val sorted = class2codons.toList.sortBy(x => x._2.size)
+    val sorted = class2codonList.toList.sortBy(x => x._2.size)
     sorted.map {
       e =>
         val o = e._2.map(c => c.toString + "|" + codon2AA(c).toString)
