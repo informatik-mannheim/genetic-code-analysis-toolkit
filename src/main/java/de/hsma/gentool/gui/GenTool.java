@@ -1300,8 +1300,9 @@ public class GenTool extends JFrame implements ActionListener {
 		getMenuItem(menubar,ACTION_TOGGLE_TOOLBAR).setText(visible?"Show Toolbar":"Hide Toolbar");
 	}
 	
+	public static GenBatch getBatch() { return batch!=null?batch:(batch=new GenBatch()); }
 	public void showBatch() {
-		if(batch==null) batch = new GenBatch();
+		GenBatch batch = getBatch();
 		if(!batch.isVisible()) {
 			batch.setLocationRelativeTo(GenTool.this);
 			batch.setVisible(true);
@@ -1311,8 +1312,9 @@ public class GenTool extends JFrame implements ActionListener {
 		showBatch(); batch.addSequence(editor.getTuples());
 	}
 	
+	public static GenBDA getBDA() { return bda!=null?bda:(bda=new GenBDA()); }
 	public void showBDA() {
-		if(bda==null) bda = new GenBDA();
+		GenBDA bda = getBDA();
 		if(!bda.isVisible()) {
 			bda.setLocationRelativeTo(GenTool.this);
 			bda.setVisible(true);

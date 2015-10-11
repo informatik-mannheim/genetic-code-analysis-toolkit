@@ -264,16 +264,19 @@ public class GenBDA extends JFrame implements ActionListener, ListDataListener, 
 	public void showAbout() { GenTool.showAbout(this); }
 	public void hideDialog() { setVisible(false); }
 	
-	@SuppressWarnings("unchecked") private void revalidateGeneticCodeTable() {		
+	public List<BinaryDichotomicAlgorithm> getBinaryDichotomicAlgorithms() { return bdaPanel.getBinaryDichotomicAlgorithms(); }
+	@SuppressWarnings("unchecked") public net.gumbix.geneticcode.dich.ct.ClassTable getClassTable() {
     scala.collection.immutable.List<?> bdas =
-    	scala.collection.JavaConversions.collectionAsScalaIterable(bdaPanel.getBinaryDichotomicAlgorithms()).toList();
-    
-    net.gumbix.geneticcode.dich.ct.ClassTable classTable = null;
-    if(bdas.nonEmpty()) classTable =
-    	new net.gumbix.geneticcode.dich.ct.ClassTable(
-    		(scala.collection.immutable.List<net.gumbix.geneticcode.dich.Classifier<Object>>)bdas,
-				net.gumbix.geneticcode.dich.IUPAC.STANDARD(),
-				new net.gumbix.geneticcode.dich.IdAminoAcidProperty(1));
+     	scala.collection.JavaConversions.collectionAsScalaIterable(getBinaryDichotomicAlgorithms()).toList();
+    return bdas.isEmpty()?null:new net.gumbix.geneticcode.dich.ct.ClassTable(
+  		(scala.collection.immutable.List<net.gumbix.geneticcode.dich.Classifier<Object>>)bdas,
+			net.gumbix.geneticcode.dich.IUPAC.STANDARD(),
+			new net.gumbix.geneticcode.dich.IdAminoAcidProperty(1));
+    	
+	}
+	
+	private void revalidateGeneticCodeTable() {		
+    net.gumbix.geneticcode.dich.ct.ClassTable classTable = getClassTable();
     
     if(table!=null) tablePanel.remove(table);
     if(classTable!=null)
