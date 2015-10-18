@@ -1,0 +1,16 @@
+<p>Checks whether a sequence is self-complementary, so the complement of all tuples is part of the same sequence.
+<p>The complement of a tuple is created by replacing the following nucleoabases and reversing the resulting tuple:
+<table>
+	<tr><td style="font-weight:bold">Adenine</td><td>with</td><td style="font-weight:bold">Uracil</td></tr>
+	<tr><td style="font-weight:bold">Uracil</td><td>with</td><td style="font-weight:bold">Adenine</td></tr>
+	<tr><td style="font-weight:bold">Guanine</td><td>with</td><td style="font-weight:bold">Cytosine</td></tr>
+	<tr><td style="font-weight:bold">Cytosine</td><td>with</td><td style="font-weight:bold">Guanine</td></tr>
+</table>
+<p><b>Example:</b><table class="example">
+	<tr><td>Input sequence:</td><td>AGU UGA UCA ACU UCG CGA</td></tr>
+	<tr><td>Test result:</td><td style="color:green">Pass</td></tr>
+</table>
+<p><b>Example:</b><table class="example">
+	<tr><td>Input sequence:</td><td>AGU UGA UAC GCA CAG</td></tr>
+	<tr><td>Test result:</td><td style="color:red">Fail</td></tr>
+</table>

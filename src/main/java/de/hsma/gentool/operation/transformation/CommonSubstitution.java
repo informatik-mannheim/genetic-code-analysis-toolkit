@@ -15,6 +15,7 @@
  */
 package de.hsma.gentool.operation.transformation;
 
+import static de.hsma.gentool.Help.*;
 import static de.hsma.gentool.Utilities.*;
 import static de.hsma.gentool.nucleic.Base.*;
 import java.util.Collection;
@@ -23,6 +24,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 import com.google.common.collect.ImmutableMap;
+import de.hsma.gentool.Documented;
 import de.hsma.gentool.Parameter;
 import de.hsma.gentool.nucleic.Base;
 import de.hsma.gentool.nucleic.Tuple;
@@ -30,6 +32,7 @@ import de.hsma.gentool.operation.Cataloged;
 import de.hsma.gentool.operation.Named;
 
 @Named(name="common substitution", icon="book_next") @Cataloged(group="Transformations")
+@Documented(title="Common Substitution", category={OPERATIONS,TRANSFORMATIONS}, resource="help/operation/transformation/common_substitution.html")
 public class CommonSubstitution implements Transformation {
 	public static final Map<String,Map<Base,Base>> SUBSTITUTIONS;
 	
@@ -58,6 +61,7 @@ public class CommonSubstitution implements Transformation {
 			CYTOSINE,ADENINE,
 			GUANINE,URACIL,
 			URACIL,GUANINE));
+		
 		substitutions.put("\u03c0CG",ImmutableMap.of(
 			ADENINE,ADENINE,
 			CYTOSINE,GUANINE,
@@ -78,7 +82,7 @@ public class CommonSubstitution implements Transformation {
 			CYTOSINE,ADENINE,
 			GUANINE,URACIL,
 			URACIL,CYTOSINE));
-			
+		
 		/* normal substitutions */
 		substitutions.put("\u03c0AC",ImmutableMap.of(
 			ADENINE,CYTOSINE,

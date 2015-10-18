@@ -15,10 +15,12 @@
  */
 package de.hsma.gentool.operation.split;
 
+import static de.hsma.gentool.Help.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
+import de.hsma.gentool.Documented;
 import de.hsma.gentool.gui.GenTool;
 import de.hsma.gentool.log.Logger;
 import de.hsma.gentool.nucleic.Tuple;
@@ -26,6 +28,7 @@ import de.hsma.gentool.operation.Cataloged;
 import de.hsma.gentool.operation.Named;
 
 @Named(name="binary dichotomic algorithm", icon="bda") @Cataloged(group="Splits")
+@Documented(title="BDA", category={OPERATIONS,SPLITS}, resource="help/operation/split/bda.html")
 public class BDA implements Split {
 	@Override public List<Collection<Tuple>> split(Collection<Tuple> tuples,Object... values) {
 		Logger logger = getLogger();

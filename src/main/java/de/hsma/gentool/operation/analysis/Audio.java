@@ -23,13 +23,16 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 import com.google.common.collect.ImmutableMap;
+import de.hsma.gentool.Documented;
 import de.hsma.gentool.log.Logger;
 import de.hsma.gentool.nucleic.Base;
 import de.hsma.gentool.nucleic.Tuple;
 import de.hsma.gentool.operation.Cataloged;
 import de.hsma.gentool.operation.Named;
+import static de.hsma.gentool.Help.*;
 
 @Named(name="audio", icon="sound") @Cataloged(group="Analyses")
+@Documented(title="Audio", category={OPERATIONS,ANALYSES}, resource="help/operation/analysis/audio.html")
 public class Audio implements Analysis {
 	private static Map<Base,Note> notes = ImmutableMap.of(
 		ADENINE,Note.C4,

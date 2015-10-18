@@ -15,9 +15,11 @@
  */
 package de.hsma.gentool.operation.test;
 
+import static de.hsma.gentool.Help.*;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import de.hsma.gentool.Documented;
 import de.hsma.gentool.log.Logger;
 import de.hsma.gentool.nucleic.Tuple;
 import de.hsma.gentool.operation.Cataloged;
@@ -26,6 +28,7 @@ import de.hsma.gentool.operation.transformation.ShiftSequence;
 import de.hsma.gentool.operation.transformation.Transformation;
 
 @Named(name="comma-free", icon="comma_free") @Cataloged(group="Tests")
+@Documented(title="Comma-Free", category={OPERATIONS,TESTS}, resource="help/operation/test/comma_free.html")
 public class CommaFree implements Test {
 	private static final Test
 		DUPLICATE_FREE = new DuplicateFree();

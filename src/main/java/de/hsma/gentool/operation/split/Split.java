@@ -15,12 +15,14 @@
  */
 package de.hsma.gentool.operation.split;
 
+import static de.hsma.gentool.Help.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+import de.hsma.gentool.Documented;
 import de.hsma.gentool.Parameter;
 import de.hsma.gentool.Parameter.Type;
 import de.hsma.gentool.Utilities;
@@ -41,6 +43,7 @@ public interface Split extends Operation {
 	@Parameter.Annotation(key="pattern",label="Split",type=Type.TEXT)
 	@Parameter.Annotation(key="regex",label="Regex",type=Type.BOOLEAN,value=Utilities.TRUE)
 	@Parameter.Annotation(key="delimiter",label="Remove Delimiter",type=Type.BOOLEAN,value=Utilities.FALSE)
+	@Documented(title="Split", category={OPERATIONS,GENERAL}, resource="help/operation/split/split.html")
 	public class Expression implements Split {   	
    	@Override public List<Collection<Tuple>> split(Collection<Tuple> tuples,Object... values) { return split(tuples, (String)values[0], (Boolean)values[1], (Boolean)values[2]); }
   	public List<Collection<Tuple>> split(Collection<Tuple> tuples,String pattern,boolean regex,boolean delimiter) {

@@ -15,6 +15,7 @@
  */
 package de.hsma.gentool.operation.analysis;
 
+import static de.hsma.gentool.Help.*;
 import static de.hsma.gentool.nucleic.Tuple.*;
 import java.util.Collection;
 import java.util.HashMap;
@@ -24,12 +25,14 @@ import scala.collection.immutable.List;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Multiset.Entry;
+import de.hsma.gentool.Documented;
 import de.hsma.gentool.gui.GenTool;
 import de.hsma.gentool.nucleic.Tuple;
 import de.hsma.gentool.operation.Cataloged;
 import de.hsma.gentool.operation.Named;
 
 @Named(name = "BDA usage", icon = "bda") @Cataloged(group = "Analyses")
+@Documented(title="BDA Usage", category={OPERATIONS,ANALYSES}, resource="help/operation/analysis/bda_usage.html")
 public class BDAUsage implements Analysis {
 	@Override public Result analyse(Collection<Tuple> tuples, Object... values) {
 		if(condenseTuples(tuples).isEmpty())

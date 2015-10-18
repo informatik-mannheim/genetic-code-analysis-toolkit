@@ -15,12 +15,14 @@
  */
 package de.hsma.gentool.operation.split;
 
+import static de.hsma.gentool.Help.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+import de.hsma.gentool.Documented;
 import de.hsma.gentool.Parameter;
 import de.hsma.gentool.Parameter.Type;
 import de.hsma.gentool.Utilities;
@@ -31,6 +33,7 @@ import de.hsma.gentool.operation.Named;
 @Named(name="pick", icon="basket_remove") @Cataloged(group="Splits")
 @Parameter.Annotation(key="pattern",label="Split",type=Type.TEXT)
 @Parameter.Annotation(key="regex",label="Regex",type=Type.BOOLEAN,value=Utilities.TRUE)
+@Documented(title="Pick", category={OPERATIONS,SPLITS}, resource="help/operation/split/pick.html")
 public class Pick implements Split {	
  	@Override public List<Collection<Tuple>> split(Collection<Tuple> tuples,Object... values) { return split(tuples, (String)values[0], (Boolean)values[1]); }
 	public List<Collection<Tuple>> split(Collection<Tuple> tuples,String pattern,boolean regex) {

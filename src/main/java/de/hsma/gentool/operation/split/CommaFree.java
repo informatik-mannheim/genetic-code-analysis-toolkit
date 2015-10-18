@@ -1,10 +1,12 @@
 package de.hsma.gentool.operation.split;
 
+import static de.hsma.gentool.Help.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import org.paukov.combinatorics.Factory;
 import org.paukov.combinatorics.ICombinatoricsVector;
+import de.hsma.gentool.Documented;
 import de.hsma.gentool.Parameter;
 import de.hsma.gentool.Parameter.Type;
 import de.hsma.gentool.nucleic.Tuple;
@@ -15,6 +17,7 @@ import de.hsma.gentool.operation.test.Test;
 @Named(name="comma-free", icon="comma_free") @Cataloged(group="Splits")
 @Parameter.Annotation(key="parts",label="Parts",type=Type.NUMBER,value="2,32767")
 @Parameter.Annotation(key="equal-sized",label="Equal Sized",type=Type.BOOLEAN)
+@Documented(title="Comma-Free", category={OPERATIONS,SPLITS}, resource="help/operation/split/comma_free.html")
 public class CommaFree implements Split {
 	private static final Test
 		COMMA_FREE = new de.hsma.gentool.operation.test.CommaFree();

@@ -42,8 +42,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.font.FontRenderContext;
 import java.awt.font.LineMetrics;
-import java.awt.geom.Area;
-import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.FilteredImageSource;
 import java.awt.image.ImageFilter;
@@ -467,7 +465,7 @@ public class Guitilities {
 		}
 	}
 	
-	public static class Rectangle {
+	/*public static class Rectangle {
 		public Point point_ul,point_lr;
 		public Dimension size;
 		public Rectangle(Point2D point_a,Point2D point_b) { this(new Point((int)point_a.getX(),(int)point_a.getY()),
@@ -498,7 +496,7 @@ public class Guitilities {
 		
 		public java.awt.Rectangle toRectangle() { return new java.awt.Rectangle(point_ul,size);	}
 		public Area toArea() { return new Area(toRectangle()); }
-	}
+	}*/
 	
   private static class ChiselBorder implements Border {
   	private Insets insets = new Insets(1, 0, 1, 0);

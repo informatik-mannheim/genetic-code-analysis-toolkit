@@ -15,9 +15,11 @@
  */
 package de.hsma.gentool.operation.transformation;
 
+import static de.hsma.gentool.Help.*;
 import java.util.Collection;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+import de.hsma.gentool.Documented;
 import de.hsma.gentool.Parameter;
 import de.hsma.gentool.Parameter.Type;
 import de.hsma.gentool.Utilities;
@@ -33,6 +35,7 @@ public interface Transformation extends Operation {
 	@Parameter.Annotation(key="pattern",label="Term",type=Type.TEXT)
 	@Parameter.Annotation(key="replace",label="Replace",type=Type.TEXT)
 	@Parameter.Annotation(key="regex",label="Regex",type=Type.BOOLEAN,value=Utilities.TRUE)
+	@Documented(title="Replace", category={OPERATIONS,GENERAL}, resource="help/operation/transformation/replace.html")
 	public class Expression implements Transformation {  	
   	@Override public Collection<Tuple> transform(Collection<Tuple> tuples,Object... values) { return transform(tuples, (String)values[0], (String)values[1], (Boolean)values[2]); }
   	public Collection<Tuple> transform(Collection<Tuple> tuples,String pattern,String replace,boolean regex) {

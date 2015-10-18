@@ -37,6 +37,7 @@ import java.net.URLConnection;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -132,6 +133,12 @@ public final class Utilities {
 		for(int index=0;index<array.length;index++)
 			if(array[index]==object) return index;
 		return -1;
+	}
+	
+	public static <T> T[] add(T[] originalArray, T element) {
+		T[] array = Arrays.copyOf(originalArray,originalArray.length+1);
+		array[array.length-1] = element;
+		return array;
 	}
 	
 	public static <T> T[] reverse(T[] originalArray) {
@@ -613,5 +620,19 @@ public final class Utilities {
 	public static class DefiniteListenableFuture<T> extends DefiniteFuture<T> implements ListenableFuture<T> {
 		public DefiniteListenableFuture(T result) { super(result); }
 		@Override public void addListener(Runnable runnable, Executor executor) { runnable.run(); }
+	}
+	
+	public static class ArrayComparator<T extends Comparable<T>> implements Comparator<T[]> {
+		@Override public int compare(T[] arrayA, T[] arrayB) {
+			if(arrayA==arrayB) return 0; int compare;
+			for(int index=0;index<arrayA.length;index++)
+				if(index<arrayB.length) {
+					if((compare=arrayA[index].compareTo(arrayB[index]))!=0)
+						return compare;
+				} else return 1; //first array is longer
+			if(arrayA.length==arrayB.length)
+				   return 0; //arrays are equal
+			else return -1; //first array is shorter 
+		}
 	}
 }

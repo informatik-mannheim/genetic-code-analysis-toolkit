@@ -15,13 +15,16 @@
  */
 package de.hsma.gentool.operation.transformation;
 
+import static de.hsma.gentool.Help.*;
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import de.hsma.gentool.Documented;
 import de.hsma.gentool.nucleic.Tuple;
 import de.hsma.gentool.operation.Cataloged;
 import de.hsma.gentool.operation.Named;
 
 @Named(name="remove duplicates", icon="style_delete") @Cataloged(group="Transformations")
+@Documented(title="Remove Duplicates", category={OPERATIONS,TRANSFORMATIONS}, resource="help/operation/transformation/remove_duplicates.html")
 public class RemoveDuplicates implements Transformation { 	
 	@Override public Collection<Tuple> transform(Collection<Tuple> tuples,Object... values) {
 		return new LinkedHashSet<>(tuples); //removing duplicates by adding it to a linked (preserving order) hash (removing duplicates) set

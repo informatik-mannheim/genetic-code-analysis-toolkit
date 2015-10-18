@@ -22,6 +22,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
+import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -38,15 +39,24 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.NavigableMap;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.regex.Pattern;
 import javax.swing.Icon;
+import javax.swing.JEditorPane;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -65,18 +75,25 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.event.HyperlinkEvent;
+import javax.swing.event.HyperlinkListener;
 import javax.swing.event.UndoableEditEvent;
 import javax.swing.plaf.basic.BasicTabbedPaneUI;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.Position;
+import javax.swing.text.html.HTMLEditorKit;
 import javax.swing.undo.CannotRedoException;
 import javax.swing.undo.CannotUndoException;
 import javax.swing.undo.CompoundEdit;
 import javax.swing.undo.UndoManager;
 import javax.swing.undo.UndoableEdit;
 import org.reflections.Reflections;
+import de.hsma.gentool.Documented;
+import de.hsma.gentool.Help;
 import de.hsma.gentool.Option;
+import de.hsma.gentool.Utilities;
+import de.hsma.gentool.Utilities.ArrayComparator;
 import de.hsma.gentool.gui.editor.NucleicListener.NucleicEvent;
 import de.hsma.gentool.gui.editor.display.GraphDisplay;
 import de.hsma.gentool.gui.helper.AttachedScrollPane;
@@ -109,7 +126,8 @@ public class NucleicEditor extends JRootPane {
 	private List<JRootPane> displayPanes;
 	private List<NucleicDisplay> displays;
 	private MouseAdapter displayResize;
-	private int displaySize = 300;
+	private HelpDisplay displayHelp;
+	private int displaySize = 320;
 
 	private JPanel optionPanel;
 	private List<Option> options;
@@ -244,7 +262,7 @@ public class NucleicEditor extends JRootPane {
 			@Override public Dimension getPreferredSize() {
 				Dimension size = new Dimension(super.getPreferredSize());
 				if(getSelectedIndex()==0)
-					size.width -= 46; //bug to reduce size to minimum
+					size.width -= 69; //bug to reduce size to minimum
 				return size;
 			}
 		});
@@ -319,9 +337,10 @@ public class NucleicEditor extends JRootPane {
 		displays = new ArrayList<NucleicDisplay>();		
 		addDisplay(new NoDisplay());
 		for(Class<? extends NucleicDisplay> displayClass:new Reflections(NucleicDisplay.class.getPackage().getName()).getSubTypesOf(NucleicDisplay.class))
-			if(displayClass!=NoDisplay.class) try {
+			if(!NoDisplay.class.equals(displayClass)&&!HelpDisplay.class.equals(displayClass)) try {
 				addDisplay(displayClass.getConstructor(new Class[]{NucleicEditor.class}).newInstance(this));
 			}	catch(Exception e) { e.printStackTrace(); }
+		addDisplay(displayHelp=new HelpDisplay());
 		this.addComponentListener(new ComponentAdapter() {			
 			@Override public void componentResized(ComponentEvent e) {
 				NucleicDisplay display = displays.get(displayPane.getSelectedIndex());
@@ -398,8 +417,18 @@ public class NucleicEditor extends JRootPane {
 		displays.add(display); displayLabels.add(label); displayPanes.add(pane);
 		displayPane.addTab(display.getLabel(),display.getIcon(),pane);
 		displayPane.setTabComponentAt(displayPane.getTabCount()-1,label);
-		addNucleicListener(display);
+		if(display instanceof NucleicListener)
+			addNucleicListener((NucleicListener)display);
 	}
+	public void toggleDisplay(Class<? extends NucleicDisplay> display) {
+		for(int index=0;index<displays.size();index++)
+			if(display.isInstance(displays.get(index))) {
+				displayPane.setSelectedIndex(index); return; }
+	}
+	public void toggleHelp() { toggleDisplay(HelpDisplay.class); }
+	public void toggleHelpIndex() { displayHelp.showIndex(); toggleHelp(); }
+	public void toggleHelpPage(String... page) { displayHelp.showPage(page); toggleHelp();		 }
+	public void toggleHelpPage(Documented documented) { toggleHelpPage(Utilities.add(documented.category(), documented.title())); }
 	
 	public List<Option> getOptions() { return Collections.unmodifiableList(options); }
 	public Option.Component addOption(Option option) {
@@ -649,21 +678,105 @@ public class NucleicEditor extends JRootPane {
 	
 	class NoDisplay extends Component implements NucleicDisplay {
 		private static final long serialVersionUID = 1l;
-		
+
 		@Override public void paint(Graphics graphics) {
 			super.paint(graphics);
 			graphics.setColor(Color.RED);
 			graphics.fillRect(0,0,getWidth(),getHeight());
 		}
 		
-		@Override public void tuplesInsert(NucleicEvent event) { /* nothing to do here */ }
-		@Override public void tuplesRemoved(NucleicEvent event) { /* nothing to do here */ }
-		@Override public void tuplesChanged(NucleicEvent event) { /* nothing to do here */ }
-
 		@Override public String getLabel() { return null; }
 		@Override public Icon getIcon() { return getImage("application_side_contract"); }
 		
 		@Override public boolean hasPreferredSize() { return true; }
 		@Override public void setPreferredSize() { setPreferredSize(new Dimension(0,0)); }
+	}
+	
+	class HelpDisplay extends JScrollPane implements NucleicDisplay {
+		private static final long serialVersionUID = 1;
+		
+		private JEditorPane editor;
+		
+		private String index;
+		private Map<String[],String> pages;
+		
+		public HelpDisplay() {
+			setBorder(DEFAULT_DISPLAY_BORDER);
+			setViewportView(editor=new JEditorPane());
+			editor.setBorder(new MatteBorder(0,20,0,0,Color.WHITE));
+			editor.setEditorKit(new HTMLEditorKit());
+			editor.setEditable(false);
+			editor.addHyperlinkListener(new HyperlinkListener() {
+				public void hyperlinkUpdate(HyperlinkEvent event) {
+					URL url = event.getURL();
+					if(event.getEventType()!=HyperlinkEvent.EventType.ACTIVATED||url==null)
+						return;
+					String path = url.getPath();
+					switch(url.getProtocol()) {
+					case "help": showPage((path.startsWith("/")?path.substring(1):path).split("/")); break;
+					default: if(Desktop.isDesktopSupported())
+						try { Desktop.getDesktop().browse(url.toURI()); } 
+						catch(IOException|URISyntaxException e) { /* nothing to do here */ }
+					}
+				}
+			});
+			
+			pages = new TreeMap<>(new ArrayComparator<>());
+			for(Class<?> documentedClass:new Reflections(Documented.class.getPackage().getName()).getTypesAnnotatedWith(Documented.class)) {
+				Documented documented = documentedClass.getAnnotation(Documented.class);
+				pages.put(Utilities.add(documented.category(), documented.title()), documented.resource());
+			} pages.putAll(Help.GENERAL_HELP_PAGES);
+			
+			index = buildIndex(); showIndex();
+		}
+		
+		@Override public String getLabel() { return "Help"; }
+		@Override public Icon getIcon() { return getImage("help"); }
+		
+		@Override public boolean hasPreferredSize() { return false; }
+		@Override public void setPreferredSize() { /* nothing to do here */ }
+		
+		public void showIndex() { editor.setText(index); editor.setCaretPosition(0); }
+		public void showPage(String... page) {
+			if(page!=null&&page.length!=0) {
+				Entry<String[],String> entry = pages.entrySet().stream().filter(candidate->Arrays.equals(candidate.getKey(),page)).findFirst().orElse(null);
+				if(entry!=null) {
+					editor.setText(buildPage(page,entry.getValue()));
+					editor.setCaretPosition(0);
+				} else showIndex();
+			} else showIndex();
+		}
+		
+		protected String buildIndex() {			
+			String[] lastPage = new String[0];
+			StringBuilder builder = new StringBuilder("<html><h1>GenTool Help</h1><h2>Contents</h2><ul>");
+			for(String[] page:pages.keySet()) {
+				int sameDepth;
+				for(sameDepth=0;sameDepth<page.length&&sameDepth<lastPage.length;sameDepth++)
+					if(!page[sameDepth].equals(lastPage[sameDepth]))
+						break;
+				for(int goBack=lastPage.length-sameDepth;goBack>1;goBack--)
+					builder.append("</ul></li>");
+				for(int newCategory=sameDepth;newCategory<page.length-1;newCategory++)
+					builder.append(String.format("<li>%s<ul>",page[newCategory]));
+				builder.append(String.format("<li><a href=\"help:///%s\">%s</a></li>",String.join("/",page),page[page.length-1]));
+				lastPage = page;
+			}
+			for(int doClose=lastPage.length;doClose>1;doClose--)
+				builder.append("</ul></li>");
+			builder.append("</ul>");
+			return builder.toString();
+		}
+		protected String buildPage(String[] page, String resource) {
+			StringBuilder builder = new StringBuilder("<html><p><a href=\"help://\">GenTool Help</a>"), link = new StringBuilder();
+			for(String name:page) builder.append(String.format(" &gt; <a href=\"help://%s\">%s</a>",
+				link.append('/').append(name).toString(), name));			
+			builder.append(String.format("<h1>%s</h1>",page[page.length-1]));
+			try {
+				builder.append(new String(readStream(new FileInputStream(Utilities.getResource(resource).getFile())), "UTF-8")
+					.replaceAll("(src|href)=\"((?!.*?://|/).*?)\"", String.format("$1=\"resource:///%s/$2\"", resource.contains("/")?resource.substring(0,resource.lastIndexOf('/')):resource)));
+			} catch(NullPointerException|IOException e) { System.err.println("Can't show help resource "+resource); }
+			return builder.toString();
+		}
 	}
 }

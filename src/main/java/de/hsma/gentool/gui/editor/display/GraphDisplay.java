@@ -36,7 +36,6 @@ import javax.swing.AbstractAction;
 import javax.swing.Icon;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
-import javax.swing.border.MatteBorder;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.TreeMultimap;
 import com.mxgraph.layout.mxCircleLayout;
@@ -55,7 +54,7 @@ import de.hsma.gentool.gui.editor.NucleicEditor;
 import de.hsma.gentool.gui.editor.NucleicListener;
 import de.hsma.gentool.nucleic.Tuple;
 
-public class GraphDisplay extends mxGraphComponent implements NucleicDisplay {
+public class GraphDisplay extends mxGraphComponent implements NucleicDisplay, NucleicListener {
 	private static final long serialVersionUID = 1;
 	
 	public static final String LABEL = "Graph";
@@ -119,7 +118,7 @@ public class GraphDisplay extends mxGraphComponent implements NucleicDisplay {
 				menu.show(GraphDisplay.this.getGraphControl(), event.getX(), event.getY());
 			}
 		});
-		setBorder(new MatteBorder(0,2,0,0,Color.LIGHT_GRAY));
+		setBorder(DEFAULT_DISPLAY_BORDER);
 		getViewport().setOpaque(true); getViewport().setBackground(Color.WHITE);
 		addComponentListener(new ComponentAdapter() {
 			@Override public void componentResized(ComponentEvent event) { layoutGraph(); }

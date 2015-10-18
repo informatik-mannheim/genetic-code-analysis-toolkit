@@ -15,14 +15,17 @@
  */
 package de.hsma.gentool.operation.transformation;
 
+import static de.hsma.gentool.Help.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import de.hsma.gentool.Documented;
 import de.hsma.gentool.nucleic.Tuple;
 import de.hsma.gentool.operation.Cataloged;
 import de.hsma.gentool.operation.Named;
 
 @Named(name="remove unknown compounds", icon="bug_delete") @Cataloged(group="Transformations")
+@Documented(title="Remove Unknown Compounds", category={OPERATIONS,TRANSFORMATIONS}, resource="help/operation/transformation/remove_unknown_compounds.html")
 public class RemoveUnknownCompounds implements Transformation {
 	@Override public Collection<Tuple> transform(Collection<Tuple> tuples,Object... values) {
 		List<Tuple> remove = new ArrayList<>(tuples);

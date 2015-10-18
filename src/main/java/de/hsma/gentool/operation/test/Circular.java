@@ -15,10 +15,12 @@
  */
 package de.hsma.gentool.operation.test;
 
+import static de.hsma.gentool.Help.*;
 import java.util.Arrays;
 import java.util.Collection;
 import org.paukov.combinatorics.Factory;
 import org.paukov.combinatorics.ICombinatoricsVector;
+import de.hsma.gentool.Documented;
 import de.hsma.gentool.Parameter;
 import de.hsma.gentool.Parameter.Type;
 import de.hsma.gentool.log.Logger;
@@ -30,6 +32,7 @@ import de.hsma.gentool.operation.transformation.Transformation;
 
 @Named(name="n-circular", icon="arrow_rotate_clockwise") @Cataloged(group="Tests")
 @Parameter.Annotation(key="n",label="n-Circular",type=Type.NUMBER,value="1,10")
+@Documented(title="Circular", category={OPERATIONS,TESTS}, resource="help/operation/test/circular.html")
 public class Circular implements Test {	
 	private static final Test
 		DUPLICATE_FREE = new DuplicateFree();

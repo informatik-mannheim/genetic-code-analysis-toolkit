@@ -15,9 +15,11 @@
  */
 package de.hsma.gentool.operation.analysis;
 
+import static de.hsma.gentool.Help.*;
 import static de.hsma.gentool.nucleic.Tuple.*;
 import static java.util.stream.Collectors.*;
 import java.util.Collection;
+import de.hsma.gentool.Documented;
 import de.hsma.gentool.Parameter;
 import de.hsma.gentool.nucleic.Tuple;
 import de.hsma.gentool.nucleic.helper.C3Code;
@@ -26,6 +28,7 @@ import de.hsma.gentool.operation.Named;
 
 @Named(name = "C3 code usage", icon = "c3") @Cataloged(group = "Analyses")
 @Parameter.Annotation(key = "codeNumber", label = "Code Number", type = Parameter.Type.NUMBER, value = "1,1,216")
+@Documented(title="C3 Usage", category={OPERATIONS,ANALYSES}, resource="help/operation/analysis/c3_usage.html")
 public class C3Usage implements Analysis {
 	@Override public Result analyse(Collection<Tuple> tuples, Object... values) { return analyse(tuples,((int)values[0]) -1); }
 	public Result analyse(Collection<Tuple> tuples, int codeNumber) {

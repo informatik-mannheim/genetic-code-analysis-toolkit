@@ -35,10 +35,11 @@ import javax.swing.border.MatteBorder;
 import javax.swing.text.BadLocationException;
 import de.hsma.gentool.gui.editor.NucleicDisplay;
 import de.hsma.gentool.gui.editor.NucleicEditor;
+import de.hsma.gentool.gui.editor.NucleicListener;
 import de.hsma.gentool.nucleic.Compound;
 import de.hsma.gentool.nucleic.Tuple;
 
-public class CompoundDisplay extends JPanel implements NucleicDisplay {
+public class CompoundDisplay extends JPanel implements NucleicDisplay, NucleicListener {
 	private static final long serialVersionUID = 1l;
 
 	public static final String LABEL = "Compound";

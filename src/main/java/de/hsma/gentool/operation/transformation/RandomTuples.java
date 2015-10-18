@@ -1,5 +1,6 @@
 package de.hsma.gentool.operation.transformation;
 
+import static de.hsma.gentool.Help.*;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -7,6 +8,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+import de.hsma.gentool.Documented;
 import de.hsma.gentool.Parameter;
 import de.hsma.gentool.Parameter.Type;
 import de.hsma.gentool.nucleic.Acid;
@@ -17,6 +19,7 @@ import de.hsma.gentool.operation.Named;
 
 @Named(name="random tuples", icon="arrow_switch") @Cataloged(group="Transformations")
 @Parameter.Annotation(key="number",label="Number of Tuples",type=Type.NUMBER,value="1,32767")
+@Documented(title="Random Tuples", category={OPERATIONS,TRANSFORMATIONS}, resource="help/operation/transformation/random_tuples.html")
 public class RandomTuples implements Transformation {
 	
 	@Override public Collection<Tuple> transform(Collection<Tuple> tuples,Object... values) { return transform(tuples,(Integer)values[0]); }

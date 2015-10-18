@@ -15,7 +15,9 @@
  */
 package de.hsma.gentool.operation.test;
 
+import static de.hsma.gentool.Help.*;
 import java.util.Collection;
+import de.hsma.gentool.Documented;
 import de.hsma.gentool.log.Logger;
 import de.hsma.gentool.nucleic.Tuple;
 import de.hsma.gentool.operation.Cataloged;
@@ -24,6 +26,7 @@ import de.hsma.gentool.operation.transformation.ShiftTuples;
 import de.hsma.gentool.operation.transformation.Transformation;
 
 @Named(name="c3", icon="c3") @Cataloged(group="Tests")
+@Documented(title="C3", category={OPERATIONS,TESTS}, resource="help/operation/test/c3.html")
 public class C3 implements Test {
 	private static final Test
 		CIRCULAR = new Circular();

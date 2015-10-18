@@ -20,12 +20,15 @@ import java.util.Optional;
 import com.google.common.collect.EnumMultiset;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Multiset.Entry;
+import de.hsma.gentool.Documented;
 import de.hsma.gentool.nucleic.Compound;
 import de.hsma.gentool.nucleic.Tuple;
 import de.hsma.gentool.operation.Cataloged;
 import de.hsma.gentool.operation.Named;
+import static de.hsma.gentool.Help.*;
 
 @Named(name="amino acids", icon="bricks") @Cataloged(group="Analyses")
+@Documented(title="Amino Acids", category={OPERATIONS,ANALYSES}, resource="help/operation/analysis/amino_acids.html")
 public class AminoAcids implements Analysis {
 	private static final String DELIMITER = ", ", TIMES = "x ";
 	

@@ -15,6 +15,7 @@
  */
 package de.hsma.gentool.operation.analysis;
 
+import static de.hsma.gentool.Help.*;
 import static de.hsma.gentool.Utilities.*;
 import static de.hsma.gentool.nucleic.Tuple.*;
 import java.io.BufferedReader;
@@ -24,6 +25,7 @@ import java.io.IOException;
 import java.util.Collection;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
+import de.hsma.gentool.Documented;
 import de.hsma.gentool.Parameter;
 import de.hsma.gentool.Parameter.Type;
 import de.hsma.gentool.log.Logger;
@@ -34,6 +36,7 @@ import de.hsma.gentool.operation.Named;
 
 @Named(name="tuple usage", icon="report") @Cataloged(group="Analyses")
 @Parameter.Annotation(key="file",label="File",type=Type.FILE)
+@Documented(title="Tuple Usage", category={OPERATIONS,ANALYSES}, resource="help/operation/analysis/tuple_usage.html")
 public class TupleUsage implements Analysis {	
 	private static final String DELIMITER = ", ", TIMES = "x ";
 	private static final Tuple EMPTY_TUPLE = new Tuple();

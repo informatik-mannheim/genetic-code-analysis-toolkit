@@ -15,7 +15,9 @@
  */
 package de.hsma.gentool.operation.test;
 
+import static de.hsma.gentool.Help.*;
 import java.util.Collection;
+import de.hsma.gentool.Documented;
 import de.hsma.gentool.log.Logger;
 import de.hsma.gentool.nucleic.Acid;
 import de.hsma.gentool.nucleic.Tuple;
@@ -23,6 +25,7 @@ import de.hsma.gentool.operation.Cataloged;
 import de.hsma.gentool.operation.Named;
 
 @Named(name="self-complementary", icon="style_go") @Cataloged(group="Tests")
+@Documented(title="Self-Complementary", category={OPERATIONS,TESTS}, resource="help/operation/test/self_complementary.html")
 public class SelfComplementary implements Test {
 	@Override public boolean test(Collection<Tuple> tuples,Object... values) {
 		Logger logger = getLogger();

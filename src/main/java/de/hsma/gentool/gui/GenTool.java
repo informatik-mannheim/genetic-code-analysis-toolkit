@@ -32,6 +32,7 @@ import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
@@ -49,6 +50,10 @@ import java.awt.font.TextAttribute;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URL;
+import java.net.URLConnection;
+import java.net.URLStreamHandler;
+import java.net.URLStreamHandlerFactory;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -136,8 +141,10 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import de.hsma.gentool.Configurable;
+import de.hsma.gentool.Documented;
 import de.hsma.gentool.Option;
 import de.hsma.gentool.Parameter;
+import de.hsma.gentool.Utilities;
 import de.hsma.gentool.Utilities.DefiniteFuture;
 import de.hsma.gentool.Utilities.FileNameExtensionFileChooser;
 import de.hsma.gentool.Utilities.OperatingSystem;
@@ -174,7 +181,7 @@ public class GenTool extends JFrame implements ActionListener {
 		FASTA_EXTENSION_FILTER = new FileNameExtensionFilter("FASTA Files (*.fasta;*.fna,*.fa)","fasta","fna","fa"),
 		TEXT_EXTENSION_FILTER = new FileNameExtensionFilter("Text Documents (*.txt)", "txt");
 	
-	private static final String NAME = "Genetic Code Tool (GenTool)", VERSION = "1.9";
+	private static final String NAME = "Genetic Code Tool (GenTool)", VERSION = "1.9.1";
 	
 	private static final int
 		MENU_FILE = 0,
@@ -213,6 +220,7 @@ public class GenTool extends JFrame implements ActionListener {
 		ACTION_SHOW_BATCH = "show_batch",
 		ACTION_ADD_TO_BATCH = "add_to_batch",
 		ACTION_PREFERENCES = "preferences",
+		ACTION_HELP = "help",
 		ACTION_ABOUT = "about";
 	
 	@SuppressWarnings("unused") private static final int
@@ -257,7 +265,17 @@ public class GenTool extends JFrame implements ActionListener {
 		updateTitle();
 		setIconImage(getImage("icon").getImage());
 		setMinimumSize(new Dimension(800,600));
-		setPreferredSize(new Dimension(1120,680));
+		setPreferredSize(new Dimension(1480,840));
+		
+		Rectangle screenSize = getGraphicsConfiguration().getBounds();
+		if(screenSize.width>=1480&&screenSize.height>=840)
+			setSize(1480,840);
+		else if(screenSize.width>=1120&&screenSize.height>=680)
+			setSize(1120,680);
+		else if(screenSize.width>=800&&screenSize.height>=600)
+			setSize(800,600);
+		else setExtendedState(JFrame.MAXIMIZED_BOTH); 
+		
 		setSize(getPreferredSize());
 		setLocationByPlatform(true);
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -435,6 +453,8 @@ public class GenTool extends JFrame implements ActionListener {
     menu[MENU_WINDOW].add(createMenuItem("BDA Editor", "bda", ACTION_SHOW_BDA, this));
     menu[MENU_WINDOW].add(createSeparator());
     menu[MENU_WINDOW].add(createMenuItem("Preferences", ACTION_PREFERENCES, this));
+    menu[MENU_HELP].add(createMenuItem("Help Contents", "help", ACTION_HELP, this));
+    menu[MENU_HELP].add(createSeparator());
 		menu[MENU_HELP].add(createMenuItem("About GenTool", "icon", ACTION_ABOUT, this));
 		for(String action:new String[]{ACTION_SAVE,ACTION_UNDO,ACTION_REDO,ACTION_CUT,ACTION_COPY,ACTION_DELETE})
 			getMenuItem(menubar,action).setEnabled(false);
@@ -458,6 +478,10 @@ public class GenTool extends JFrame implements ActionListener {
 		toolbar[TOOLBAR_WINDOW].add(createToolbarButton("Open GenBatch", "calculator", ACTION_SHOW_BATCH, this));
 		toolbar[TOOLBAR_WINDOW].add(createToolbarButton("Add Sequence to GenBatch", "calculator_add", ACTION_ADD_TO_BATCH, this));
 		toolbar[TOOLBAR_WINDOW].add(createToolbarButton("BDA Editor", "bda", ACTION_SHOW_BDA, this));
+		
+		toolbar[TOOLBAR_HELP] = new JToolBar("Help");
+		toolbar[TOOLBAR_HELP].add(createToolbarButton("Help Contents", "help", ACTION_HELP, this));
+		
 		for(String action:new String[]{ACTION_SAVE})
 			getToolbarButton(toolbar,action).setEnabled(false);
 		
@@ -586,7 +610,10 @@ public class GenTool extends JFrame implements ActionListener {
 			parameterBox.add(component);
 		}
 		panel.add(parameterBox, BorderLayout.CENTER);
-
+		
+		JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+		panel.add(buttons, BorderLayout.EAST);
+		
 		JButton batch = new JButton(getImage("calculator_add_small"));
 		batch.setToolTipText("Add operation to batch");
 		batch.setFocusable(false); batch.setBorderPainted(false);
@@ -599,7 +626,20 @@ public class GenTool extends JFrame implements ActionListener {
 				addBatchOperation(operation,values.toArray());
 			}
 		});
-		panel.add(batch, BorderLayout.EAST);
+		buttons.add(batch);
+		
+		if(operation.isAnnotationPresent(Documented.class)) {
+			JButton help = new JButton(getImage("help"));
+			help.setToolTipText("Show help for this operation");
+			help.setFocusable(false); help.setBorderPainted(false);
+			help.setContentAreaFilled(false); help.setBorder(EMPTY_BORDER);
+			help.addActionListener(new ActionListener() {
+				@Override public void actionPerformed(ActionEvent event) {
+					editor.toggleHelpPage(operation.getAnnotation(Documented.class));
+				}
+			});
+			buttons.add(help);
+		}
 		
 		container.add(panel);
 	}
@@ -637,6 +677,7 @@ public class GenTool extends JFrame implements ActionListener {
 		case ACTION_SHOW_BDA: showBDA(); break;
 		case ACTION_SHOW_BATCH: showBatch(); break;
 		case ACTION_ADD_TO_BATCH: addToBatch(); break;
+		case ACTION_HELP: showHelp(); break;
 		case ACTION_ABOUT: showAbout(); break;
 		default: System.err.println(String.format("Action %s not implemented.", action)); }
 	}
@@ -1321,6 +1362,8 @@ public class GenTool extends JFrame implements ActionListener {
 		} else bda.requestFocus();
 	}
 	
+	public void showHelp() { editor.toggleHelpIndex(); }
+	
 	public void showAbout() { showAbout(this); }
 	public static void showAbout(Frame parent) {
 		final JDialog about = new JDialog(parent, "About Genetic Code Tool (GenTool)", true);
@@ -1371,7 +1414,7 @@ public class GenTool extends JFrame implements ActionListener {
 		private static final long serialVersionUID = 1l;
 		
 		private final GridBagConstraints defaultConstraints;
-
+		
 		protected List<FoldingPanel> pagePanels = new ArrayList<>();
 		protected FoldingPanel inputPanel;
 		protected JComboBox<Input> inputCombo;
@@ -1459,6 +1502,8 @@ public class GenTool extends JFrame implements ActionListener {
 		private static final int MODE_FIND = 0, MODE_REPLACE = 1, MODE_SPLIT = 2;
 		
     protected EventListenerList listenerList = new EventListenerList();
+    
+    private int mode;
     
     private JLabel what, with;
 		private JTextField term, replace;
@@ -1559,6 +1604,17 @@ public class GenTool extends JFrame implements ActionListener {
 				}
 			});
 			
+			JButton help = new JButton(getImage("help_small"));
+			help.setToolTipText("Show help");
+			help.addActionListener(new ActionListener() {
+				@Override public void actionPerformed(ActionEvent e) {
+					switch(mode) {
+					case MODE_FIND: editor.toggleHelpPage(Test.Expression.class.getAnnotation(Documented.class)); break;
+					case MODE_REPLACE: editor.toggleHelpPage(Transformation.Expression.class.getAnnotation(Documented.class)); break;
+					case MODE_SPLIT: editor.toggleHelpPage(Split.Expression.class.getAnnotation(Documented.class)); break; }
+				}
+			});
+			
 			JButton cancel = new JButton("Cancel");
 			cancel.addActionListener(new ActionListener() {
 				@Override public void actionPerformed(ActionEvent event) {
@@ -1613,17 +1669,16 @@ public class GenTool extends JFrame implements ActionListener {
 						.addGroup(layout.createSequentialGroup()
 							.addComponent(find, 90, 90, 140)
 							.addComponent(findBatch, 40, 40, 40)
+							.addComponent(split, 90, 90, 140)
+							.addComponent(splitBatch, 40, 40, 40)
+							.addComponent(help, 40, 40, 40)
 						)
 						.addComponent(replaceNext, 140, 140, 140)
 						.addGroup(layout.createSequentialGroup()
 							.addComponent(replaceAll, 90, 90, 140)
 							.addComponent(replaceBatch, 40, 40, 40)
 						)
-						.addGroup(layout.createSequentialGroup()
-							.addComponent(split, 90, 90, 140)
-							.addComponent(splitBatch, 40, 40, 40)
-						)
-						.addComponent(cancel, 140, 140, 140)
+						.addComponent(cancel, 90, 90, 240)
 					)
 			);
 			layout.linkSize(SwingConstants.HORIZONTAL, what, with);
@@ -1637,6 +1692,7 @@ public class GenTool extends JFrame implements ActionListener {
 						.addComponent(findBatch)
 						.addComponent(split)
 						.addComponent(splitBatch)
+						.addComponent(help)
 					)
 					.addGroup(layout.createParallelGroup(Alignment.BASELINE)
 						.addComponent(with)
@@ -1674,7 +1730,7 @@ public class GenTool extends JFrame implements ActionListener {
 		public void showSplit() { showMode(MODE_SPLIT); }
 		
 		private void showMode(int mode) {
-			switch(mode) {
+			switch(this.mode=mode) {
 			case MODE_FIND: setTitle("Find"); break;
 			case MODE_REPLACE: setTitle("Find / Replace"); break;
 			case MODE_SPLIT: setTitle("Split"); break; }
@@ -1922,6 +1978,28 @@ public class GenTool extends JFrame implements ActionListener {
 				}
 			}
 		} catch (URISyntaxException e) { /* nothing to do here *//* }*/
+		
+		// Register resource:// & help:// protocols for help
+		URL.setURLStreamHandlerFactory(new URLStreamHandlerFactory() {
+			public URLStreamHandler createURLStreamHandler(String protocol) {
+				switch(protocol) {
+				case "resource":
+					return new URLStreamHandler() {
+						protected URLConnection openConnection(URL url) throws IOException {
+							String path = url.getPath();
+							return Optional.ofNullable(Utilities.getResource(path.startsWith("/")?
+								path.substring(1):path)).orElseThrow(()->new IOException("Resource not found")).openConnection();
+						}
+					};
+				case "help":
+					return new URLStreamHandler() {
+						protected URLConnection openConnection(URL url) throws IOException {
+							return new URLConnection(url) { public void connect() throws IOException { /* nothing to do here */ } };
+						}
+					};
+				default: return null; }
+			}
+		});
 		
 		// Prepare Look and Feel
 		Guitilities.prepareLookAndFeel();

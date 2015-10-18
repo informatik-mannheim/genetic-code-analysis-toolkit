@@ -15,8 +15,10 @@
  */
 package de.hsma.gentool.operation.transformation;
 
+import static de.hsma.gentool.Help.*;
 import java.util.Collection;
 import java.util.regex.Pattern;
+import de.hsma.gentool.Documented;
 import de.hsma.gentool.Parameter;
 import de.hsma.gentool.Parameter.Type;
 import de.hsma.gentool.nucleic.Tuple;
@@ -25,6 +27,7 @@ import de.hsma.gentool.operation.Named;
 
 @Named(name="n-shift sequence", icon="text_indent") @Cataloged(group="Transformations")
 @Parameter.Annotation(key="shift",label="Shift",type=Type.NUMBER,value="1,10")
+@Documented(title="Shift Sequence", category={OPERATIONS,TRANSFORMATIONS}, resource="help/operation/transformation/shift_sequence.html")
 public class ShiftSequence implements Transformation {
 	private static final Pattern
 		PATTERN_SHIFT_A = Pattern.compile("(\\S)\\s+(\\S)"),

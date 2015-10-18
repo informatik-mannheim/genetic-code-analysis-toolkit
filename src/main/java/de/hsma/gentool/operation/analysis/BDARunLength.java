@@ -24,13 +24,16 @@ import java.util.HashMap;
 import java.util.IntSummaryStatistics;
 import java.util.List;
 import net.gumbix.geneticcode.dich.Codon;
+import de.hsma.gentool.Documented;
 import de.hsma.gentool.gui.GenTool;
 import de.hsma.gentool.nucleic.Tuple;
 import de.hsma.gentool.nucleic.helper.SequenceUtilities.Pair;
 import de.hsma.gentool.operation.Cataloged;
 import de.hsma.gentool.operation.Named;
+import static de.hsma.gentool.Help.*;
 
 @Named(name = "BDA run lengths", icon = "bda") @Cataloged(group = "Analyses")
+@Documented(title="BDA Run Length", category={OPERATIONS,ANALYSES}, resource="help/operation/analysis/bda_run_length.html")
 public class BDARunLength implements Analysis {
 	@Override public Result analyse(Collection<Tuple> tuples, Object... values) {
 		if(condenseTuples(tuples).isEmpty())

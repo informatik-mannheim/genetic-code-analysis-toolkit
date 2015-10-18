@@ -15,9 +15,11 @@
  */
 package de.hsma.gentool.operation.test;
 
+import static de.hsma.gentool.Help.*;
 import java.util.Collection;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+import de.hsma.gentool.Documented;
 import de.hsma.gentool.Parameter;
 import de.hsma.gentool.Utilities;
 import de.hsma.gentool.Parameter.Type;
@@ -39,6 +41,7 @@ public interface Test extends Operation {
 	@Named(name="match", icon="magnifier_zoom_in")
 	@Parameter.Annotation(key="pattern",label="Term",type=Type.TEXT)
 	@Parameter.Annotation(key="regex",label="Regex",type=Type.BOOLEAN,value=Utilities.TRUE)
+	@Documented(title="Find", category={OPERATIONS,GENERAL}, resource="help/operation/test/find.html")
 	public class Expression implements Test {
    	@Override public boolean test(Collection<Tuple> tuples,Object... values) { return test(tuples, (String)values[0], (Boolean)values[1]); }
   	public boolean test(Collection<Tuple> tuples,String pattern,boolean regex) {

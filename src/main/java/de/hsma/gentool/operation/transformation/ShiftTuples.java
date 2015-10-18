@@ -15,8 +15,10 @@
  */
 package de.hsma.gentool.operation.transformation;
 
+import static de.hsma.gentool.Help.*;
 import java.util.Collection;
 import java.util.regex.Pattern;
+import de.hsma.gentool.Documented;
 import de.hsma.gentool.Parameter;
 import de.hsma.gentool.Parameter.Type;
 import de.hsma.gentool.nucleic.Tuple;
@@ -25,6 +27,7 @@ import de.hsma.gentool.operation.Named;
 
 @Named(name="n-shift all tuples", icon="text_kerning") @Cataloged(group="Transformations")
 @Parameter.Annotation(key="shift",label="Shift",type=Type.NUMBER,value="1,10")
+@Documented(title="Shift Tuples", category={OPERATIONS,TRANSFORMATIONS}, resource="help/operation/transformation/shift_tuples.html")
 public class ShiftTuples implements Transformation {
 	private static final Pattern PATTERN_ROTATE = Pattern.compile("(\\S)(\\S*)");
 	private static final String REPLACE_ROTATE = "$2$1";

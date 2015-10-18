@@ -15,6 +15,7 @@
  */
 package de.hsma.gentool.operation.analysis;
 
+import static de.hsma.gentool.Help.*;
 import static de.hsma.gentool.nucleic.Tuple.*;
 import de.hsma.gentool.nucleic.helper.C3Code;
 import static de.hsma.gentool.nucleic.helper.SequenceUtilities.*;
@@ -24,16 +25,17 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.IntSummaryStatistics;
 import java.util.List;
+import de.hsma.gentool.Documented;
 import de.hsma.gentool.Parameter;
 import de.hsma.gentool.nucleic.Tuple;
 import de.hsma.gentool.nucleic.helper.SequenceUtilities.Pair;
 import de.hsma.gentool.operation.Cataloged;
 import de.hsma.gentool.operation.Named;
 
-@Named(name = "C3 code run lengths", icon = "c3") @Cataloged(group = "Analyses")
+@Named(name = "C3 run lengths", icon = "c3") @Cataloged(group = "Analyses")
 @Parameter.Annotation(key = "codeNumber", label = "Code Number", type = Parameter.Type.NUMBER, value = "1,1,216")
+@Documented(title="C3 Code Run Lenghts", category={OPERATIONS,ANALYSES}, resource="help/operation/analysis/c3_run_length.html")
 public class C3RunLength implements Analysis {
-
 	@Override public Result analyse(Collection<Tuple> tuples, Object... values) { return analyse(tuples, ((int)values[0])-1); }
 	public Result analyse(Collection<Tuple> tuples, int codeNumber) {
 		if(condenseTuples(tuples).isEmpty())

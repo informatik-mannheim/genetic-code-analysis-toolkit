@@ -15,9 +15,14 @@
  */
 package de.hsma.gentool.gui.editor;
 
+import java.awt.Color;
 import javax.swing.Icon;
+import javax.swing.border.Border;
+import javax.swing.border.MatteBorder;
 
-public interface NucleicDisplay extends NucleicListener {
+public interface NucleicDisplay {
+	public static Border DEFAULT_DISPLAY_BORDER = new MatteBorder(0,2,0,0,Color.LIGHT_GRAY);
+	
 	public String getLabel();
 	public Icon getIcon();
 	
