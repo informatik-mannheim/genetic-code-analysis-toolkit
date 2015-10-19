@@ -167,7 +167,7 @@ public class GenBDA extends JFrame implements ActionListener, ListDataListener, 
 		
 		add(createSplitPane(JSplitPane.HORIZONTAL_SPLIT,false,true,360,0.195,
 			new JScrollPane(bdaPanel=new BinaryDichotomicAlgorithmPanel()),
-			new JScrollPane(tablePanel=new JPanel())), BorderLayout.CENTER);
+			new JScrollPane(tablePanel=new JPanel(new BorderLayout()))), BorderLayout.CENTER);
 		
 		add(bottom = new JPanel(new FlowLayout(FlowLayout.RIGHT)),BorderLayout.SOUTH);
 		
@@ -285,9 +285,19 @@ public class GenBDA extends JFrame implements ActionListener, ListDataListener, 
     else table = null;
     tablePanel.revalidate();
     tablePanel.repaint();
-    
-    int classes = classTable==null?0:classTable.classes().size();
-    status.setText((classes==0?"No":classes)+(classes==1?" class":" classes"));
+
+		if (classTable != null) {
+			int classes = classTable.classes().size();
+			String classText = (classes == 0 ? "No" : classes) + (classes == 1 ? " class" : " classes");
+			String degText = classTable.degeneracy().mkString();
+			String errorA = "EA: " + classTable.errorA();
+			String errorC = "EC: " + classTable.errorC();
+			String error = "E: " + classTable.error();
+			status.setText(classText + ", degeneracy " + degText + ", " + errorA + ", "
+							+ errorC + ", " + error);
+		} else {
+			status.setText(" "); // to force status bar to be drawn.
+		}
 	}
 	
 	class BinaryDichotomicAlgorithmPanel extends JPanel {
