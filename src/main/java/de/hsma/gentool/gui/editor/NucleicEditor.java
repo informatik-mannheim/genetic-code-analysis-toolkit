@@ -39,7 +39,6 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -773,9 +772,9 @@ public class NucleicEditor extends JRootPane {
 				link.append('/').append(name).toString(), name));			
 			builder.append(String.format("<h1>%s</h1>",page[page.length-1]));
 			try {
-				builder.append(new String(readStream(new FileInputStream(Utilities.getResource(resource).getFile())), "UTF-8")
+				builder.append(new String(readStream(Utilities.getResource(resource).openStream()), "UTF-8")
 					.replaceAll("(src|href)=\"((?!.*?://|/).*?)\"", String.format("$1=\"resource:///%s/$2\"", resource.contains("/")?resource.substring(0,resource.lastIndexOf('/')):resource)));
-			} catch(NullPointerException|IOException e) { System.err.println("Can't show help resource "+resource); }
+			} catch(NullPointerException|IOException e) { System.err.println("Can't show help resource "+resource); e.printStackTrace(); }
 			return builder.toString();
 		}
 	}
