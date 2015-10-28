@@ -2,13 +2,13 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>de.hsma.gentool</groupId>
-	<artifactId>gentool</artifactId>
-	<version>1.9.1-SNAPSHOT</version>
+	<groupId>bio.gcat</groupId>
+	<artifactId>gcat</artifactId>
+	<version>1.9.2-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
-	<name>Genetic Code Tool (GenTool)</name>
-	<url>http://www.mbi.hs-mannheim.de/research/mathematics-of-the-genetic-information.html</url>
+	<name>Genetic Code Analysis Toolkit</name>
+	<url>http://www.gcat.bio/</url>
 
 	<developers>
 		<developer>
@@ -184,7 +184,7 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>de.hsma.gentool.gui.GenTool</mainClass>
+							<mainClass>bio.gcat.gui.AnalysisTool</mainClass>
 						</manifest>
 					</archive>
 					<descriptorRefs>
@@ -208,9 +208,9 @@
 				<version>1.4</version>
 				<configuration>
 					<keystore>.keystore</keystore>
-					<alias>gentool</alias>
-					<storepass>gentool</storepass>
-					<keypass>gentool</keypass>
+					<alias>bio.gcat</alias>
+					<storepass>bio.gcat</storepass>
+					<keypass>bio.gcat</keypass>
 				</configuration>
 				<executions>
 					<execution>

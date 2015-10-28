@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project default="genkey" name="Create Singed Runnable Jar for Project GeneticCodeTool">
+<project default="genkey" name="Create temporary key for project Genetic Code Analysis Toolkit">
 	<property name="sign.key.store" value="${basedir}/.keystore"/>
-	<property name="sign.key.storepass" value="gentool"/>
-	<property name="sign.key.keypass" value="gentool"/>
-	<property name="sign.key.alias" value="gentool"/>
+	<property name="sign.key.storepass" value="bio.gcat"/>
+	<property name="sign.key.keypass" value="bio.gcat"/>
+	<property name="sign.key.alias" value="bio.gcat"/>
 
 	<target name="genkey">
 		<genkey alias="${sign.key.alias}" verbose="true"
 			storepass="${sign.key.storepass}" keypass="${sign.key.keypass}"
 			validity="365" keystore="${sign.key.store}">
 			<dname>
-				<param name="CN" value="Hochschule Mannheim"/>
-				<param name="OU" value="GenTool"/>
-				<param name="O" value="GenTool"/>
+				<param name="CN" value="bio.gcat"/>
+				<param name="O" value="Hochschule Mannheim"/>
+				<param name="OU" value="Genetic Code Analysis Toolkit"/>
 				<param name="C" value="DE"/>
 			</dname>
 		</genkey>

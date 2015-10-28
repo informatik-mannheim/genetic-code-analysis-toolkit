@@ -1,20 +1,28 @@
+<!DOCTYPE HTML>
 <html>
 	<head>
-		<title>Genetic Code Tool (GenTool)</title>
+		<meta charset="UTF-8">
+		<title>Genetic Code Analysis Toolkit (GCAT)</title>
 		<style>
-			body{ padding:40px 10px;width:280px;text-align:center;font-family:Arial, Helvetica, sans-serif }
-			body>img{ width:240px }
-			body>div{ display:table;padding:20px }
-			body>div>span{ display:table-cell;vertical-align: middle;padding:0 5px }
+			html,body{ padding:0;margin:0 }
+			1body{ padding:40px 10px;width:280px;text-align:center;font-family:Arial, Helvetica, sans-serif }
+			1body>img{ width:240px }
+			1body>div{ display:table;padding:20px }
+			1body>div>span{ display:table-cell;vertical-align: middle;padding:0 5px }
+			
+			body>header{ height:136px;background:#014596;background:-moz-linear-gradient(-45deg,#014596 0%,#5692c8 100%);background:-webkit-gradient(linear,lefttop,rightbottom,color-stop(0%,#014596),color-stop( 100%,#5692c8));background:-webkit-linear-gradient(-45deg,#014596 0%,#5692c8 100%);background:-o-linear-gradient(-45deg,#014596 0%,#5692c8 100%);background:-ms-linear-gradient(-45deg,#014596 0%,#5692c8 100%);background:linear-gradient(135deg,#014596 0%,#5692c81  00%);filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#014596',endColorstr='#5692c8',GradientType=1) }
+
 		</style>
 	</head>
 	<body>
-		<img src="images/gentool.png" alt="GenTool Logo"><br>
+		<header>
+			<img src="images/logo.png" alt="Genetic Code Analysis (GCAT) Logo">
+		</header>
 		<div>
 			<span>Click here to launch:</span>
 			<script src="https://www.java.com/js/deployJava.js"></script>
 			<script>
-				deployJava.createWebStartLaunchButton(location.href.substring(0,location.href.lastIndexOf('/')+1)+'gentool.jnlp','1.8.0');
+				deployJava.createWebStartLaunchButton(location.href.substring(0,location.href.lastIndexOf('/')+1)+'launch.jnlp','1.8.0');
 			</script>
 		</div>
 	</body>
