@@ -38,15 +38,15 @@ import javax.swing.border.EmptyBorder;
 import bio.gcat.nucleic.Base;
 import bio.gcat.nucleic.Tuple;
 
-public class CodonWheel extends DefaultInput {
+public class CodonCircle extends DefaultInput {
 	private static final long serialVersionUID = 1l;
 
-	private static final String NAME = "Codon Wheel";
+	private static final String NAME = "Codon Circle";
 	private static final float[] CIRCLES = new float[]{1f,.825f,.5f};
 	
 	@Override public String getName() { return NAME; }
 	
-	public CodonWheel() {
+	public CodonCircle() {
 		setLayout(null);
 		setBorder(new EmptyBorder(10,10,10,10));
 		setPreferredSize(new Dimension(300,300));
@@ -56,10 +56,10 @@ public class CodonWheel extends DefaultInput {
 				int width = getWidth(),height = getHeight(),diameter = min(width-insets.left-insets.right,height-insets.top-insets.bottom);
 				float radius = (float)diameter/2; Point2D.Float center = new Point2D.Float((float)width/2,(float)height/2);
 				for(TupleButton button:buttons.values()) {
-					WheelButton wheelButton = (WheelButton)button;
-					FontMetrics metrics = wheelButton.getFontMetrics(wheelButton.getFont());
-					wheelButton.setLocation((int)round(center.x-sin(wheelButton.angle)*radius*wheelButton.circle-(float)metrics.stringWidth(wheelButton.getText())/2),
-						(int)round(center.y-cos(wheelButton.angle)*radius*wheelButton.circle-(float)metrics.getHeight()/2));
+					CircleButton circleButton = (CircleButton)button;
+					FontMetrics metrics = circleButton.getFontMetrics(circleButton.getFont());
+					circleButton.setLocation((int)round(center.x-sin(circleButton.angle)*radius*circleButton.circle-(float)metrics.stringWidth(circleButton.getText())/2),
+						(int)round(center.y-cos(circleButton.angle)*radius*circleButton.circle-(float)metrics.getHeight()/2));
 				}
 			}
 		});
@@ -79,8 +79,8 @@ public class CodonWheel extends DefaultInput {
 			}
 		}
 	}
-	private WheelButton createTupleButton(final Tuple tuple, float angle, float circle, float font) {		
-		WheelButton button = new WheelButton(tuple,angle,circle,font);
+	private CircleButton createTupleButton(final Tuple tuple, float angle, float circle, float font) {		
+		CircleButton button = new CircleButton(tuple,angle,circle,font);
 		buttons.put(tuple,button);
 		return button;
 	}
@@ -117,12 +117,12 @@ public class CodonWheel extends DefaultInput {
 		}
 	}
 	
-	protected class WheelButton extends TupleButton {
+	protected class CircleButton extends TupleButton {
 		private static final long serialVersionUID = 1l;
 		
 		public final float angle,circle;
 		
-		public WheelButton(Tuple tuple, float angle, float circle, float font) {
+		public CircleButton(Tuple tuple, float angle, float circle, float font) {
 			super(tuple); this.angle = angle; this.circle = circle;
 			setFocusable(false); setContentAreaFilled(false); setBorderPainted(false); setBorder(EMPTY_BORDER);
 			setFont(getFont().deriveFont(Font.BOLD,font)); FontMetrics metrics = getFontMetrics(getFont().deriveFont(Font.BOLD));

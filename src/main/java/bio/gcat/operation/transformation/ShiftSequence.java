@@ -25,7 +25,7 @@ import bio.gcat.nucleic.Tuple;
 import bio.gcat.operation.Cataloged;
 import bio.gcat.operation.Named;
 
-@Named(name="n-shift sequence", icon="text_indent") @Cataloged(group="Transformations")
+@Named(name="n-shift sequence", icon="text_indent") @Cataloged(group="Permutation: Tuples / Bases")
 @Parameter.Annotation(key="shift",label="Shift",type=Type.NUMBER,value="1,10")
 @Documented(title="Shift Sequence", category={OPERATIONS,TRANSFORMATIONS}, resource="help/operation/transformation/shift_sequence.html")
 public class ShiftSequence implements Transformation {

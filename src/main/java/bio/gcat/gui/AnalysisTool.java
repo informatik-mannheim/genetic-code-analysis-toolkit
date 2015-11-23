@@ -99,6 +99,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButton;
+import javax.swing.JRootPane;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
@@ -147,11 +148,11 @@ import bio.gcat.batch.Action.TaskAttribute;
 import bio.gcat.gui.editor.NucleicAdapter;
 import bio.gcat.gui.editor.NucleicDocument;
 import bio.gcat.gui.editor.NucleicEditor;
-import bio.gcat.gui.editor.NucleicEditor.EditorMode;
+import bio.gcat.gui.editor.NucleicOptions.EditorMode;
 import bio.gcat.gui.helper.FoldingPanel;
 import bio.gcat.gui.helper.Guitilities;
 import bio.gcat.gui.helper.PopupMouseAdapter;
-import bio.gcat.gui.input.CodonWheel;
+import bio.gcat.gui.input.CodonCircle;
 import bio.gcat.gui.input.Input;
 import bio.gcat.log.InjectionLogger;
 import bio.gcat.log.Logger;
@@ -326,10 +327,10 @@ public class AnalysisTool extends JFrame implements ActionListener {
 						private final Color lineColor = new Color(0,0,0,64);
 						@Override public void paint(Graphics graphics) {
 							super.paint(graphics);
-							int defaultTupleLength = editor.getDefaultTupleLength();
-							if(defaultTupleLength>0) {
+							int tupleLength = editor.getTupleLength();
+							if(tupleLength>0) {
 								graphics.setColor(lineColor);
-								int width=getFontMetrics(getFont()).charWidth('0'), tupleWidth = width*defaultTupleLength;
+								int width=getFontMetrics(getFont()).charWidth('0'), tupleWidth = width*tupleLength;
 								for(int left=getInsets().left+width/2+tupleWidth; left<getWidth(); left += tupleWidth + width)
 									graphics.drawLine(left, 0, left, getHeight());
 							}
@@ -509,7 +510,7 @@ public class AnalysisTool extends JFrame implements ActionListener {
 			}
 		});
 		editor.addNucleicListener(new NucleicAdapter() {
-			@Override public void tuplesChanged(NucleicEvent event) {
+			@Override public void tuplesUndoableChange(NucleicEvent event) {
 				getMenuItem(menubar,ACTION_UNDO).setEnabled(editor.canUndo());
 				getMenuItem(menubar,ACTION_REDO).setEnabled(editor.canRedo());
 			}
@@ -521,11 +522,37 @@ public class AnalysisTool extends JFrame implements ActionListener {
 			@Override public void changedUpdate(DocumentEvent event) { editor.setDirty(); updateTitle(); }
 		});
 		optionLabel.setPreferredSize(new Dimension(140,optionLabel.getPreferredSize().height));
+		editor.getOptionPanel().add(new JButton(new AbstractAction("Clear Editor") {
+			private static final long serialVersionUID = 1;
+			@Override public void actionPerformed(ActionEvent e) { editor.setText(null); }
+		}));
 		
 		findDialog = new FindDialog();
 		
 		split = new JSplitPane[2];
-		split[0] = createSplitPane(JSplitPane.VERTICAL_SPLIT,false,false,0.725,editor,new JScrollPane(consolePane=new ConsolePane()));
+		split[0] = createSplitPane(JSplitPane.VERTICAL_SPLIT,false,false,0.725,editor,new JRootPane() { private static final long serialVersionUID = 1L; {			
+			JPanel contentPane = (JPanel)getContentPane();
+			contentPane.setLayout(new BorderLayout());
+			
+			JScrollPane consoleScroll = new JScrollPane(consolePane=new ConsolePane());
+			contentPane.add(consoleScroll,BorderLayout.CENTER);
+			consoleScroll.setBorder(null);
+			
+			JPanel glassPane = (JPanel)getGlassPane();
+			glassPane.setVisible(true);
+			glassPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
+			
+			final JButton button = new JButton(getImage("bin_closed"));
+			button.setToolTipText("Clean console");
+			button.setBorderPainted(false);
+			button.setFocusPainted(false);
+			button.setContentAreaFilled(false);
+			button.addActionListener(new ActionListener() {
+				@Override public void actionPerformed(ActionEvent e) { consolePane.clearText(); }
+			});
+			glassPane.add(button);
+			
+		}});
 		split[1] = createSplitPane(JSplitPane.HORIZONTAL_SPLIT,false,true,410,0.195,new JScrollPane(catalogPanel=createCatalog()),split[0]);
 		add(split[1],BorderLayout.CENTER);
 		
@@ -751,14 +778,14 @@ public class AnalysisTool extends JFrame implements ActionListener {
 		currentFile(null);
 	}
 	public void newText(String text) {
-		editor.setMode(EditorMode.SEQUENCE);
-		editor.setDefaultTupleLength(0);
+		editor.setEditorMode(EditorMode.SEQUENCE);
+		editor.setTupleLength(0);
 		editor.setDefaultAcid(null);
 		editor.setText(text);
 		
 		boolean emptyText = text==null||text.isEmpty();
 		Collection<Tuple> tuples = editor.getTuples();
-		editor.setDefaultTupleLength(emptyText?3:Tuple.tuplesLength(tuples));
+		editor.setTupleLength(emptyText?3:Tuple.tuplesLength(tuples));
 		editor.setDefaultAcid(emptyText?Acid.RNA:Tuple.tuplesAcid(tuples));
 		optionLabel.setValue(null);
 		
@@ -1437,7 +1464,7 @@ public class AnalysisTool extends JFrame implements ActionListener {
 			
 			Input input,defaultInput=null; inputs = new ArrayList<>();
 			for(Class<? extends Input> inputClass:new Reflections(Input.class.getPackage().getName()).getSubTypesOf(Input.class))
-				try { inputs.add(input=inputClass.newInstance()); if(CodonWheel.class.equals(inputClass)) defaultInput = input; }
+				try { inputs.add(input=inputClass.newInstance()); if(CodonCircle.class.equals(inputClass)) defaultInput = input; }
 				catch(InstantiationException|IllegalAccessException e) { /* nothing to do here */ }
 			inputPanel = addPage(new JPanel(new BorderLayout()),"Input",true);
 			
@@ -1884,6 +1911,7 @@ public class AnalysisTool extends JFrame implements ActionListener {
 		private HTMLEditorKit kit;
 		
 		public ConsolePane() {
+			setBorder(new EmptyBorder(5,5,5,5));
 			setContentType("text/html");
 			setEditorKit(kit=new HTMLEditorKit());
 			StyleSheet style = kit.getStyleSheet();

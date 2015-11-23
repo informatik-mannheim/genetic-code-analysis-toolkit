@@ -124,7 +124,7 @@ public class CompoundDisplay extends JPanel implements NucleicDisplay, NucleicLi
 			} else text = "ERR";
 			
 			// adapt text length to tuple length
-			int defaultTupleLength = editor.getDefaultTupleLength();
+			int defaultTupleLength = editor.getTupleLength();
 			if(defaultTupleLength>0&&defaultTupleLength<text.length())
 				text = text.substring(0,defaultTupleLength);
 			
@@ -160,5 +160,6 @@ public class CompoundDisplay extends JPanel implements NucleicDisplay, NucleicLi
 			public void run() { repaint(); }
 		});
 	}
-	@Override public void tuplesChanged(NucleicEvent event) { /* undoable change, nothing to do here */ }
+	@Override public void tuplesUndoableChange(NucleicEvent event) { /* undoable change, nothing to do here */ }
+	@Override public void optionsChange(NucleicEvent event) { /* nothing to do here */ }
 }

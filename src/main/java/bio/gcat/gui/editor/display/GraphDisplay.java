@@ -18,7 +18,9 @@ package bio.gcat.gui.editor.display;
 import static bio.gcat.gui.helper.Guitilities.*;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
@@ -34,6 +36,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import javax.swing.AbstractAction;
 import javax.swing.Icon;
+import javax.swing.JButton;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import bio.gcat.gui.editor.NucleicDisplay;
@@ -61,6 +64,7 @@ public class GraphDisplay extends mxGraphComponent implements NucleicDisplay, Nu
 	public static final Icon ICON = getImage("chart_organisation");
 	
 	private mxGraph graph;
+	private mxGraphControl control;
 	private Object parent;
 	private mxIGraphModel model;
 
@@ -73,13 +77,21 @@ public class GraphDisplay extends mxGraphComponent implements NucleicDisplay, Nu
 		super(new mxGraph());
 		
 		graph = getGraph();
+		(control = getGraphControl()).setLayout(new FlowLayout(FlowLayout.RIGHT));
 		parent = graph.getDefaultParent();
 		model = graph.getModel();
 		
 		vertices = new HashMap<>();
 		edges = new HashMap<>();
 		
-		getGraphControl().addMouseListener(new MouseAdapter() {
+		final JButton button = new JButton(getImage("chart_organisation"));
+		button.setToolTipText("Change layout");
+		button.setBorderPainted(false);
+		button.setFocusPainted(false);
+		button.setContentAreaFilled(false);
+		control.add(button);
+		
+		control.addMouseListener(new MouseAdapter() {
 			private JPopupMenu menu = new JPopupMenu() {
 				private static final long serialVersionUID = 1l; {
 					addLayout("Default Layout", null);
@@ -94,6 +106,11 @@ public class GraphDisplay extends mxGraphComponent implements NucleicDisplay, Nu
 				//addLayout("Partition Layout", new mxPartitionLayout(graph));
 					addLayout("Stack Layout", new mxStackLayout(graph, false, 25, 25, 0, 0));
 					((JMenuItem)getComponent(0)).getAction().setEnabled(false);
+					button.addActionListener(new ActionListener() {
+						@Override public void actionPerformed(ActionEvent event) {
+							menu.show(control, button.getX(), button.getY()+button.getHeight());
+						}
+					});
 				}
 				private void addLayout(String name, final mxIGraphLayout layout) { //class name to name "((?<!^)\\p{Lu})"
 					if(layout instanceof mxGraphLayout)
@@ -115,7 +132,7 @@ public class GraphDisplay extends mxGraphComponent implements NucleicDisplay, Nu
 			private void popUp(MouseEvent event) {
 				if(!event.isPopupTrigger())
 					return;
-				menu.show(GraphDisplay.this.getGraphControl(), event.getX(), event.getY());
+				menu.show(control,event.getX(),event.getY());
 			}
 		});
 		setBorder(DEFAULT_DISPLAY_BORDER);
@@ -134,7 +151,8 @@ public class GraphDisplay extends mxGraphComponent implements NucleicDisplay, Nu
 
 	@Override public void tuplesInsert(NucleicListener.NucleicEvent event) { updateGraph(event.getTuples()); }
 	@Override public void tuplesRemoved(NucleicListener.NucleicEvent event) { this.tuplesInsert(event); }
-	@Override public void tuplesChanged(NucleicListener.NucleicEvent event) { /* nothing to do here */ }
+	@Override public void tuplesUndoableChange(NucleicListener.NucleicEvent event) { /* nothing to do here */ }
+	@Override public void optionsChange(NucleicEvent event) { /* nothing to do here */ }
 	
 	private void updateGraph(Collection<Tuple> tuples) {
 		HashSet<Tuple> vertices = new HashSet<Tuple>();
@@ -142,21 +160,10 @@ public class GraphDisplay extends mxGraphComponent implements NucleicDisplay, Nu
 
 		Tuple tupleFrom,tupleTo;
 		for(Tuple tuple:tuples) {
-			int length = tuple.length();
-			if(length<2||length>5) continue;
 			String string = tuple.toString();
-
-			vertices.add(tupleFrom=new Tuple(string.substring(0,1)));
-			vertices.add(tupleTo=new Tuple(string.substring(1)));
-			edges.put(tupleFrom,tupleTo);
-
-			vertices.add(tupleFrom=new Tuple(string.substring(0,string.length()-1)));
-			vertices.add(tupleTo=new Tuple(string.substring(string.length()-1)));
-			edges.put(tupleFrom,tupleTo);
-			
-			if(string.length()%2==0) {
-				vertices.add(tupleFrom=new Tuple(string.substring(0,string.length()/2)));
-				vertices.add(tupleTo=new Tuple(string.substring(string.length()/2)));
+			for(int cut=1;cut<=tuple.length()/2;cut++) {
+				vertices.add(tupleFrom=new Tuple(string.substring(0,cut)));
+				vertices.add(tupleTo=new Tuple(string.substring(cut)));
 				edges.put(tupleFrom,tupleTo);
 			}
 		}

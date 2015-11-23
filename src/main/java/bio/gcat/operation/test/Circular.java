@@ -30,7 +30,7 @@ import bio.gcat.operation.Named;
 import bio.gcat.operation.transformation.ShiftSequence;
 import bio.gcat.operation.transformation.Transformation;
 
-@Named(name="n-circular", icon="arrow_rotate_clockwise") @Cataloged(group="Tests")
+@Named(name="n-circular", icon="arrow_rotate_clockwise") @Cataloged(group="Tests",order=2)
 @Parameter.Annotation(key="n",label="n-Circular",type=Type.NUMBER,value="1,10")
 @Documented(title="Circular", category={OPERATIONS,TESTS}, resource="help/operation/test/circular.html")
 public class Circular implements Test {	
@@ -81,5 +81,29 @@ public class Circular implements Test {
 		}
 
 		return true;
+	}
+	
+	@Named(name="circular", icon="arrow_rotate_clockwise") @Cataloged(group="Tests",order=1)
+	@Documented(title="Circular", category={OPERATIONS,TESTS}, resource="help/operation/test/circular.html")
+	public static class CommonCircular extends Circular {
+		@Override public boolean test(Collection<Tuple> tuples,Object... values) {
+			Logger logger = getLogger();
+			
+			int length;
+			if((length=Tuple.tuplesLength(tuples))==0) {
+				logger.log("Tuples of variable length, can't check for circular.");
+				return false; //tuples not all of same length
+			}
+			
+			switch(length) {
+			case 1: return super.test(tuples,1);
+			case 2: return super.test(tuples,3);
+			case 3: return super.test(tuples,4);
+			case 4: return super.test(tuples,3);
+			default:
+				logger.log("Circular is not defined for length \u2265 4. Please use n-circular.");
+				return false;
+			}
+		}
 	}
 }

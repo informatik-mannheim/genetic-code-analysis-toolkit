@@ -17,12 +17,16 @@ package bio.gcat.gui.editor;
 
 public class NucleicAdapter implements NucleicListener {
 	@Override public void tuplesInsert(NucleicEvent event) {
-		/* nothting to do here */
+		/* nothing to do here */
 	}
 	@Override public void tuplesRemoved(NucleicEvent event) {
-		/* nothting to do here */
+		/* nothing to do here */
 	}
-	@Override public void tuplesChanged(NucleicEvent event) {
-		/* nothting to do here */
+	@Override public void tuplesUndoableChange(NucleicEvent event) {
+		/* nothing to do here */
+	}
+	
+	@Override public void optionsChange(NucleicEvent event) {
+		/* nothing to do here */
 	}
 }

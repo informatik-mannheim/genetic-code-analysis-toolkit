@@ -32,7 +32,7 @@ import javax.swing.JButton;
 import javax.swing.JPanel;
 import bio.gcat.gui.editor.NucleicEditor;
 import bio.gcat.gui.editor.NucleicListener;
-import bio.gcat.gui.editor.NucleicEditor.EditorMode;
+import bio.gcat.gui.editor.NucleicOptions.EditorMode;
 import bio.gcat.nucleic.Acid;
 import bio.gcat.nucleic.Base;
 import bio.gcat.nucleic.Tuple;
@@ -71,7 +71,8 @@ public abstract class DefaultInput extends JPanel implements Input, NucleicListe
 			}
 		});
 	}
-	@Override public void tuplesChanged(NucleicEvent event) { /* undoable change, nothing to do here */ }
+	@Override public void tuplesUndoableChange(NucleicEvent event) { /* undoable change, nothing to do here */ }
+	@Override public void optionsChange(NucleicEvent event) { /* nothing to do here */ }
 	
 	protected class TupleButton extends JButton {
 		private static final long serialVersionUID = 1l;
@@ -84,7 +85,7 @@ public abstract class DefaultInput extends JPanel implements Input, NucleicListe
 			addActionListener(new ActionListener() {
 				@Override public void actionPerformed(ActionEvent event) {
 					if(editor!=null&&editor.getTextPane().isEditable())
-						if(editor.getMode()!=EditorMode.SET||!editor.getTuples().contains(tuple))
+						if(editor.getEditorMode()!=EditorMode.SET||!editor.getTuples().contains(tuple))
 							   editor.appendTuples(Arrays.asList(tuple));
 						else editor.setTuples(new ArrayList<Tuple>(editor.getTuples()) { private static final long serialVersionUID = 1l; {
 							remove(tuple);

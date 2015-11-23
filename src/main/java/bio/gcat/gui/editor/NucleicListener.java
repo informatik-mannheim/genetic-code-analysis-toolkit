@@ -23,18 +23,26 @@ import bio.gcat.nucleic.Tuple;
 public interface NucleicListener extends EventListener {
 	public void tuplesInsert(NucleicEvent event);
 	public void tuplesRemoved(NucleicEvent event);
-	public void tuplesChanged(NucleicEvent event);
+	public void tuplesUndoableChange(NucleicEvent event);
+	
+	public void optionsChange(NucleicEvent event);
 	
 	public static class NucleicEvent extends EventObject {
 		private static final long serialVersionUID = 1l;
 		
 		private Collection<Tuple> tuples;
+		private NucleicOptions options;
 		
 		public NucleicEvent(Object source, Collection<Tuple> tuples) {
 			super(source);
 			this.tuples = tuples;
 		}
+		public NucleicEvent(Object source, NucleicOptions options) {
+			super(source);
+			this.options = options;
+		}
 		
 		public Collection<Tuple> getTuples() { return tuples; }
+		public NucleicOptions getOptions() { return options; }
 	}
 }

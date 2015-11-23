@@ -32,7 +32,7 @@ public class NucleicDocument extends DefaultStyledDocument {
 
 	private static Pattern patternTupleLength;
 	
-	private int defaultTupleLength;
+	private int tupleLength;
 	private Acid defaultAcid = RNA;
 	
 	@Override public void insertString(int offset, String text, AttributeSet attributes) throws BadLocationException {
@@ -59,8 +59,8 @@ public class NucleicDocument extends DefaultStyledDocument {
 				return;
 			else endsWithSpace = false;
 		
-		// default tuple length input (di-nucleoide, codon, ...)
-		if(defaultTupleLength>0) {
+		// tuple length input (di-nucleoide, codon, ...)
+		if(tupleLength>0) {
 			StringBuilder builder = new StringBuilder();
 			
 			if(text.length()!=1) {
@@ -81,7 +81,7 @@ public class NucleicDocument extends DefaultStyledDocument {
 						if(!SPACE.equals(getText(lookbackOffset, 1)))
 							currentTupleLength++;
 						else break;
-				if(currentTupleLength%defaultTupleLength==0)
+				if(currentTupleLength%tupleLength==0)
 					builder.append(SPACE);
 			}
 			
@@ -91,11 +91,11 @@ public class NucleicDocument extends DefaultStyledDocument {
 		super.insertString(offset, text, attributes);
 	}
 	
-	public int getDefaultTupleLength() { return defaultTupleLength; }
-	public void setDefaultTupleLength(int defaultTupleLength) {
-		if(defaultTupleLength>0)
-			patternTupleLength = Pattern.compile(" ?(\\S{1,"+(this.defaultTupleLength=defaultTupleLength)+"}) *");
-		else { this.defaultTupleLength = 0; patternTupleLength = null; }
+	public int getTupleLength() { return tupleLength; }
+	public void setTupleLength(int tupleLength) {
+		if(tupleLength>0)
+			patternTupleLength = Pattern.compile(" ?(\\S{1,"+(this.tupleLength=tupleLength)+"}) *");
+		else { this.tupleLength = 0; patternTupleLength = null; }
 	}
 	
 	public Acid getDefaultAcid() { return defaultAcid; }

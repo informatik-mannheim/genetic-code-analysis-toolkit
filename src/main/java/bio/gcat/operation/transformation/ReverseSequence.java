@@ -10,7 +10,7 @@ import bio.gcat.nucleic.Tuple;
 import bio.gcat.operation.Cataloged;
 import bio.gcat.operation.Named;
 
-@Named(name="reverse sequence", icon="arrow_rotate_clockwise") @Cataloged(group="Transformations")
+@Named(name="reverse sequence", icon="arrow_rotate_clockwise") @Cataloged(group="Permutation: Positions")
 @Documented(title="Reverse Sequence", category={OPERATIONS,TRANSFORMATIONS}, resource="help/operation/transformation/reverse_sequence.html")
 public class ReverseSequence implements Transformation {
 	@Override public Collection<Tuple> transform(Collection<Tuple> tuples,Object... values) {
