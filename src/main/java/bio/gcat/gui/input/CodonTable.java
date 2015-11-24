@@ -34,17 +34,17 @@ public class CodonTable extends DefaultInput {
 	
 	@Override public String getName() { return NAME; }
 
-	public CodonTable() {
+	public CodonTable() { createTuplePanels(); }
+	
+	protected void createTuplePanels() {
 		Base bases[] = DEFAULT_ACID.bases; int basesLength = bases.length;
 		List<Tuple> tuples = Tuple.allTuples(DEFAULT_ACID,3);
 		
 		setLayout(new GridLayout(basesLength, basesLength, 5, 5));
-		for(int panelOffset=0;panelOffset<tuples.size();panelOffset+=basesLength) {
+		for(int panelOffset=0;panelOffset<tuples.size();panelOffset+=basesLength)
 			add(createTuplePanel(tuples, panelOffset, basesLength));
-		}
 	}
-	
-	private JPanel createTuplePanel(List<Tuple> tuples, int panelOffset, int size) {
+	protected JPanel createTuplePanel(List<Tuple> tuples, int panelOffset, int size) {
 		JPanel panel = new JPanel(new GridLayout(size,1));
 		panel.setBackground(BASE_COLORS.get(DEFAULT_ACID.bases[panelOffset/16]));
 		for(int offset=0;offset<size;offset++)

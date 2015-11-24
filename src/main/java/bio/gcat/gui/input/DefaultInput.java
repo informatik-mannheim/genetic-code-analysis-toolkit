@@ -30,6 +30,8 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.swing.JButton;
 import javax.swing.JPanel;
+import javax.swing.text.BadLocationException;
+import bio.gcat.gui.editor.NucleicDocument;
 import bio.gcat.gui.editor.NucleicEditor;
 import bio.gcat.gui.editor.NucleicListener;
 import bio.gcat.gui.editor.NucleicOptions.EditorMode;
@@ -85,11 +87,16 @@ public abstract class DefaultInput extends JPanel implements Input, NucleicListe
 			addActionListener(new ActionListener() {
 				@Override public void actionPerformed(ActionEvent event) {
 					if(editor!=null&&editor.getTextPane().isEditable())
-						if(editor.getEditorMode()!=EditorMode.SET||!editor.getTuples().contains(tuple))
-							   editor.appendTuples(Arrays.asList(tuple));
-						else editor.setTuples(new ArrayList<Tuple>(editor.getTuples()) { private static final long serialVersionUID = 1l; {
-							remove(tuple);
-						}});
+						if(editor.getOptions().tupleLength==tuple.length()) {
+							if(editor.getEditorMode()!=EditorMode.SET||!editor.getTuples().contains(tuple))
+								   editor.appendTuples(Arrays.asList(tuple));
+							else editor.setTuples(new ArrayList<Tuple>(editor.getTuples()) { private static final long serialVersionUID = 1l; {
+								remove(tuple);
+							}});
+						} else try {	
+							NucleicDocument document = editor.getDocument();
+							document.insertString(document.getLength(),tuple.toString(),null);
+						} catch(BadLocationException e) { /* nothing to do here */ }
 				}
 			});
 		}

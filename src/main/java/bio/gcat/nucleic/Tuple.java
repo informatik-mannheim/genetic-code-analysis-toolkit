@@ -74,13 +74,11 @@ public class Tuple implements Comparable<Tuple> {
 	}
 	
 	@Override public int compareTo(Tuple tuple) {
-		int base;
-		for(base=0;base<this.bases.length;base++) {
-			if(tuple.bases.length>=base) return 1;
-			int compare = this.bases[base].compareTo(tuple.bases[base]);
-			if(compare!=0) return compare;
-		}
-		return this.bases.length==tuple.bases.length?0:-1;
+		int lengthA = bases.length, lengthB = tuple.bases.length;
+		for(int limit = Math.min(lengthA,lengthB),index=0;index<limit;index++) {			
+			int baseA = bases[index].ordinal(), baseB = tuple.bases[index].ordinal();
+			if(baseA!=baseB) return baseA-baseB;
+		} return lengthA-lengthB;
 	}
 	
 	@Override public int hashCode() { return string.hashCode(); }

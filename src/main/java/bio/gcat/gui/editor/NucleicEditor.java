@@ -55,6 +55,7 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.regex.Pattern;
 import javax.swing.Icon;
+import javax.swing.JComboBox;
 import javax.swing.JEditorPane;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -359,6 +360,9 @@ public class NucleicEditor extends JRootPane {
 			}
 		});
 		
+		document.setTupleLength(options.tupleLength);
+		document.setDefaultAcid(options.defaultAcid);
+		
 		(optionLength=addOption(new Option("tupleLength", "Tuple Length", getTupleLength(), 0, 10, 1))).addChangeListener(new ChangeListener() {
 			@Override public void stateChanged(ChangeEvent event) {
 				int oldValue = getTupleLength(), newValue = (Integer)((JSpinner)event.getSource()).getValue();
@@ -370,7 +374,12 @@ public class NucleicEditor extends JRootPane {
 		});
 		(optionAcid=addOption(new Option("acid", "Default Acid", getDefaultAcid(), new Acid[]{null,RNA,DNA}, EMPTY, RNA.name(), DNA.name()))).addItemListener(new ItemListener() {
 			@Override public void itemStateChanged(ItemEvent event) {
-				setDefaultAcid(event.getStateChange()==ItemEvent.SELECTED?(Acid)event.getItem():null);
+				Acid acid = (Acid)((JComboBox<?>)event.getSource()).getSelectedItem();
+				if(acid==null) {
+					if(event.getStateChange()==ItemEvent.DESELECTED)
+						setDefaultAcid(null);
+				} else if(event.getStateChange()==ItemEvent.SELECTED)
+					setDefaultAcid(acid);
 			}
 		});
 		(optionMode=addOption(new Option("editorMode", "Consider as", EditorMode.SEQUENCE, new EditorMode[]{EditorMode.SEQUENCE,EditorMode.SET}, "Sequence", "Set"))).addItemListener(new ItemListener() {
@@ -458,7 +467,7 @@ public class NucleicEditor extends JRootPane {
 				int length = document.getLength();
 				if(length!=0&&!SPACE.equals(document.getText(length-1,1)))
 					document.insertString(length++,SPACE,null);
-				document.insertString(length, Tuple.joinTuples(tuples), null);
+				document.insertString(length,Tuple.joinTuples(tuples),null);
 			} catch(BadLocationException e) { /* nothing to do here */ }
 			  finally { edit.commitTransaction(); }
 		}});

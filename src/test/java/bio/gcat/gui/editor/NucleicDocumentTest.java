@@ -123,8 +123,8 @@ public class NucleicDocumentTest {
 	
 	@Test public void testDefaultTupleLength() {
 		NucleicDocument document = new NucleicDocument();
-		document.setDefaultTupleLength(3);
-		assertEquals(3,document.getDefaultTupleLength());
+		document.setTupleLength(3);
+		assertEquals(3,document.getTupleLength());
 		
 		try {			
 			document.insertString(document.getLength(),"A",null);
@@ -144,12 +144,12 @@ public class NucleicDocumentTest {
 			document.insertString(document.getLength(),"AAAGGGCCC",null);
 			assertEquals("AAA GGG CCC ",document.getText(0,document.getLength()));
 			
-			document.setDefaultTupleLength(2); document.adaptText();
+			document.setTupleLength(2); document.adaptText();
 			assertEquals("AA AG GG CC C",document.getText(0,document.getLength()));
 			document.insertString(document.getLength(),"C",null);
 			assertEquals("AA AG GG CC CC ",document.getText(0,document.getLength()));
 			
-			document.setDefaultTupleLength(0); document.adaptText();
+			document.setTupleLength(0); document.adaptText();
 			assertEquals("AAAGGGCCCC",document.getText(0,document.getLength()));
 		} catch(BadLocationException e) { fail("Failed to set text, bad location"); }
 	}

@@ -44,6 +44,8 @@ public class CodonCircle extends DefaultInput {
 	private static final String NAME = "Codon Circle";
 	private static final float[] CIRCLES = new float[]{1f,.825f,.5f};
 	
+	private int circles = 3;
+	
 	@Override public String getName() { return NAME; }
 	
 	public CodonCircle() {
@@ -85,6 +87,14 @@ public class CodonCircle extends DefaultInput {
 		return button;
 	}
 	
+	public int getCircles() { return circles; }
+	public void setCircles(int circles) {
+		this.circles = Math.min(circles>0?circles:3,CIRCLES.length);
+		for(TupleButton button:buttons.values())
+			button.setVisible(this.circles>=button.tuple.length());
+		repaint();
+	}
+	
 	@Override protected void paintComponent(Graphics defaultGraphics) {
 		super.paintComponent(defaultGraphics);
 		Graphics2D graphics = (Graphics2D)defaultGraphics;
@@ -95,7 +105,7 @@ public class CodonCircle extends DefaultInput {
 		float radius = (float)diameter/2; Point2D.Float center = new Point2D.Float((float)width/2,(float)height/2);
 		
 		Base[] bases = DEFAULT_ACID.bases;
-		for(int circle=0;circle<CIRCLES.length;circle++) {
+		for(int circle=CIRCLES.length-circles;circle<CIRCLES.length;circle++) {
 			int sections = (int)Math.pow(4,CIRCLES.length-circle);
 			float angle = 360f/sections, size = diameter*CIRCLES[circle];
 			for(int section=0;section<sections;section++) {
@@ -105,16 +115,32 @@ public class CodonCircle extends DefaultInput {
 		}
 		
 		graphics.setColor(Color.BLACK);
-		graphics.draw(new Ellipse2D.Float(center.x-radius,center.y-radius,diameter,diameter));
-		for(int circle=0;circle<CIRCLES.length;circle++)			
+		for(int circle=CIRCLES.length-circles;circle<CIRCLES.length;circle++)			
 			graphics.draw(new Ellipse2D.Float(center.x-radius*CIRCLES[circle],center.y-radius*CIRCLES[circle],diameter*CIRCLES[circle],diameter*CIRCLES[circle]));
 		
 		float piFraction = (float)(TWO_PI/64);
 		for(int line=0;line<64;line++) {
-			float circle = line%16==0?0f:line%4==0?CIRCLES[2]:CIRCLES[1],
-				x = (float)(sin(piFraction*line)*radius),y = (float)(cos(piFraction*line)*radius);
-			graphics.draw(new Line2D.Float(center.x-x*circle,center.y-y*circle,center.x-x,center.y-y));
+			float inner, outer = CIRCLES[CIRCLES.length-circles]*radius;
+			double x = sin(piFraction*line), y = cos(piFraction*line);
+			if(line%16==0) {
+				inner = 0f;
+			} else if(line%4==0) {
+				if(circles<2)
+					continue;
+				inner = CIRCLES[2]*radius;
+			} else {
+				if(circles<3)
+					continue;
+				inner = CIRCLES[1]*radius;
+			}
+			graphics.draw(new Line2D.Float(
+				center.x-(float)(x*inner),center.y-(float)(y*inner),
+				center.x-(float)(x*outer),center.y-(float)(y*outer)));
 		}
+	}
+	
+	@Override public void optionsChange(NucleicEvent event) {
+		super.optionsChange(event); setCircles(event.getOptions().tupleLength);
 	}
 	
 	protected class CircleButton extends TupleButton {
