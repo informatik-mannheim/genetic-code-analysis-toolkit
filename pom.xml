@@ -207,10 +207,10 @@
 				<artifactId>maven-jarsigner-plugin</artifactId>
 				<version>1.4</version>
 				<configuration>
-					<keystore>.keystore</keystore>
-					<alias>bio.gcat</alias>
-					<storepass>bio.gcat</storepass>
-					<keypass>bio.gcat</keypass>
+					<keystore>${signing.keystore}</keystore>
+					<storepass>${signing.storepass}</storepass>
+					<keypass>${signing.keypass}</keypass>
+					<alias>${signing.alias}</alias>
 				</configuration>
 				<executions>
 					<execution>
@@ -220,57 +220,6 @@
 						</goals>
 					</execution>
 				</executions>
-			</plugin>
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-antrun-plugin</artifactId>
-				<version>1.8</version>
-				<executions>
-					<execution>
-						<phase>deploy</phase>
-						<goals>
-							<goal>run</goal>
-						</goals>
-						<configuration>
-							<target>
-								<echo>preparing scp(/ant-jsch) for deployment</echo>
-								<available property="ant-jsch.present" file="${ant.home}/lib/ant-jsch.jar" />
-								<fail if="ant-jsch.present"
-									message="Please remove ant-jsch.jar from ANT_HOME/lib see [http://ant.apache.org/faq.html#delegating-classloader]" />
-								<path id="jsch.class.path">
-									<pathelement location="ant-lib/ant-jsch.jar" />
-									<pathelement location="ant-lib/jsch-0.1.52.jar" />
-								</path>
-								<taskdef name="scp"
-									classname="org.apache.tools.ant.taskdefs.optional.ssh.Scp"
-									classpathref="jsch.class.path" />
-
-								<echo>deploying to server: ${deployment.directory}</echo>
-								<copy todir="${project.build.directory}/webapp">
-									<fileset dir="${basedir}/src/main/webapp" />
-								</copy>
-								<copy
-									file="${project.build.directory}/${project.build.finalName}-jar-with-dependencies.jar"
-									tofile="${project.build.directory}/webapp/${project.artifactId}.jar"
-									overwrite="true" />
-								<scp todir="${deployment.directory}" keyfile="${deployment.keyfile}"
-									passphrase="${deployment.passphrase}">
-									<fileset dir="${project.build.directory}/webapp" />
-								</scp>
-							</target>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-deploy-plugin</artifactId>
-				<version>2.7</version>
-				<configuration>
-					<skip>true</skip>
-				</configuration>
 			</plugin>
 		</plugins>
 	</build>
