@@ -64,7 +64,7 @@ import com.google.common.base.CaseFormat;
 import com.google.common.util.concurrent.ListenableFuture;
 
 public final class Utilities {	
-	public static final String EMPTY = "", SPACE = " ", NEW_LINE = "\n", WHITESPACE = " \t\n\r\f", TRUE = "true", FALSE = "false", CHARSET = "UTF-8";
+	public static final String EMPTY = "", SPACE = " ", TAB = "\t", NEW_LINE = "\n", WHITESPACE = " \t\n\r\f", TRUE = "true", FALSE = "false", CHARSET = "UTF-8";
 	public static final double TWO_PI = PI*2, HALF_PI = PI/2, QUARTER_PI = PI/4, EIGHTH_PI = PI/8, SIXTEENTH_PI = PI/16;
 	
   private static final int BUFFER_SIZE = 8192;

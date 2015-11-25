@@ -28,6 +28,7 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Insets;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -39,6 +40,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.geom.Line2D;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -82,6 +84,11 @@ import javax.swing.plaf.basic.BasicTabbedPaneUI;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.Position;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyleContext;
+import javax.swing.text.TabSet;
+import javax.swing.text.TabStop;
 import javax.swing.text.html.HTMLEditorKit;
 import javax.swing.undo.CannotRedoException;
 import javax.swing.undo.CannotUndoException;
@@ -141,14 +148,15 @@ public class NucleicEditor extends JRootPane {
 		textPane = new JTextPane() {
 			private static final long serialVersionUID = 1l;
 			private final Color lineColor = new Color(0,0,0,64);
-			@Override public void paint(Graphics graphics) {
-				super.paint(graphics);
-				int TupleLength = getTupleLength();
-				if(TupleLength>0) {
+			@Override public void paint(Graphics defaultGraphics) {
+				super.paint(defaultGraphics);
+				Graphics2D graphics = (Graphics2D)defaultGraphics;
+				int tupleLength = getTupleLength();
+				if(tupleLength>0) {
 					graphics.setColor(lineColor);
-					int width=getFontMetrics(getFont()).charWidth('0'), tupleWidth = width*TupleLength;
-					for(int left=getInsets().left+width/2+tupleWidth; left<textPane.getWidth(); left += tupleWidth + width)
-						graphics.drawLine(left, 0, left, textPane.getHeight());
+					int width = getWidth(),charWidth = textPane.getFontMetrics(textPane.getFont()).charWidth('0'),tupleWidth = charWidth*tupleLength;
+					for(float left=getInsets().left+(float)charWidth/2+tupleWidth;left<width;left+=tupleWidth+charWidth)
+						graphics.draw(new Line2D.Float(left, 0, left, textPane.getHeight()));
 				}
 			}
 		};
@@ -165,10 +173,10 @@ public class NucleicEditor extends JRootPane {
 		textPane.addComponentListener(new ComponentAdapter() {
 			@Override public void componentResized(ComponentEvent event) {
 				if(numberPanel!=null) numberPanel.repaint();
+				adaptTabSet();
 			}
 		});
 		textPane.setDocument(document=new NucleicDocument());
-		document.addUndoableEditListener(edit=new UndoableEditListener());
 		
 		tuples = new ConcurrentSkipListMap<Position, Tuple>(new Comparator<Position>() {
 			@Override public int compare(Position positionA, Position positionB) {
@@ -190,6 +198,7 @@ public class NucleicEditor extends JRootPane {
 		try {
 			tuples.put(document.createPosition(0), new Tuple());
 		} catch(BadLocationException e) { /** nothing to do here */ }
+		document.addUndoableEditListener(edit=new UndoableEditListener());
 		document.addDocumentListener(new DocumentListener() {
 			@Override public void insertUpdate(DocumentEvent event) {
 				try {
@@ -473,6 +482,11 @@ public class NucleicEditor extends JRootPane {
 		}});
 	}
 	
+	protected void adaptTabSet() {
+		int width = getWidth(),charWidth = textPane.getFontMetrics(textPane.getFont()).charWidth('0'),tupleWidth = charWidth*(getTupleLength()+1);
+		TabStop[] tabs = new TabStop[width/tupleWidth]; Arrays.setAll(tabs,tab->new TabStop((tab+1)*tupleWidth));
+		textPane.setParagraphAttributes(StyleContext.getDefaultStyleContext().addAttribute(SimpleAttributeSet.EMPTY, StyleConstants.TabSet, new TabSet(tabs)), false);
+	}
 	
 	public JPanel getOptionPanel() { return optionPanel; }
 	public Option.Component addOption(Option option) {
@@ -496,8 +510,8 @@ public class NucleicEditor extends JRootPane {
 	public void setTupleLength(int tupleLength) {
 		optionLength.setValue(options.tupleLength=tupleLength);
 		document.setTupleLength(tupleLength);
-		document.adaptText(); repaint();
-		fireOptionsChange();
+		document.adaptText(); adaptTabSet(); 
+		repaint(); fireOptionsChange();
 	}
 	
 	public Acid getDefaultAcid() { return options.defaultAcid; }
