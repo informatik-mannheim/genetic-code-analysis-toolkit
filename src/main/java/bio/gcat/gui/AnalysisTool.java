@@ -182,7 +182,7 @@ public class AnalysisTool extends JFrame implements ActionListener {
 		FASTA_EXTENSION_FILTER = new FileNameExtensionFilter("FASTA Files (*.fasta;*.fna,*.fa)","fasta","fna","fa"),
 		TEXT_EXTENSION_FILTER = new FileNameExtensionFilter("Text Documents (*.txt)", "txt");
 	
-	public static final String NAME = "Genetic Code Analysis Toolkit (GCAT)", VERSION = "1.9.2";
+	public static final String NAME = "Genetic Code Analysis Toolkit (GCAT)", VERSION = "1.9.3";
 	
 	private static final int
 		MENU_FILE = 0,
