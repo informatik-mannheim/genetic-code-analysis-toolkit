@@ -23,7 +23,7 @@ import bio.gcat.nucleic.Tuple;
 import bio.gcat.operation.Cataloged;
 import bio.gcat.operation.Named;
 
-@Named(name="duplicate free", icon="style_delete") @Cataloged(group="Tests")
+@Named(name="duplicate free", icon="style_delete") @Cataloged(group="Tests", order=60)
 @Documented(title="Duplicate Free", category={OPERATIONS,TESTS}, resource="help/operation/test/duplicate_free.html")
 public class DuplicateFree implements Test {
 	@Override public boolean test(Collection<Tuple> tuples,Object... values) {
