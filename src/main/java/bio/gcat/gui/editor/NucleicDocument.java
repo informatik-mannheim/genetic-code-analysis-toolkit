@@ -35,7 +35,6 @@ public class NucleicDocument extends DefaultStyledDocument {
 	private int tupleLength;
 	private Acid defaultAcid = RNA;
 	
-	@Override public String getText(int offset,int length) throws BadLocationException { return super.getText(offset,length).replace(TAB,SPACE); }
 	@Override public void insertString(int offset, String text, AttributeSet attributes) throws BadLocationException {
 		// only allow input of bases & with maximum one whitespace
 		if((text=Tuple.tupleString(text)).isEmpty())
@@ -90,7 +89,7 @@ public class NucleicDocument extends DefaultStyledDocument {
 		}
 		
 		// this document works transparently with tabs instead of spaces
-		super.insertString(offset,text.replace(SPACE,TAB),attributes);
+		super.insertString(offset,text,attributes);
 	}
 	
 	public int getTupleLength() { return tupleLength; }

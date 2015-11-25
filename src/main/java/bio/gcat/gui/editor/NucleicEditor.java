@@ -81,6 +81,7 @@ import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
 import javax.swing.event.UndoableEditEvent;
 import javax.swing.plaf.basic.BasicTabbedPaneUI;
+import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.Position;
@@ -176,7 +177,12 @@ public class NucleicEditor extends JRootPane {
 				adaptTabSet();
 			}
 		});
-		textPane.setDocument(document=new NucleicDocument());
+		// create a nucleic document that is transparanetly working with tabs instead of spaces!
+		textPane.setDocument(document=new NucleicDocument() {
+			private static final long serialVersionUID = 1l;
+			@Override public String getText(int offset,int length) throws BadLocationException { return super.getText(offset,length).replace(TAB,SPACE); }
+			@Override public void insertString(int offset,String text,AttributeSet attributes) throws BadLocationException { super.insertString(offset,text.replace(SPACE,TAB),attributes); }
+		});
 		
 		tuples = new ConcurrentSkipListMap<Position, Tuple>(new Comparator<Position>() {
 			@Override public int compare(Position positionA, Position positionB) {
@@ -374,11 +380,14 @@ public class NucleicEditor extends JRootPane {
 		
 		(optionLength=addOption(new Option("tupleLength", "Tuple Length", getTupleLength(), 0, 10, 1))).addChangeListener(new ChangeListener() {
 			@Override public void stateChanged(ChangeEvent event) {
-				int oldValue = getTupleLength(), newValue = (Integer)((JSpinner)event.getSource()).getValue();
-				if(EditorMode.SET.equals(getEditorMode())&&newValue!=0&&newValue<oldValue&&
-					JOptionPane.showOptionDialog(NucleicEditor.this,"<html><b>Warning:</b> Reducing the tuple length in set mode, might lead\nto a loss of tuples, because duplicate tuples are beeing removed\nimmediately after the conversion was performed.","Change default tuple length.",JOptionPane.OK_CANCEL_OPTION,JOptionPane.WARNING_MESSAGE,null,new String[]{"Continue","Cancel"},JOptionPane.CANCEL_OPTION)!=JOptionPane.OK_OPTION) {
-					((JSpinner)event.getSource()).setValue(oldValue);
-				} else setTupleLength(newValue);
+				SwingUtilities.invokeLater(new Runnable() {
+					@Override public void run() {
+						int oldValue = getTupleLength(), newValue = (Integer)((JSpinner)event.getSource()).getValue();
+						if(EditorMode.SET.equals(getEditorMode())&&newValue!=0&&newValue<oldValue&&JOptionPane.showOptionDialog(NucleicEditor.this,"<html><b>Warning:</b> Reducing the tuple length in set mode, might lead\nto a loss of tuples, because duplicate tuples are beeing removed\nimmediately after the conversion was performed.","Change default tuple length.",JOptionPane.OK_CANCEL_OPTION,JOptionPane.WARNING_MESSAGE,null,new String[]{"Continue","Cancel"},JOptionPane.CANCEL_OPTION)!=JOptionPane.OK_OPTION)
+							((JSpinner)event.getSource()).setValue(oldValue);
+						else setTupleLength(newValue);
+					}
+				});
 			}
 		});
 		(optionAcid=addOption(new Option("acid", "Default Acid", getDefaultAcid(), new Acid[]{null,RNA,DNA}, EMPTY, RNA.name(), DNA.name()))).addItemListener(new ItemListener() {
