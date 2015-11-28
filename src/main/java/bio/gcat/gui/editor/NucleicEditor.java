@@ -81,7 +81,6 @@ import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
 import javax.swing.event.UndoableEditEvent;
 import javax.swing.plaf.basic.BasicTabbedPaneUI;
-import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.Position;
@@ -181,7 +180,7 @@ public class NucleicEditor extends JRootPane {
 		textPane.setDocument(document=new NucleicDocument() {
 			private static final long serialVersionUID = 1l;
 			@Override public String getText(int offset,int length) throws BadLocationException { return super.getText(offset,length).replace(TAB,SPACE); }
-			@Override public void insertString(int offset,String text,AttributeSet attributes) throws BadLocationException { super.insertString(offset,text.replace(SPACE,TAB),attributes); }
+			@Override protected String prepareText(String text) { return super.prepareText(text).replace(SPACE,TAB); }
 		});
 		
 		tuples = new ConcurrentSkipListMap<Position, Tuple>(new Comparator<Position>() {

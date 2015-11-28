@@ -89,7 +89,7 @@ public class NucleicDocument extends DefaultStyledDocument {
 		}
 		
 		// this document works transparently with tabs instead of spaces
-		super.insertString(offset,text,attributes);
+		super.insertString(offset,prepareText(text),attributes);
 	}
 	
 	public int getTupleLength() { return tupleLength; }
@@ -108,4 +108,6 @@ public class NucleicDocument extends DefaultStyledDocument {
 		try { replace(0,getLength(),getText(0,getLength()).replace(SPACE,EMPTY),null); }
 		catch(BadLocationException e) { /* nothing to do here */ }
 	}
+	protected String prepareText(String text) {
+		return text; }
 }
