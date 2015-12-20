@@ -108,89 +108,6 @@
 			<version>4.5</version>
 		</dependency>
 	</dependencies>
-
-	<profiles>
-		<profile>
-			<id>jar</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-jarsigner-plugin</artifactId>
-						<version>1.4</version>
-						<configuration>
-							<keystore>${signing.keystore}</keystore>
-							<storepass>${signing.storepass}</storepass>
-							<keypass>${signing.keypass}</keypass>
-							<alias>${signing.alias}</alias>
-							<tsa>${signing.tsa}</tsa>
-						</configuration>
-						<executions>
-							<execution>
-								<id>sign</id>
-								<goals>
-									<goal>sign</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-		<profile>
-			<id>jnlp</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.codehaus.mojo</groupId>
-						<artifactId>webstart-maven-plugin</artifactId>
-						<version>1.0-beta-6</version>
-	          <dependencies>
-	            <!-- TODO(pw): This dependency is just a workaround for 1.0-beta-6
-	                 until 1.0-beta-7 is released, to make build work with Java 1.8 -->
-	            <dependency>
-	              <groupId>org.codehaus.mojo</groupId>
-	              <artifactId>keytool-api-1.7</artifactId>
-	              <version>1.5</version>
-	            </dependency>
-	          </dependencies>
-						<executions>
-							<execution>
-								<phase>package</phase>
-								<goals>
-									<goal>jnlp</goal>
-								</goals>
-							</execution>
-						</executions>
-						<configuration>
-							<codebase>http://www.gcat.bio/</codebase>
-							<jnlp>
-								<mainClass>bio.gcat.gui.AnalysisTool</mainClass>
-							</jnlp>
-							<pack200>
-								<enabled>false</enabled>
-							</pack200>
-							<sign>
-								<keystore>${signing.keystore}</keystore>
-								<storepass>${signing.storepass}</storepass>
-								<keypass>${signing.keypass}</keypass>
-								<alias>${signing.alias}</alias>
-								<tsaLocation>${signing.tsa}</tsaLocation>
-							</sign>
-							<updateManifestEntries>
-								<Application-Name>AnalysisTool</Application-Name>
-								<Trusted-Library>true</Trusted-Library>
-								<Permissions>all-permissions</Permissions> 
-								<Codebase>*</Codebase>
-								<Trusted-Only>true</Trusted-Only> 
-							</updateManifestEntries>
-							<verbose>true</verbose>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-	</profiles>
 	
 	<build>
 		<pluginManagement>
@@ -277,13 +194,76 @@
 								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
 									<mainClass>bio.gcat.gui.AnalysisTool</mainClass>
 									<manifestEntries>
+										<Application-Name>Genetic Code Analysis Toolkit</Application-Name>
 										<Main-Class>bio.gcat.gui.AnalysisTool</Main-Class>
+										<Trusted-Library>true</Trusted-Library>
+										<Permissions>all-permissions</Permissions> 
+										<Codebase>*</Codebase>
+										<Trusted-Only>true</Trusted-Only>
+										<Build-By>University of Applied Sciences Mannheim</Build-By>
 									</manifestEntries>
 								</transformer>
 							</transformers>
 						</configuration>
 					</execution>
 				</executions>
+			</plugin>
+				
+
+			<plugin>
+				<groupId>com.github.batkinson.plugins</groupId>
+				<artifactId>maven-pack200-plugin</artifactId>
+				<version>1.0.1</version>
+				<executions>
+					<execution>
+						<id>normalize-jars</id>
+						<phase>package</phase>
+						<goals>
+							<goal>pack</goal>
+						</goals>
+						<configuration>
+							<normalizeOnly>true</normalizeOnly>
+						</configuration>
+					</execution>
+					<execution>
+						<id>pack-jars</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>pack</goal>
+						</goals>
+						<configuration>
+							<normalizeOnly>false</normalizeOnly>
+						</configuration>
+					</execution>
+				</executions>
+				<configuration>
+					<processMainArtifact>true</processMainArtifact>
+					<includeClassifiers>
+						<includeClassifier>all-in-one</includeClassifier>
+					</includeClassifiers>
+				</configuration>
+			</plugin>
+			
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jarsigner-plugin</artifactId>
+				<version>1.4</version>
+				<executions>
+					<execution>
+						<id>sign</id>
+						<phase>package</phase>
+						<goals>
+							<goal>sign</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<keystore>${signing.keystore}</keystore>
+					<storepass>${signing.storepass}</storepass>
+					<keypass>${signing.keypass}</keypass>
+					<alias>${signing.alias}</alias>
+					<tsa>${signing.tsa}</tsa>
+				</configuration>
 			</plugin>
 			
 			<!-- <plugin>
