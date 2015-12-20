@@ -208,7 +208,6 @@
 					</execution>
 				</executions>
 			</plugin>
-				
 
 			<plugin>
 				<groupId>com.github.batkinson.plugins</groupId>
@@ -238,9 +237,7 @@
 				</executions>
 				<configuration>
 					<processMainArtifact>true</processMainArtifact>
-					<includeClassifiers>
-						<includeClassifier>all-in-one</includeClassifier>
-					</includeClassifiers>
+					<failOnUnknownAttributes>false</failOnUnknownAttributes>
 				</configuration>
 			</plugin>
 			
