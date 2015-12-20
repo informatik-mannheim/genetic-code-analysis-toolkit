@@ -197,7 +197,7 @@
 										<Application-Name>Genetic Code Analysis Toolkit</Application-Name>
 										<Main-Class>bio.gcat.gui.AnalysisTool</Main-Class>
 										<Trusted-Library>true</Trusted-Library>
-										<Permissions>all-permissions</Permissions> 
+										<Permissions>sandbox</Permissions> 
 										<Codebase>*</Codebase>
 										<Trusted-Only>true</Trusted-Only>
 										<Build-By>University of Applied Sciences Mannheim</Build-By>
@@ -247,7 +247,7 @@
 									<fileset dir="${basedir}/src/main/webapp" />
 								</copy>
 								<copy
-									file="${project.build.directory}/${project.build.finalName}-jar-with-dependencies.jar"
+									file="${project.build.directory}/${project.build.finalName}.jar"
 									tofile="${project.build.directory}/webapp/${project.artifactId}.jar"
 									overwrite="true" />
 							</target>
