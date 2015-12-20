@@ -16,7 +16,7 @@
     </shortcut>
   </information>
   <security>
-  	<sandbox/>
+  	<all-permissions/>
   </security>
   <resources>
     <j2se version="1.8"/>

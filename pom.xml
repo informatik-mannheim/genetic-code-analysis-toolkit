@@ -197,7 +197,7 @@
 										<Application-Name>Genetic Code Analysis Toolkit</Application-Name>
 										<Main-Class>bio.gcat.gui.AnalysisTool</Main-Class>
 										<Trusted-Library>true</Trusted-Library>
-										<Permissions>sandbox</Permissions> 
+										<Permissions>all-permissions</Permissions> 
 										<Codebase>*</Codebase>
 										<Trusted-Only>true</Trusted-Only>
 										<Build-By>University of Applied Sciences Mannheim</Build-By>
