@@ -5,7 +5,6 @@
 	<groupId>bio.gcat</groupId>
 	<artifactId>gcat</artifactId>
 	<version>1.9.3-SNAPSHOT</version>
-	<packaging>jar</packaging>
 
 	<name>Genetic Code Analysis Toolkit</name>
 	<url>http://www.gcat.bio/</url>
@@ -60,7 +59,7 @@
 		<dependency>
 			<groupId>org.reflections</groupId>
 			<artifactId>reflections-maven</artifactId>
-			<version>0.9.9-RC2</version>
+			<version>0.9.9-RC1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
@@ -110,11 +109,96 @@
 		</dependency>
 	</dependencies>
 
+	<profiles>
+		<profile>
+			<id>jar</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-jarsigner-plugin</artifactId>
+						<version>1.4</version>
+						<configuration>
+							<keystore>${signing.keystore}</keystore>
+							<storepass>${signing.storepass}</storepass>
+							<keypass>${signing.keypass}</keypass>
+							<alias>${signing.alias}</alias>
+							<tsa>${signing.tsa}</tsa>
+						</configuration>
+						<executions>
+							<execution>
+								<id>sign</id>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<id>jnlp</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>webstart-maven-plugin</artifactId>
+						<version>1.0-beta-6</version>
+	          <dependencies>
+	            <!-- TODO(pw): This dependency is just a workaround for 1.0-beta-6
+	                 until 1.0-beta-7 is released, to make build work with Java 1.8 -->
+	            <dependency>
+	              <groupId>org.codehaus.mojo</groupId>
+	              <artifactId>keytool-api-1.7</artifactId>
+	              <version>1.5</version>
+	            </dependency>
+	          </dependencies>
+						<executions>
+							<execution>
+								<phase>package</phase>
+								<goals>
+									<goal>jnlp</goal>
+								</goals>
+							</execution>
+						</executions>
+						<configuration>
+							<codebase>http://www.gcat.bio/</codebase>
+							<jnlp>
+								<mainClass>bio.gcat.gui.AnalysisTool</mainClass>
+							</jnlp>
+							<pack200>
+								<enabled>false</enabled>
+							</pack200>
+							<sign>
+								<keystore>${signing.keystore}</keystore>
+								<storepass>${signing.storepass}</storepass>
+								<keypass>${signing.keypass}</keypass>
+								<alias>${signing.alias}</alias>
+								<tsaLocation>${signing.tsa}</tsaLocation>
+							</sign>
+							<updateManifestEntries>
+								<Application-Name>AnalysisTool</Application-Name>
+								<Trusted-Library>true</Trusted-Library>
+								<Permissions>all-permissions</Permissions> 
+								<Codebase>*</Codebase>
+								<Trusted-Only>true</Trusted-Only> 
+							</updateManifestEntries>
+							<verbose>true</verbose>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+	
 	<build>
 		<pluginManagement>
 			<plugins>
-				<!--This plugin's configuration is used to store Eclipse m2e settings 
-					only. It has no influence on the Maven build itself. -->
+				<!--
+					This plugin's configuration is used to store Eclipse m2e settings 
+					only. It has no influence on the Maven build itself.
+				-->
 				<plugin>
 					<groupId>org.eclipse.m2e</groupId>
 					<artifactId>lifecycle-mapping</artifactId>
@@ -180,49 +264,29 @@
 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-assembly-plugin</artifactId>
+				<artifactId>maven-shade-plugin</artifactId>
+				<version>1.6</version>
 				<executions>
 					<execution>
-						<id>make-assembly</id>
 						<phase>package</phase>
 						<goals>
-							<goal>single</goal>
+							<goal>shade</goal>
 						</goals>
 						<configuration>
-							<descriptorRefs>
-								<descriptorRef>jar-with-dependencies</descriptorRef>
-							</descriptorRefs>
-							<archive>
-								<manifest>
+							<transformers>
+								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
 									<mainClass>bio.gcat.gui.AnalysisTool</mainClass>
-								</manifest>
-							</archive>
+									<manifestEntries>
+										<Main-Class>bio.gcat.gui.AnalysisTool</Main-Class>
+									</manifestEntries>
+								</transformer>
+							</transformers>
 						</configuration>
 					</execution>
 				</executions>
 			</plugin>
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-jarsigner-plugin</artifactId>
-				<version>1.4</version>
-				<configuration>
-					<keystore>${signing.keystore}</keystore>
-					<storepass>${signing.storepass}</storepass>
-					<keypass>${signing.keypass}</keypass>
-					<alias>${signing.alias}</alias>
-				</configuration>
-				<executions>
-					<execution>
-						<id>sign</id>
-						<goals>
-							<goal>sign</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
 			
-			<plugin>
+			<!-- <plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-antrun-plugin</artifactId>
 				<version>1.8</version>
@@ -245,7 +309,7 @@
 						</configuration>
 					</execution>
 				</executions>
-			</plugin>
+			</plugin>-->
 		</plugins>
 	</build>
 
