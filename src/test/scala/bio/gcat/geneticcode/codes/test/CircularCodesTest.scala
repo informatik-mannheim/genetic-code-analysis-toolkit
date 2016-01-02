@@ -1,9 +1,10 @@
-package bio.gcat.geneticcode.codes
+package bio.gcat.geneticcode.codes.test
 
+import bio.gcat.geneticcode.codes.Code
 import bio.gcat.geneticcode.dich.Codon
-import org.junit.Test
-import junit.framework.Assert._
 import bio.gcat.geneticcode.dich.CodonImplicitDefs._
+import junit.framework.Assert._
+import org.junit.Test
 
 /**
  * @author Markus Gumbel (m.gumbel@hs-mannheim.de)
@@ -57,7 +58,7 @@ class CircularCodesTest {
     val l = code.codonsL
     val s1 = code.shift(l, 1)
     val s2 = code.shift(l, 2)
-    println(code.codonsL + "->" + s1 + "->" + s2)
+    // println(code.codonsL + "->" + s1 + "->" + s2)
     assertEquals(List(Codon("GGG"), Codon("UGU")), s1)
     assertEquals(List(Codon("GGU"), Codon("GUG")), s2)
   }
@@ -69,7 +70,7 @@ class CircularCodesTest {
     val l = code.codonsL
     val s1 = code.shift(l, 1)
     val s2 = code.shift(l, 2)
-    println(code.codonsL + "->" + s1 + "->" + s2)
+    // println(code.codonsL + "->" + s1 + "->" + s2)
   }
 
   @Test

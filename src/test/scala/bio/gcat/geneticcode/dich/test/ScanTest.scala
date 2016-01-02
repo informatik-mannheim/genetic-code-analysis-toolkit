@@ -1,5 +1,7 @@
 package bio.gcat.geneticcode.dich.test
 
+import java.text.SimpleDateFormat
+
 import bio.gcat.geneticcode.dich.ct.ClassTable
 import bio.gcat.geneticcode.dich.scan.ClassPower2Scan
 import bio.gcat.geneticcode.dich.{ClassTableScan, Classifier, Scan}
@@ -8,9 +10,9 @@ import junit.framework.Assert._
 import org.junit.{Ignore, Test}
 
 /**
- * @author Markus Gumbel (m.gumbel@hs-mannheim.de)
- *         (c) 2012 Markus Gumbel
- */
+  * @author Markus Gumbel (m.gumbel@hs-mannheim.de)
+  *         (c) 2012 Markus Gumbel
+  */
 class ScanTest {
 
   @Test
@@ -39,8 +41,12 @@ class ScanTest {
   }
 
   def countDepth(depth: Int, isValue: Int) {
+    Loggable.fileLog = false // avoid output
+    Loggable.consoleLog = false
     var counter = 0
     val s = new Scan[ClassTable](depth) with ClassTableScan {
+
+      doPersist = false
 
       override def createClassTable(bda: List[Classifier[Int]], w: Int) = {
         val t = new ClassTable(bda)
@@ -53,8 +59,8 @@ class ScanTest {
   }
 
   /**
-   * Takes quite long
-   */
+    * Takes quite long
+    */
   @Test
   @Ignore
   def testPower2() {
@@ -67,11 +73,14 @@ class ScanTest {
   @Test
   def testMetadata() {
     Loggable.fileLog = false // to save time
-    val s = new Scan[ClassTable](List(), 2) with ClassTableScan {
 
-      }
-    val info = s.filename
-    println(info)
+    val s = new Scan[ClassTable](List(), 2) with ClassTableScan {
+      doPersist = false
+    }
+    val should = "Scan-b0-d2-" +
+      new SimpleDateFormat("yyyyMMdd-hhmmss").format(s.date)
+
+    assertEquals(should, s.filename)
     //assertEquals(23220, s.solutions.size)
   }
 }

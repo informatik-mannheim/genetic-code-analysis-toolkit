@@ -1,5 +1,6 @@
-package bio.gcat.geneticcode.dich
+package bio.gcat.geneticcode.dich.demo
 
+import bio.gcat.geneticcode.dich._
 import bio.gcat.geneticcode.dich.ct.ClassTable
 
 /**

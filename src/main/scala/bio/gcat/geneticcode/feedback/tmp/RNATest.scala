@@ -1,19 +1,19 @@
-package bio.gcat.geneticcode.feedback.test
+package bio.gcat.geneticcode.feedback.tmp
 
 import org.biojava3.core.sequence._
-import compound.RNACompoundSet
-import io.IUPACParser
+import org.biojava3.core.sequence.compound.RNACompoundSet
+import org.biojava3.core.sequence.io.IUPACParser
+import org.biojava3.core.sequence.transcription.{Table, TranscriptionEngine}
+
 import scala.collection.JavaConversions._
-import transcription.{TranscriptionEngine, Table}
-import junit.framework.TestCase
 
 /**
  * (c) 2012 by Markus Gumbel (m.gumbel@hs-mannheim.de)
  * @author Markus Gumbel
  */
-class RNATest extends TestCase {
+object RNATest {
 
-  def testMain() {
+  def main(args: Array[String]) {
     val rna = new RNASequence("AGUC")
     println(rna)
     // rna.getAsList.foreach(base => println(base.getMolecularWeight))

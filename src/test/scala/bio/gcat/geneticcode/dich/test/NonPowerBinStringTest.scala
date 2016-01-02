@@ -3,7 +3,7 @@ package bio.gcat.geneticcode.dich.test
 import bio.gcat.geneticcode.dich.{IUPAC, NonPowerBinString, Codon}
 import bio.gcat.geneticcode.dich.CodonImplicitDefs._
 import junit.framework.Assert._
-import org.junit.Test
+import org.junit.{Ignore, Test}
 
 /**
  * @author Markus Gumbel (m.gumbel@hs-mannheim.de)
@@ -98,6 +98,7 @@ class NonPowerBinStringTest {
   }
 
   @Test
+  @Ignore
   def printTable() {
     val npr = new NonPowerBinString(IUPAC.EUPLOTID_NUCLEAR, 1)
     for (i <- 0 to 4) {

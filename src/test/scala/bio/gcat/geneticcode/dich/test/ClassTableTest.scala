@@ -27,7 +27,7 @@ class ClassTableTest {
   @Test
   def testGeneticCode() {
     val ct = new ClassTable(List(RumerBDA), IUPAC.VERTEBRATE_MITOCHONDRIAL)
-    println(ct.mkString)
+    // println(ct.mkString)
   }
 
   @Test

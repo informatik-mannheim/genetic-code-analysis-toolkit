@@ -5,7 +5,7 @@ import bio.gcat.geneticcode.dich.scan.RandomScan
 import org.junit.{Ignore, Test}
 
 /**
- * See also bio.gcat.geneticcode.dich.demo.Paper.
+ * See also Paper.
  * As required by reviewer #2.
  * @author Markus Gumbel (m.gumbel@hs-mannheim.de)
  *         (c) 2012 Markus Gumbel

@@ -37,6 +37,6 @@ class F2VectorSpaceTest {
     assertTrue(!vs.isSubSpace(c))
     assertTrue(vs.isMovedSubSpace(c))
     val l = vs.movedSubSpaceExceptions(c)
-    println(l.mkString("\n"))
+    // println(l.mkString("\n"))
   }
 }

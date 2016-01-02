@@ -42,7 +42,7 @@ class MiniBioBDASetTest {
   @Test
   def testLeaveOutSize1() {
     val x = MinBioBDASet.shortenedBDAList(1)
-    println(x.mkString("\n"))
+    // println(x.mkString("\n"))
     assertEquals(24, x.size)
   }
 }

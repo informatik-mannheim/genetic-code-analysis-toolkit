@@ -30,6 +30,11 @@ abstract class Scan[T <: ClassTable : ClassTag]
   // private val allClassifiers = classifierSet.allClassifiers
 
   /**
+    * True if scan will be persisted, otherwise false
+    */
+  var doPersist = true
+
+  /**
    * Number of configurations that have been tested.
    */
   var configs: Double = 0.0
@@ -198,8 +203,10 @@ abstract class Scan[T <: ClassTable : ClassTag]
       combinations + " combinations (duplicates are not yet considered.)"
     log info "solutions = " + solutions.size
 
-    store(filename)
-    log info "Saved to " + filename + ".ser"
+    if (doPersist) {
+      store(filename)
+      log info "Saved to " + filename + ".ser"
+    }
     val duration = (System.currentTimeMillis() - startTime) / 1000.0
     log info "T = " + duration + " s"
   }
