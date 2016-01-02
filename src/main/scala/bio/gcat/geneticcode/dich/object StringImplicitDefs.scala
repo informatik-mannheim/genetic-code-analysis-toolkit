@@ -28,6 +28,7 @@ object CompoundImplicitDefs {
     case 'A' => Adenine
     case 'C' => Cytosine
     case 'U' => Uracil
+    case 'T' => Uracil // TODO: any side effects here?
     case 'G' => Guanine
   }
 }
