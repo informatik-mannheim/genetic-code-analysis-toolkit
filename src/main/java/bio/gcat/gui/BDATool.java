@@ -76,10 +76,8 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableCellRenderer;
-import net.gumbix.geneticcode.dich.AntiCodonBDA$;
-import net.gumbix.geneticcode.dich.BinaryDichotomicAlgorithm;
-import net.gumbix.geneticcode.dich.ParityBDA$;
-import net.gumbix.geneticcode.dich.RumerBDA$;
+
+import bio.gcat.geneticcode.dich.*;
 import org.apache.commons.math3.util.Pair;
 import bio.gcat.gui.helper.Guitilities;
 import bio.gcat.gui.helper.ListTableModel;
@@ -114,7 +112,7 @@ public class BDATool extends JFrame implements ActionListener, ListDataListener,
 	
 	private BinaryDichotomicAlgorithmPanel bdaPanel;
 	private JPanel tablePanel;
-	private net.gumbix.geneticcode.dich.ui.JGeneticCodeTable table;
+	private bio.gcat.geneticcode.dich.ui.JGeneticCodeTable table;
 	
 	public BDATool() {
 		super("BDA Tool - "+AnalysisTool.NAME);
@@ -265,22 +263,22 @@ public class BDATool extends JFrame implements ActionListener, ListDataListener,
 	public void hideDialog() { setVisible(false); }
 	
 	public List<BinaryDichotomicAlgorithm> getBinaryDichotomicAlgorithms() { return bdaPanel.getBinaryDichotomicAlgorithms(); }
-	@SuppressWarnings("unchecked") public net.gumbix.geneticcode.dich.ct.ClassTable getClassTable() {
+	@SuppressWarnings("unchecked") public bio.gcat.geneticcode.dich.ct.ClassTable getClassTable() {
     scala.collection.immutable.List<?> bdas =
      	scala.collection.JavaConversions.collectionAsScalaIterable(getBinaryDichotomicAlgorithms()).toList();
-    return bdas.isEmpty()?null:new net.gumbix.geneticcode.dich.ct.ClassTable(
-  		(scala.collection.immutable.List<net.gumbix.geneticcode.dich.Classifier<Object>>)bdas,
-			net.gumbix.geneticcode.dich.IUPAC.STANDARD(),
-			new net.gumbix.geneticcode.dich.IdAminoAcidProperty(1));
+    return bdas.isEmpty()?null:new bio.gcat.geneticcode.dich.ct.ClassTable(
+  		(scala.collection.immutable.List<Classifier<Object>>)bdas,
+				bio.gcat.geneticcode.dich.IUPAC.STANDARD(),
+			new bio.gcat.geneticcode.dich.IdAminoAcidProperty(1));
     	
 	}
 	
-	private void revalidateGeneticCodeTable() {		
-    net.gumbix.geneticcode.dich.ct.ClassTable classTable = getClassTable();
+	private void revalidateGeneticCodeTable() {
+		bio.gcat.geneticcode.dich.ct.ClassTable classTable = getClassTable();
     
     if(table!=null) tablePanel.remove(table);
     if(classTable!=null)
-    	tablePanel.add(table=new net.gumbix.geneticcode.dich.ui.JGeneticCodeTable(classTable),
+    	tablePanel.add(table=new bio.gcat.geneticcode.dich.ui.JGeneticCodeTable(classTable),
 	    	BorderLayout.CENTER);
     else table = null;
     tablePanel.revalidate();
@@ -582,7 +580,7 @@ public class BDATool extends JFrame implements ActionListener, ListDataListener,
 					return bda.q1().toString();
 				case 3: //Q2
 					StringBuilder q2 = new StringBuilder(String.valueOf('{'));
-					scala.collection.Iterator<net.gumbix.geneticcode.dich.Compound> compounds =
+					scala.collection.Iterator<Compound> compounds =
 						bda.q2().iterator();
 					while(compounds.hasNext()) {
 						q2.append(compounds.next().toString());
@@ -687,7 +685,7 @@ public class BDATool extends JFrame implements ActionListener, ListDataListener,
 				BinaryDichotomicAlgorithm bda = bdas.getItemAt(bdas.getSelectedIndex());
 				if(bda==null) {
 			  	Pair<Integer,Integer> indices = i1i2.getItemAt(i1i2.getSelectedIndex());
-			  	bda = new net.gumbix.geneticcode.dich.BinaryDichotomicAlgorithm(indices.getFirst()-1,indices.getSecond()-1,
+			  	bda = new BinaryDichotomicAlgorithm(indices.getFirst()-1,indices.getSecond()-1,
 		  			toTuple(q1.getItemAt(q1.getSelectedIndex())),toSet(q2.getItemAt(q2.getSelectedIndex())));
 				} return bda;
 			}
@@ -726,7 +724,7 @@ public class BDATool extends JFrame implements ActionListener, ListDataListener,
 			while((line=buffer.readLine())!=null) {
 				if(line.isEmpty()) continue;
 				else if((matcher=BDA_PATTERN.matcher(line)).matches()) {
-			  	bdas.add(new net.gumbix.geneticcode.dich.BinaryDichotomicAlgorithm(Integer.parseInt(matcher.group(1))-1,Integer.parseInt(matcher.group(2))-1,
+			  	bdas.add(new BinaryDichotomicAlgorithm(Integer.parseInt(matcher.group(1))-1,Integer.parseInt(matcher.group(2))-1,
 		  			toTuple(new Pair<Base,Base>(Base.valueOf(matcher.group(3).charAt(0)),Base.valueOf(matcher.group(4).charAt(0)))),
 		  			toSet(new Pair<Base,Base>(Base.valueOf(matcher.group(5).charAt(0)),Base.valueOf(matcher.group(6).charAt(0))))));
 				} else throw new IOException("Unknown line format for BDA \""+line+"\", expected (%d,%d) (%C,%C) {%C,%C}");
@@ -748,41 +746,41 @@ public class BDATool extends JFrame implements ActionListener, ListDataListener,
 					|| AntiCodonBDA$.MODULE$.equals(bda);
 		}
 		
-		public static Pair<Base,Base> toPair(scala.Tuple2<net.gumbix.geneticcode.dich.Compound,net.gumbix.geneticcode.dich.Compound> tuple) {
+		public static Pair<Base,Base> toPair(scala.Tuple2<Compound,Compound> tuple) {
 			return new Pair<Base,Base>(toBase(tuple._1),toBase(tuple._2));
 		}
-		public static Pair<Base,Base> toPair(scala.collection.Set<net.gumbix.geneticcode.dich.Compound> set) {
-			scala.collection.Iterator<net.gumbix.geneticcode.dich.Compound> compounds =
+		public static Pair<Base,Base> toPair(scala.collection.Set<Compound> set) {
+			scala.collection.Iterator<Compound> compounds =
 				set.iterator();
 			return new Pair<Base,Base>(toBase(compounds.next()),toBase(compounds.next()));
 		}
-		public static scala.Tuple2<net.gumbix.geneticcode.dich.Compound,net.gumbix.geneticcode.dich.Compound> toTuple(Pair<Base,Base> bases) {
-			return new scala.Tuple2<net.gumbix.geneticcode.dich.Compound,net.gumbix.geneticcode.dich.Compound>(
+		public static scala.Tuple2<Compound,Compound> toTuple(Pair<Base,Base> bases) {
+			return new scala.Tuple2<Compound,Compound>(
 					toCompound(bases.getFirst()),toCompound(bases.getSecond()));
 		}
-		public static scala.collection.immutable.Set<net.gumbix.geneticcode.dich.Compound> toSet(Pair<Base,Base> bases) {
-			scala.collection.immutable.HashSet<net.gumbix.geneticcode.dich.Compound> set =
+		public static scala.collection.immutable.Set<Compound> toSet(Pair<Base,Base> bases) {
+			scala.collection.immutable.HashSet<Compound> set =
 		  		new scala.collection.immutable.HashSet<>();
 	  	return set.$plus(toCompound(bases.getFirst())).$plus(toCompound(bases.getSecond()));
 		}
 		
-		public static Base toBase(net.gumbix.geneticcode.dich.Compound compound) {
-			if(compound.equals(net.gumbix.geneticcode.dich.Adenine$.MODULE$))
+		public static Base toBase(Compound compound) {
+			if(compound.equals(Adenine$.MODULE$))
 				return Base.ADENINE;
-			else if(compound.equals(net.gumbix.geneticcode.dich.Uracil$.MODULE$))
+			else if(compound.equals(Uracil$.MODULE$))
 				return Base.URACIL;
-			else if(compound.equals(net.gumbix.geneticcode.dich.Cytosine$.MODULE$))
+			else if(compound.equals(Cytosine$.MODULE$))
 				return Base.CYTOSINE;
-			else if(compound.equals(net.gumbix.geneticcode.dich.Guanine$.MODULE$))
+			else if(compound.equals(Guanine$.MODULE$))
 				return Base.GUANINE;
 			else return null;
 		}
-		public static net.gumbix.geneticcode.dich.Compound toCompound(Base base) {
+		public static Compound toCompound(Base base) {
 			switch(base) {
-			case ADENINE: return net.gumbix.geneticcode.dich.Adenine$.MODULE$;
-			case URACIL: case THYMINE: return net.gumbix.geneticcode.dich.Uracil$.MODULE$;
-			case CYTOSINE: return net.gumbix.geneticcode.dich.Cytosine$.MODULE$;
-			case GUANINE: return net.gumbix.geneticcode.dich.Guanine$.MODULE$;
+			case ADENINE: return Adenine$.MODULE$;
+			case URACIL: case THYMINE: return Uracil$.MODULE$;
+			case CYTOSINE: return Cytosine$.MODULE$;
+			case GUANINE: return Guanine$.MODULE$;
 			default: return null; }
 		}
 	}

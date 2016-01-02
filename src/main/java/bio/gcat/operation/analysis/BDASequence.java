@@ -9,7 +9,7 @@ import bio.gcat.nucleic.Tuple;
 import bio.gcat.operation.Cataloged;
 import bio.gcat.operation.Named;
 import scala.Tuple3;
-import net.gumbix.geneticcode.dich.Codon;
+import bio.gcat.geneticcode.dich.Codon;
 
 @Named(name = "BDA sequence", icon = "bda") @Cataloged(group = "Analyses")
 @Documented(title="BDA Sequence", category={OPERATIONS,ANALYSES}, resource="help/operation/analysis/bda_sequence.html")
@@ -19,8 +19,8 @@ public class BDASequence implements Analysis {
 			return new SimpleResult(this, "No tuples.");
 		else if(Tuple.tuplesLength(tuples)!=3)
 			return new SimpleResult(this, "Only sequences with codons (tuples of length 3) are allowed.");
-		
-    net.gumbix.geneticcode.dich.ct.ClassTable classTable = AnalysisTool.getBDA().getClassTable();
+
+		bio.gcat.geneticcode.dich.ct.ClassTable classTable = AnalysisTool.getBDA().getClassTable();
     if(classTable==null)
     	return new SimpleResult(this, "No Binary Dichotomic Algorithm. Use BDA Tool to open / create BDAs.");
     

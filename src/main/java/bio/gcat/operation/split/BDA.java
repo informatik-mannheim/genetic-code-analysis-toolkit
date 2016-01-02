@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 import bio.gcat.Documented;
+import bio.gcat.geneticcode.dich.Codon;
 import bio.gcat.gui.AnalysisTool;
 import bio.gcat.log.Logger;
 import bio.gcat.nucleic.Tuple;
@@ -32,15 +33,15 @@ import bio.gcat.operation.Named;
 public class BDA implements Split {
 	@Override public List<Collection<Tuple>> split(Collection<Tuple> tuples,Object... values) {
 		Logger logger = getLogger();
-		
-    net.gumbix.geneticcode.dich.ct.ClassTable classTable = AnalysisTool.getBDA().getClassTable();
+
+		bio.gcat.geneticcode.dich.ct.ClassTable classTable = AnalysisTool.getBDA().getClassTable();
     if(classTable==null) {
 			logger.log("No Binary Dichotomic Algorithm. Use BDA Tool to open / create BDAs.");
 			return null; //no BDA
     }
     
     List<Collection<Tuple>> split = new ArrayList<>();
-    for(scala.collection.immutable.List<net.gumbix.geneticcode.dich.Codon> codons:classTable.class2codonList().values())
+    for(scala.collection.immutable.List<Codon> codons:classTable.class2codonList().values())
     	split.add(new ArrayList<Tuple>(tuples) { private static final long serialVersionUID = 1l; {
     		retainAll(scala.collection.JavaConversions.asJavaCollection(codons.toList()).stream().map(codon->new Tuple(codon.toString())).collect(Collectors.toList()));
     	}});
