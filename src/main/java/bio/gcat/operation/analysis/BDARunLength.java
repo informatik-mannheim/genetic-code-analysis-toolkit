@@ -30,7 +30,7 @@ import bio.gcat.nucleic.Tuple;
 import bio.gcat.nucleic.helper.SequenceUtilities.Pair;
 import bio.gcat.operation.Cataloged;
 import bio.gcat.operation.Named;
-import net.gumbix.geneticcode.dich.Codon;
+import bio.gcat.geneticcode.dich.Codon;
 
 @Named(name = "BDA run lengths", icon = "bda") @Cataloged(group = "Analyses")
 @Documented(title="BDA Run Length", category={OPERATIONS,ANALYSES}, resource="help/operation/analysis/bda_run_length.html")
@@ -40,8 +40,8 @@ public class BDARunLength implements Analysis {
 			return new SimpleResult(this, "No tuples.");
 		else if(Tuple.tuplesLength(tuples)!=3)
 			return new SimpleResult(this, "Only sequences with codons (tuples of length 3) are allowed.");
-		
-    net.gumbix.geneticcode.dich.ct.ClassTable classTable = AnalysisTool.getBDA().getClassTable();
+
+		bio.gcat.geneticcode.dich.ct.ClassTable classTable = AnalysisTool.getBDA().getClassTable();
     if(classTable==null)
     	return new SimpleResult(this, "No Binary Dichotomic Algorithm. Use BDA Tool to open / create BDAs.");
     

@@ -434,8 +434,7 @@ public final class Utilities {
 		SPACE(' ',"[ \t\\f]"),
 		NEW_LINE('\n',"\r\n|\n\r|[\n\r]","\n?\r?"),
 		WHITESPACE(' ',"\r\n|\n\r|[ \t\n\r\\f]");
-		public static enum Trim { LEFT,RIGHT,BOTH; }
-		
+				
 		public final char character;
 		private final String string;
 		private Pattern match,start,end,last,left,right,both,condense,split;
@@ -456,8 +455,9 @@ public final class Utilities {
 		public int indexOf(String input) { Matcher matcher = match.matcher(input); return matcher.find()?matcher.start():-1; }
 		public int lastIndexOf(String input) { Matcher matcher = (last!=null?last:(last=Pattern.compile(".*("+match.pattern()+")",Pattern.DOTALL))).matcher(input); return matcher.find()?matcher.start(1):-1; }
 		public String replace(String input,String replacement) { return match.matcher(input).replaceAll(replacement); }
-		public String trim(String input) { return trim(input,Trim.BOTH); }
-		public String trim(String input, Trim trim) { return (Trim.BOTH.equals(trim)?(both!=null?both:(both=Pattern.compile("\\A(?:"+match.pattern()+")+|(?:"+match.pattern()+")+\\z"))):Trim.LEFT.equals(trim)?(left!=null?left:(left=Pattern.compile("\\A(?:"+match.pattern()+")+"))):(right!=null?right:(right=Pattern.compile("(?:"+match.pattern()+")+\\z")))).matcher(input).replaceAll(EMPTY); }
+		public String trim(String input) { return (both!=null?both:(both=Pattern.compile("\\A(?:"+match.pattern()+")+|(?:"+match.pattern()+")+\\z"))).matcher(input).replaceAll(EMPTY); }
+		public String leftTrim(String input) { return (left!=null?left:(left=Pattern.compile("\\A(?:"+match.pattern()+")+"))).matcher(input).replaceAll(EMPTY); }
+		public String rightTrim(String input) { return (right!=null?right:(right=Pattern.compile("(?:"+match.pattern()+")+\\z"))).matcher(input).replaceAll(EMPTY); }
 		public String condense(String input) { return (condense!=null?condense:(condense=Pattern.compile("(?:"+match.pattern()+")+"))).matcher(input).replaceAll(string); }
 		public String[] split(String input) { return split.split(input); }
 		

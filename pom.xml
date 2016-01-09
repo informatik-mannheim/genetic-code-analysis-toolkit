@@ -95,7 +95,8 @@
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.4</version>
-			<scope>test</scope>
+			<!-- <scope>test</scope> -->
+			<!-- Needed for BDA demos -->
 		</dependency>
 		<dependency>
 			<groupId>com.eclipsesource.minimal-json</groupId>

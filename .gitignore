@@ -1,4 +1,5 @@
 /.cache
+.cache*
 .idea
 .keystore
 genkey.xml
@@ -6,3 +7,4 @@ genkey.xml
 bin
 out
 target
+/launch.jnlp
