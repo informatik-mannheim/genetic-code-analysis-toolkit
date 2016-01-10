@@ -15,14 +15,22 @@
  */
 package bio.gcat.operation.analysis;
 
-import static bio.gcat.Help.*;
-import static bio.gcat.Utilities.*;
-import static bio.gcat.nucleic.Tuple.*;
+import static bio.gcat.Help.ANALYSES;
+import static bio.gcat.Help.OPERATIONS;
+import static bio.gcat.Utilities.containsOnly;
+import static bio.gcat.nucleic.Tuple.normalizeTuples;
+import static bio.gcat.nucleic.Tuple.splitTuples;
+import static bio.gcat.nucleic.Tuple.tupleString;
+
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Collection;
+
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Multiset;
+
 import bio.gcat.Documented;
 import bio.gcat.Parameter;
 import bio.gcat.Parameter.Type;
@@ -31,8 +39,6 @@ import bio.gcat.nucleic.Acid;
 import bio.gcat.nucleic.Tuple;
 import bio.gcat.operation.Cataloged;
 import bio.gcat.operation.Named;
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Multiset;
 
 @Named(name="tuple usage", icon="report") @Cataloged(group="Analyses")
 @Parameter.Annotation(key="file",label="File",type=Type.FILE)
@@ -41,11 +47,11 @@ public class TupleUsage implements Analysis {
 	private static final String DELIMITER = ", ", TIMES = "x ";
 	private static final Tuple EMPTY_TUPLE = new Tuple();
 	
-	@Override public Result analyse(Collection<Tuple> tuples,Object... values) { return analyse(tuples,(File)values[0]); }
-	public Result analyse(Collection<Tuple> tuples,File file) {
+	@Override public Result analyse(Collection<Tuple> tuples,Object... values) { return analyse(tuples,(InputStream)values[0]); }
+	public Result analyse(Collection<Tuple> tuples,InputStream input) {
 		Logger logger = getLogger();
 		
-		if(file==null||!file.exists()) {
+		if(input==null) {
 			logger.log("Choose an existing file to count tuple usage in.");
 			return null;
 		}
@@ -57,7 +63,7 @@ public class TupleUsage implements Analysis {
 		}
 		
 		Multiset<Tuple> tupleCount = HashMultiset.create();
-		try(BufferedReader reader = new BufferedReader(new FileReader(file))) {
+		try(BufferedReader reader = new BufferedReader(new InputStreamReader(input))) {
 			String line; while((line=reader.readLine())!=null)
 				tupleCount.addAll(normalizeTuples(splitTuples(tupleString(line).trim()),acid));
 		} catch(IOException e) { logger.log("Error while reading file.",e); return null; }

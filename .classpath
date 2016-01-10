@@ -27,6 +27,5 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="var" path="JNLP"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

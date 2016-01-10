@@ -15,9 +15,16 @@
  */
 package bio.gcat.gui.editor;
 
-import static bio.gcat.Utilities.*;
-import static bio.gcat.gui.helper.Guitilities.*;
-import static bio.gcat.nucleic.Acid.*;
+import static bio.gcat.Utilities.EMPTY;
+import static bio.gcat.Utilities.SPACE;
+import static bio.gcat.Utilities.TAB;
+import static bio.gcat.Utilities.fixPosition;
+import static bio.gcat.Utilities.readStream;
+import static bio.gcat.gui.helper.Guitilities.getImageIcon;
+import static bio.gcat.gui.helper.Guitilities.invokeAppropriate;
+import static bio.gcat.nucleic.Acid.DNA;
+import static bio.gcat.nucleic.Acid.RNA;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -56,6 +63,7 @@ import java.util.NavigableMap;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.regex.Pattern;
+
 import javax.swing.Icon;
 import javax.swing.JComboBox;
 import javax.swing.JEditorPane;
@@ -95,7 +103,13 @@ import javax.swing.undo.CannotUndoException;
 import javax.swing.undo.CompoundEdit;
 import javax.swing.undo.UndoManager;
 import javax.swing.undo.UndoableEdit;
+
 import org.reflections.Reflections;
+import org.reflections.scanners.SubTypesScanner;
+import org.reflections.scanners.TypeAnnotationsScanner;
+import org.reflections.util.ClasspathHelper;
+import org.reflections.util.ConfigurationBuilder;
+
 import bio.gcat.Documented;
 import bio.gcat.Help;
 import bio.gcat.Option;
@@ -142,8 +156,6 @@ public class NucleicEditor extends JRootPane {
 	
 	public NucleicEditor() {
 		setLayout(new BorderLayout());
-		new BetterGlassPane(this);
-		getGlassPane().setVisible(true);
 		
 		textPane = new JTextPane() {
 			private static final long serialVersionUID = 1l;
@@ -347,16 +359,23 @@ public class NucleicEditor extends JRootPane {
 		displayLabels = new ArrayList<>(); displayPanes = new ArrayList<>();
 		displays = new ArrayList<NucleicDisplay>();		
 		addDisplay(new NoDisplay());
-		for(Class<? extends NucleicDisplay> displayClass:new Reflections(NucleicDisplay.class.getPackage().getName()).getSubTypesOf(NucleicDisplay.class))
+		
+		Reflections displayReflections = new Reflections(new ConfigurationBuilder()
+			.addClassLoaders(ClasspathHelper.staticClassLoader(),ClasspathHelper.contextClassLoader()/*,ClassLoader.getSystemClassLoader()*/)
+			.setUrls(ClasspathHelper.forPackage(NucleicDisplay.class.getPackage().getName()))
+			.setScanners(new SubTypesScanner()));
+		for(Class<? extends NucleicDisplay> displayClass:displayReflections.getSubTypesOf(NucleicDisplay.class))
 			if(!NoDisplay.class.equals(displayClass)&&!HelpDisplay.class.equals(displayClass)) try {
 				addDisplay(displayClass.getConstructor(new Class[]{NucleicEditor.class}).newInstance(this));
 			}	catch(Exception e) { e.printStackTrace(); }
 		addDisplay(displayHelp=new HelpDisplay());
 		this.addComponentListener(new ComponentAdapter() {			
 			@Override public void componentResized(ComponentEvent e) {
-				NucleicDisplay display = displays.get(displayPane.getSelectedIndex());
-				if(display.hasPreferredSize())
-					display.setPreferredSize();
+				int index = displayPane.getSelectedIndex(); if(index!=-1) {
+					NucleicDisplay display = displays.get(displayPane.getSelectedIndex());
+					if(display.hasPreferredSize())
+						display.setPreferredSize();
+				}
 			}
 		});
 		displayPane.setSelectedIndex(displayPane.indexOfTab(GraphDisplay.LABEL));
@@ -728,7 +747,7 @@ public class NucleicEditor extends JRootPane {
 		}
 		
 		@Override public String getLabel() { return null; }
-		@Override public Icon getIcon() { return getImage("application_side_contract"); }
+		@Override public Icon getIcon() { return getImageIcon("application_side_contract"); }
 		
 		@Override public boolean hasPreferredSize() { return true; }
 		@Override public void setPreferredSize() { setPreferredSize(new Dimension(0,0)); }
@@ -764,7 +783,11 @@ public class NucleicEditor extends JRootPane {
 			});
 			
 			pages = new TreeMap<>(new ArrayComparator<>());
-			for(Class<?> documentedClass:new Reflections(Documented.class.getPackage().getName()).getTypesAnnotatedWith(Documented.class)) {
+			Reflections documentedReflections = new Reflections(new ConfigurationBuilder()
+				.addClassLoaders(ClasspathHelper.staticClassLoader(),ClasspathHelper.contextClassLoader()/*,ClassLoader.getSystemClassLoader()*/)
+				.setUrls(ClasspathHelper.forPackage(Documented.class.getPackage().getName()))
+				.setScanners(new TypeAnnotationsScanner()));
+			for(Class<?> documentedClass:documentedReflections.getTypesAnnotatedWith(Documented.class)) {
 				Documented documented = documentedClass.getAnnotation(Documented.class);
 				pages.put(Utilities.add(documented.category(), documented.title()), documented.resource());
 			} pages.putAll(Help.GENERAL_HELP_PAGES);
@@ -773,7 +796,7 @@ public class NucleicEditor extends JRootPane {
 		}
 		
 		@Override public String getLabel() { return "Help"; }
-		@Override public Icon getIcon() { return getImage("help"); }
+		@Override public Icon getIcon() { return getImageIcon("help"); }
 		
 		@Override public boolean hasPreferredSize() { return false; }
 		@Override public void setPreferredSize() { /* nothing to do here */ }
@@ -815,7 +838,7 @@ public class NucleicEditor extends JRootPane {
 				link.append('/').append(name).toString(), name));			
 			builder.append(String.format("<h1>%s</h1>",page[page.length-1]));
 			try {
-				builder.append(new String(readStream(Utilities.getResource(resource).openStream()), "UTF-8")
+				builder.append(new String(readStream(Utilities.getResourceAsStream(resource)), "UTF-8")
 					.replaceAll("(src|href)=\"((?!.*?://|/).*?)\"", String.format("$1=\"resource:///%s/$2\"", resource.contains("/")?resource.substring(0,resource.lastIndexOf('/')):resource)));
 			} catch(NullPointerException|IOException e) { System.err.println("Can't show help resource "+resource); e.printStackTrace(); }
 			return builder.toString();

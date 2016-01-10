@@ -15,21 +15,28 @@
  */
 package bio.gcat.gui.editor;
 
-import static bio.gcat.Utilities.*;
-import static bio.gcat.nucleic.Acid.*;
+import static bio.gcat.Utilities.EMPTY;
+import static bio.gcat.Utilities.SPACE;
+import static bio.gcat.nucleic.Acid.DNA;
+import static bio.gcat.nucleic.Acid.RNA;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultStyledDocument;
-import bio.gcat.Utilities.Characters;
+
 import bio.gcat.nucleic.Acid;
 import bio.gcat.nucleic.Base;
 import bio.gcat.nucleic.Tuple;
+import lc.kra.Characters;
 
 public class NucleicDocument extends DefaultStyledDocument {
 	private static final long serialVersionUID = 1l;
-
+	private static final Characters SPACE_CHARACTERS =
+		new Characters(' ',Pattern.compile("[ \t\\f]"));
+	
 	private static Pattern patternTupleLength;
 	
 	private int tupleLength;
@@ -51,11 +58,11 @@ public class NucleicDocument extends DefaultStyledDocument {
 
 		// white space handling
 		if((startOfText||afterSpace)&&startsWithSpace)
-			if((text = Characters.SPACE.trim(text,Characters.Trim.LEFT)).isEmpty())
+			if((text = SPACE_CHARACTERS.leftTrim(text)).isEmpty())
 				return;
 			else startsWithSpace = false;
 		if(((startOfText&&endOfText&&startsWithSpace)||beforeTwoSpace)&&endsWithSpace)
-			if((text = Characters.SPACE.trim(text,Characters.Trim.RIGHT)).isEmpty())
+			if((text = SPACE_CHARACTERS.rightTrim(text)).isEmpty())
 				return;
 			else endsWithSpace = false;
 		

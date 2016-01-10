@@ -15,12 +15,13 @@
  */
 package bio.gcat;
 
-import static java.lang.Math.*;
-import java.io.BufferedOutputStream;
+import static java.lang.Math.PI;
+
 import java.io.BufferedWriter;
 import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -28,13 +29,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Array;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLDecoder;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -47,71 +47,113 @@ import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.stream.Stream;
+
+import javax.jnlp.BasicService;
+import javax.jnlp.FileContents;
+import javax.jnlp.FileOpenService;
+import javax.jnlp.FileSaveService;
+import javax.jnlp.PersistenceService;
+import javax.jnlp.ServiceManager;
+import javax.jnlp.UnavailableServiceException;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.Position;
-import sun.reflect.ConstructorAccessor;
-import sun.reflect.ReflectionFactory;
-import bio.gcat.gui.AnalysisTool;
+
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
 import com.google.common.base.CaseFormat;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import bio.gcat.gui.AnalysisTool;
+
 public final class Utilities {	
 	public static final String EMPTY = "", SPACE = " ", TAB = "\t", NEW_LINE = "\n", WHITESPACE = " \t\n\r\f", TRUE = "true", FALSE = "false", CHARSET = "UTF-8";
 	public static final double TWO_PI = PI*2, HALF_PI = PI/2, QUARTER_PI = PI/4, EIGHTH_PI = PI/8, SIXTEENTH_PI = PI/16;
-	
-  private static final int BUFFER_SIZE = 8192;
-  private static final int TEMP_DIRECTORY_ATTEMPTS = 10000;
 
-  private static Properties configuration = new Properties();
-  
-  public static URL getResource(String name) {
-  	if(!name.startsWith("/"))
-  		name = "/bio/gcat/"+name;
-  	return Utilities.class.getResource(name);
-  }
-  
-  private static String tempDirectory() {
-  	return System.getProperty("java.io.tmpdir");
-  }
-  
+	private static final int BUFFER_SIZE = 8192;
+	private static final int TEMP_DIRECTORY_ATTEMPTS = 10000;
+	
+	private static final String CONFIGURATION_NAME = AnalysisTool.class.getSimpleName()+".properties";
+	
+	private static Boolean jnlp;
+	private static Properties configuration;
+	private static ClassLoader localClassLoader;
+	static { localClassLoader = Utilities.class.getClassLoader(); }
+	
+	private static String tempDirectory() {
+		return AccessController.doPrivileged(new PrivilegedAction<String>() {
+			@Override public String run() { return System.getProperty("java.io.tmpdir"); }
+		});
+	}
+	
+	public static BasicService getBasicService() throws UnavailableServiceException {
+		return (BasicService)ServiceManager.lookup("javax.jnlp.BasicService"); }
+	public static PersistenceService getPersistenceService() throws UnavailableServiceException {
+		return (PersistenceService)ServiceManager.lookup("javax.jnlp.PersistenceService"); }
+	public static FileOpenService getFileOpenService() throws UnavailableServiceException {
+		return (FileOpenService)ServiceManager.lookup("javax.jnlp.FileOpenService"); }
+	public static FileSaveService getFileSaveService() throws UnavailableServiceException {
+		return (FileSaveService)ServiceManager.lookup("javax.jnlp.FileSaveService"); }
+	
+	public static boolean checkJNLP() {
+		if(jnlp!=null) return jnlp;
+		try { getBasicService(); return jnlp=true; }
+		catch(UnavailableServiceException e) {
+			return jnlp=false; }
+	}
+	public static InputStream getResourceAsStream(String name) {
+		if(!name.startsWith("bio/gcat/"))
+			name = "bio/gcat"+(name.startsWith("/")?EMPTY:"/")+name;
+		return localClassLoader.getResourceAsStream(name);
+	}
+	
+	private static File configurationFile() { return new File(tempDirectory(),CONFIGURATION_NAME); }
+	private static FileContents configurationFileContents() throws IOException, UnavailableServiceException {
+		return getPersistenceService().get(new URL(getBasicService().getCodeBase(),CONFIGURATION_NAME)); }
+
 	private static boolean loadConfiguration() {
-		if(!configuration.isEmpty()) return true;
-		File file = new File(tempDirectory()+AnalysisTool.class.getSimpleName()+".properties");
-		if(!file.exists()) return false;
+		if(configuration!=null) return true;
 		try {
-			configuration.load(new FileInputStream(file));
-		}	catch (Exception e) {	return false;	}
-		return true;
+			InputStream input;
+			try {
+				input = configurationFileContents().getInputStream();
+			} catch(UnavailableServiceException eu) {
+				input = new FileInputStream(configurationFile());
+			} (configuration=new Properties()).load(input);
+			return true;
+		} catch(FileNotFoundException e) {
+			configuration = new Properties();
+			return true;
+		} catch(IOException e) { return false; }
 	}
 	private static boolean writeConfiguration() {
-		if(configuration.isEmpty()) return true;
-		File file = new File(tempDirectory()+AnalysisTool.class.getSimpleName()+".properties");
+		if(configuration==null) return true;
 		try {
-			if(! file.exists()) file.createNewFile();
-			configuration.store(new BufferedOutputStream(new FileOutputStream(file)),new String());
-		}	catch (IOException e) { return false;	}
-		return true;		
+			try {
+				configuration.store(configurationFileContents().
+					getOutputStream(true),new String());
+			} catch(UnavailableServiceException eu) {
+				configuration.store(new FileOutputStream(configurationFile()),EMPTY);
+			}
+			return true;
+		} catch (IOException e) { return false; }
 	}	
 	public static boolean hasConfiguration(String key) {
-		return (loadConfiguration()&&configuration.containsKey(key));
-	}
+		return (loadConfiguration()&&configuration.containsKey(key)); }
 	public static String getConfiguration(String key) { return getConfiguration(key,null); }
 	public static String getConfiguration(String key,String dfault) {
-		if(!loadConfiguration()||!configuration.containsKey(key)) return dfault;
+		if(!loadConfiguration()||!configuration.containsKey(key))
+			return dfault;
 		return configuration.getProperty(key);
 	}
 	public static boolean setConfiguration(String key,String value) {
 		configuration.setProperty(key,value);
 		return writeConfiguration();
-	}
+	}	
 	
 	public static URL getLocalPath() {
 		URL path = Utilities.class.getProtectionDomain().getCodeSource().getLocation();
@@ -127,7 +169,13 @@ public final class Utilities {
 		return new File(file.append(path.split("!",2)[0]).toString());
 	}
 	
-	public static boolean isWindows() { return System.getProperty("os.name").startsWith("Windows"); }
+	public static boolean safeSetSystemProperty(String key, String value) {
+		try {
+			if(!value.equals(System.getProperty(key)))
+				System.setProperty(key,value);
+			return true;
+		} catch(SecurityException e) { return false; }
+	}
 
 	public static int indexOf(Object[] array,Object object) {
 		for(int index=0;index<array.length;index++)
@@ -258,6 +306,11 @@ public final class Utilities {
   		super.approveSelection();
 		}
 	}
+
+	public static String[] getFilterExtensions(FileNameExtensionFilter... filters) {
+		return filters!=null?Arrays.stream(filters).map(filter->filter.getExtensions()).reduce((extensionsA,extensionsB)->
+			Stream.concat(Arrays.stream(extensionsA),Arrays.stream(extensionsB)).toArray(String[]::new)).get():null;
+	}
 	
 	public static Object jsonValueAsObject(JsonValue value) {
 		if(value.isBoolean())
@@ -290,83 +343,83 @@ public final class Utilities {
 			map.put(member.getName(), jsonValueAsObject(member.getValue()));
 		return map;		
 	}
-	
+
 	public static byte[] readFile(File file) throws IOException { return readStream(new FileInputStream(file)); }
-  public static byte[] readStream(InputStream input) throws IOException { return readStream(input, -1, true); }
-  public static byte[] readStream(InputStream input, int length, boolean readAll) throws IOException {
-  	byte[] output = {}; int position = 0;
-  	if(length==-1) length = Integer.MAX_VALUE;
-  	while(position<length) {
-  		int bytesToRead;
-  		if(position>=output.length) { // Only expand when there's no room
-  			bytesToRead = Math.min(length - position, output.length + 1024);
-  			if(output.length < position + bytesToRead)
-  				output = Arrays.copyOf(output, position + bytesToRead);
-  		} else bytesToRead = output.length - position;
-  		int bytesRead = input.read(output, position, bytesToRead);
-  		if(bytesRead<0) {
-  			if(!readAll||length==Integer.MAX_VALUE) {
-  				if(output.length!=position)
-  					output = Arrays.copyOf(output, position);
-  				break;
-  			} else throw new EOFException("Detect premature EOF");
-  		}
-  		position += bytesRead;
-  	}
-  	return output;
-  }
+	public static byte[] readStream(InputStream input) throws IOException { return readStream(input, -1, true); }
+	public static byte[] readStream(InputStream input, int length, boolean readAll) throws IOException {
+		byte[] output = {}; int position = 0;
+		if(length==-1) length = Integer.MAX_VALUE;
+		while(position<length) {
+			int bytesToRead;
+			if(position>=output.length) { // Only expand when there's no room
+				bytesToRead = Math.min(length - position, output.length + 1024);
+				if(output.length < position + bytesToRead)
+					output = Arrays.copyOf(output, position + bytesToRead);
+			} else bytesToRead = output.length - position;
+			int bytesRead = input.read(output, position, bytesToRead);
+			if(bytesRead<0) {
+				if(!readAll||length==Integer.MAX_VALUE) {
+					if(output.length!=position)
+						output = Arrays.copyOf(output, position);
+					break;
+				} else throw new EOFException("Detect premature EOF");
+			}
+			position += bytesRead;
+		}
+		return output;
+	}
 
-  public static URLConnection writeString(URLConnection connection, String string) throws IOException {
-  	writeString(connection.getOutputStream(), string);
-  	return connection;	
-  }
-  public static void writeString(OutputStream output, String string) throws IOException {
-  	BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(output));
-  	writer.write(string); writer.flush();
-  }
+	public static URLConnection writeString(URLConnection connection, String string) throws IOException {
+		writeString(connection.getOutputStream(), string);
+		return connection;	
+	}
+	public static void writeString(OutputStream output, String string) throws IOException {
+		BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(output));
+		writer.write(string); writer.flush();
+	}
 
-  public static File createTempDirectory(String prefix) {
-  	String baseName = prefix+Long.toString(System.currentTimeMillis())+"-";
-  	File directory = new File(tempDirectory()), tempDirectory;
-  	for (int counter=0;counter<TEMP_DIRECTORY_ATTEMPTS;counter++)
-  		if((tempDirectory=new File(directory, baseName+counter)).mkdir())
-  			return tempDirectory;
-  	throw new IllegalStateException("Failed to create directory within "
-  			+ TEMP_DIRECTORY_ATTEMPTS + " attempts (tried "
-  			+ baseName + "0 to " + baseName + (TEMP_DIRECTORY_ATTEMPTS - 1) + ')');
-  }
+	public static File createTempDirectory(String prefix) {
+		String baseName = prefix+Long.toString(System.currentTimeMillis())+"-";
+		File directory = new File(tempDirectory()), tempDirectory;
+		for (int counter=0;counter<TEMP_DIRECTORY_ATTEMPTS;counter++)
+			if((tempDirectory=new File(directory, baseName+counter)).mkdir())
+				return tempDirectory;
+		throw new IllegalStateException("Failed to create directory within "
+				+ TEMP_DIRECTORY_ATTEMPTS + " attempts (tried "
+				+ baseName + "0 to " + baseName + (TEMP_DIRECTORY_ATTEMPTS - 1) + ')');
+	}
 
-  public static void writeFile(String text, File file) throws IOException {
-  	Writer writer = new BufferedWriter(new FileWriter(file));
-  	try { writer.write(text); }
-  	finally { writer.close(); }
-  }
-  public static void writeFile(InputStream input, File file) throws IOException {
-  	OutputStream output = null;
-  	try {
-  		output = new FileOutputStream(file);
-  		int read; byte[] buffer = new byte[BUFFER_SIZE];
-  		while((read=input.read(buffer))>0)
-  			output.write(buffer, 0, read);
-  	} finally { if(output!=null) output.close(); }
-  }
+	public static void writeFile(String text, File file) throws IOException {
+		Writer writer = new BufferedWriter(new FileWriter(file));
+		try { writer.write(text); }
+		finally { writer.close(); }
+	}
+	public static void writeFile(InputStream input, File file) throws IOException {
+		OutputStream output = null;
+		try {
+			output = new FileOutputStream(file);
+			int read; byte[] buffer = new byte[BUFFER_SIZE];
+			while((read=input.read(buffer))>0)
+				output.write(buffer, 0, read);
+		} finally { if(output!=null) output.close(); }
+	}
 
-  public static boolean deleteDirectory(File directory) { return deleteDirectory(directory, false); }
-  public static boolean deleteDirectory(File directory, boolean preserveGit) {
-  	if(directory.exists()&&directory.isDirectory()&&!(preserveGit&&directory.getName().equals(".git"))) {
-  		boolean deleteDirectory = true;
-  		for(File file:directory.listFiles())
-  			if(file.isDirectory()) {
-  				if(!deleteDirectory(file, preserveGit))
-  					deleteDirectory = false;
-  			} else file.delete();
-  		return deleteDirectory?directory.delete():false;
-  	} else return false;
-  }
-  
-  public static boolean isEmpty(String text) {
-  	return text==null||text.isEmpty();
-  }
+	public static boolean deleteDirectory(File directory) { return deleteDirectory(directory, false); }
+	public static boolean deleteDirectory(File directory, boolean preserveGit) {
+		if(directory.exists()&&directory.isDirectory()&&!(preserveGit&&directory.getName().equals(".git"))) {
+			boolean deleteDirectory = true;
+			for(File file:directory.listFiles())
+				if(file.isDirectory()) {
+					if(!deleteDirectory(file, preserveGit))
+						deleteDirectory = false;
+				} else file.delete();
+			return deleteDirectory?directory.delete():false;
+		} else return false;
+	}
+
+	public static boolean isEmpty(String text) {
+		return text==null||text.isEmpty();
+	}
 	public static boolean isNumeric(String number) {
 		try {
 			Long.parseLong(number);
@@ -428,152 +481,6 @@ public final class Utilities {
 	}
 	public static String camelCase(String text) {
 		return CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL,text);
-	}
-
-	public static enum Characters {
-		SPACE(' ',"[ \t\\f]"),
-		NEW_LINE('\n',"\r\n|\n\r|[\n\r]","\n?\r?"),
-		WHITESPACE(' ',"\r\n|\n\r|[ \t\n\r\\f]");
-				
-		public final char character;
-		private final String string;
-		private Pattern match,start,end,last,left,right,both,condense,split;
-		
-		private Characters(char character) { this(character,Character.toString(character)); }
-		private Characters(char character,String pattern) {
-			string = String.valueOf(this.character = character);
-			split = match = Pattern.compile(pattern);
-		}
-		private Characters(char character,String pattern,String split) {
-			this(character,pattern); this.split = Pattern.compile(split);
-		}
-		
-		public boolean equals(String input) { return match.matcher(input).matches(); }
-		public boolean contains(String input) { return match.matcher(input).find(); }
-		public boolean startsWith(String input) { return (start!=null?start:(start=Pattern.compile("\\A"+match.pattern()))).matcher(input).find(); }
-		public boolean endsWith(String input) { return (end!=null?end:(end=Pattern.compile(match.pattern()+"\\z"))).matcher(input).find(); }
-		public int indexOf(String input) { Matcher matcher = match.matcher(input); return matcher.find()?matcher.start():-1; }
-		public int lastIndexOf(String input) { Matcher matcher = (last!=null?last:(last=Pattern.compile(".*("+match.pattern()+")",Pattern.DOTALL))).matcher(input); return matcher.find()?matcher.start(1):-1; }
-		public String replace(String input,String replacement) { return match.matcher(input).replaceAll(replacement); }
-		public String trim(String input) { return (both!=null?both:(both=Pattern.compile("\\A(?:"+match.pattern()+")+|(?:"+match.pattern()+")+\\z"))).matcher(input).replaceAll(EMPTY); }
-		public String leftTrim(String input) { return (left!=null?left:(left=Pattern.compile("\\A(?:"+match.pattern()+")+"))).matcher(input).replaceAll(EMPTY); }
-		public String rightTrim(String input) { return (right!=null?right:(right=Pattern.compile("(?:"+match.pattern()+")+\\z"))).matcher(input).replaceAll(EMPTY); }
-		public String condense(String input) { return (condense!=null?condense:(condense=Pattern.compile("(?:"+match.pattern()+")+"))).matcher(input).replaceAll(string); }
-		public String[] split(String input) { return split.split(input); }
-		
-		@Override public String toString() { return string; }
-		
-		public static Characters valueOf(char character) {
-			String string = Character.toString(character);
-			try { return Characters.valueOf(string); }
-			catch(IllegalArgumentException e) {
-				return Enums.addEnum(Characters.class,string,
-					new Class<?>[]{char.class},new Object[]{character});
-			}
-		}
-	}
-	
-	public static class Enums {
-		private static ReflectionFactory reflectionFactory = ReflectionFactory.getReflectionFactory();
-
-		private static void setFailsafeFieldValue(Field field, Object target, Object value) throws NoSuchFieldException,IllegalAccessException {
-			field.setAccessible(true);
-
-			// change the modifier in the Field instance to
-			// not be final anymore, thus tricking reflection into
-			// letting us modify the static final field
-			Field modifiersField = Field.class.getDeclaredField("modifiers");
-			modifiersField.setAccessible(true);
-			int modifiers = modifiersField.getInt(field);
-
-			// blank out the final bit in the modifiers int
-			modifiers &= ~Modifier.FINAL;
-			modifiersField.setInt(field, modifiers);
-
-			reflectionFactory.newFieldAccessor(field, false).set(target, value);
-		}
-
-		private static void blankField(Class<?> enumClass, String fieldName) throws NoSuchFieldException,IllegalAccessException {
-			for(Field field : Class.class.getDeclaredFields()) {
-				if(field.getName().contains(fieldName)) {
-					AccessibleObject.setAccessible(new Field[] { field }, true);
-					setFailsafeFieldValue(field, enumClass, null);
-					break;
-				}
-			}
-		}
-
-		private static void cleanEnumCache(Class<?> enumClass) throws NoSuchFieldException, IllegalAccessException {
-			blankField(enumClass, "enumConstantDirectory"); // Sun (Oracle?!?) JDK 1.5/6
-			blankField(enumClass, "enumConstants"); // IBM JDK
-		}
-
-		private static ConstructorAccessor getConstructorAccessor(Class<?> enumClass, Class<?>[] additionalParameterTypes) throws NoSuchMethodException {
-			Class<?>[] parameterTypes = new Class[additionalParameterTypes.length + 2];
-			parameterTypes[0] = String.class;
-			parameterTypes[1] = int.class;
-			System.arraycopy(additionalParameterTypes, 0, parameterTypes, 2, additionalParameterTypes.length);
-			return reflectionFactory.newConstructorAccessor(enumClass.getDeclaredConstructor(parameterTypes));
-		}
-
-		private static Object makeEnum(Class<?> enumClass, String value, int ordinal, Class<?>[] additionalTypes,
-				Object[] additionalValues) throws Exception {
-			Object[] parms = new Object[additionalValues.length + 2];
-			parms[0] = value;
-			parms[1] = Integer.valueOf(ordinal);
-			System.arraycopy(additionalValues, 0, parms, 2, additionalValues.length);
-			return enumClass.cast(getConstructorAccessor(enumClass, additionalTypes).newInstance(parms));
-		}
-
-		
-		public static <T extends Enum<?>> void addEnum(Class<T> enumType, String enumName) {
-			addEnum(enumType, enumName, new Class<?>[] {}, new Object[] {});
-		}
-		
-		/**
-		 * Add an enum instance to the enum class given as argument
-		 *
-		 * @param <T> the type of the enum (implicit)
-		 * @param enumType the class of the enum to be modified
-		 * @param enumName the name of the new enum instance to be added to the class.
-		 * @return 
-		 */
-		@SuppressWarnings("unchecked")
-		public static <T extends Enum<?>> T addEnum(Class<T> enumType, String enumName, Class<?>[] additionalTypes, Object[] additionalValues) {
-			// 0. Sanity checks
-			if(!Enum.class.isAssignableFrom(enumType))
-				throw new RuntimeException("class "+enumType+" is not an instance of Enum");
-			
-			// 1. Lookup "$VALUES" holder in enum class and get previous enum instances
-			Field valuesField = null, fields[] = enumType.getDeclaredFields();
-			for(Field field:fields)
-				if(field.getName().contains("$VALUES")) {
-					valuesField = field;
-					break;
-				}
-			AccessibleObject.setAccessible(new Field[]{valuesField},true);
-
-			try {
-				// 2. Copy it
-				T[] previousValues = (T[])valuesField.get(enumType),
-					newValues = Arrays.copyOf(previousValues,previousValues.length+1);
-				
-				// 3. build new enum
-				newValues[previousValues.length] = (T) makeEnum(enumType, // The target enum class
-					enumName, // THE NEW ENUM INSTANCE TO BE DYNAMICALLY ADDED
-					previousValues.length,
-					additionalTypes, // could be used to pass values to the enum constuctor if needed
-					additionalValues); // could be used to pass values to the enum constuctor if needed
-				
-				// 5. Set new values field
-				setFailsafeFieldValue(valuesField, null, newValues);
-
-				// 6. Clean enum cache
-				cleanEnumCache(enumType);
-				
-				return newValues[previousValues.length];
-			} catch (Exception e) { throw new RuntimeException(e.getMessage(), e); }
-		}
 	}
 	
 	public static class Range {

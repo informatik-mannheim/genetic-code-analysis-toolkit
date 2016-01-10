@@ -43,7 +43,7 @@ public class CompoundDisplay extends JPanel implements NucleicDisplay, NucleicLi
 	private static final long serialVersionUID = 1l;
 
 	public static final String LABEL = "Compound";
-	public static final Icon ICON = getImage("color_swatch");
+	public static final Icon ICON = getImageIcon("color_swatch");
 	
 	private final Color COLOR_NONPOLAR = new Color(255,231,95),
                          COLOR_POLAR = new Color(179,222,192),

@@ -20,12 +20,18 @@ import java.util.Comparator;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Predicate;
+
 import org.reflections.Reflections;
+import org.reflections.scanners.SubTypesScanner;
+import org.reflections.util.ClasspathHelper;
+import org.reflections.util.ConfigurationBuilder;
+
+import com.google.common.collect.Multimap;
+import com.google.common.collect.TreeMultimap;
+
 import bio.gcat.Parameter;
 import bio.gcat.log.InjectionLogger;
 import bio.gcat.log.Logger;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.TreeMultimap;
 
 public interface Operation extends InjectionLogger.Injectable {
 	public default String getName() { return getName(this.getClass()); }
@@ -65,7 +71,11 @@ public interface Operation extends InjectionLogger.Injectable {
 				return nameA.compareTo(nameB);
 			}
 		});
-		operations.addAll(new Reflections(Operation.class.getPackage().getName()).getSubTypesOf(Operation.class));
+		Reflections operationsReflections = new Reflections(new ConfigurationBuilder()
+			.addClassLoaders(ClasspathHelper.staticClassLoader(),ClasspathHelper.contextClassLoader()/*,ClassLoader.getSystemClassLoader()*/)
+			.setUrls(ClasspathHelper.forPackage(Operation.class.getPackage().getName()))
+			.setScanners(new SubTypesScanner()));
+		operations.addAll(operationsReflections.getSubTypesOf(Operation.class));
 		operations.removeIf(new Predicate<Class<? extends Operation>>() {
 			@Override public boolean test(Class<? extends Operation> operation) {
 				if(onlyCataloged&&!operation.isAnnotationPresent(Cataloged.class))

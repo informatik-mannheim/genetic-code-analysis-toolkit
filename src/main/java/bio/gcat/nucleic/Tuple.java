@@ -15,10 +15,25 @@
  */
 package bio.gcat.nucleic;
 
-import static bio.gcat.Utilities.*;
-import static bio.gcat.nucleic.Acid.*;
-import static bio.gcat.nucleic.Base.*;
-import static bio.gcat.nucleic.Compound.*;
+import static bio.gcat.Utilities.EMPTY;
+import static bio.gcat.Utilities.SPACE;
+import static bio.gcat.Utilities.WHITESPACE;
+import static bio.gcat.Utilities.contains;
+import static bio.gcat.Utilities.pow;
+import static bio.gcat.Utilities.reverse;
+import static bio.gcat.Utilities.substitute;
+import static bio.gcat.nucleic.Acid.DNA;
+import static bio.gcat.nucleic.Acid.RNA;
+import static bio.gcat.nucleic.Base.ADENINE;
+import static bio.gcat.nucleic.Base.CYTOSINE;
+import static bio.gcat.nucleic.Base.GUANINE;
+import static bio.gcat.nucleic.Base.THYMINE;
+import static bio.gcat.nucleic.Base.URACIL;
+import static bio.gcat.nucleic.Compound.START;
+import static bio.gcat.nucleic.Compound.STOP;
+import static bio.gcat.nucleic.Compound.isStart;
+import static bio.gcat.nucleic.Compound.isStop;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -27,8 +42,10 @@ import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import bio.gcat.Utilities.Characters;
+
 import com.google.common.collect.ImmutableMap;
+
+import lc.kra.Characters;
 
 public class Tuple implements Comparable<Tuple> {
 	private static final Map<Base,Base> COMPLEMENT_SUBSTITUTION = ImmutableMap.of(

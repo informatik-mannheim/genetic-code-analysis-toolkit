@@ -108,6 +108,18 @@
 			<artifactId>httpclient</artifactId>
 			<version>4.5</version>
 		</dependency>
+		<dependency>
+			<groupId>lc.kra.characters</groupId>
+			<artifactId>characters</artifactId>
+			<version>0.1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>javax.jnlp</groupId>
+			<artifactId>jnlp-api</artifactId>
+			<version>7.0</version>
+			<scope>system</scope>
+			<systemPath>${java.home}/lib/javaws.jar</systemPath>
+		</dependency>
 	</dependencies>
 	
 	<build>
@@ -197,10 +209,10 @@
 									<manifestEntries>
 										<Application-Name>Genetic Code Analysis Toolkit</Application-Name>
 										<Main-Class>bio.gcat.gui.AnalysisTool</Main-Class>
-										<Trusted-Library>true</Trusted-Library>
+										<!-- <Trusted-Library>true</Trusted-Library>
+										<Trusted-Only>true</Trusted-Only> -->
 										<Permissions>sandbox</Permissions> 
 										<Codebase>*</Codebase>
-										<Trusted-Only>true</Trusted-Only>
 										<Build-By>University of Applied Sciences Mannheim</Build-By>
 									</manifestEntries>
 								</transformer>
@@ -273,6 +285,14 @@
 			<id>biojava-maven-repo</id>
 			<name>BioJava repository</name>
 			<url>http://www.biojava.org/download/maven/</url>
+		</repository>
+		<repository>
+			<id>characters-mvn-repo</id>
+			<url>https://raw.github.com/kristian/characters/mvn-repo/</url>
+			<snapshots>
+				<enabled>true</enabled>
+				<updatePolicy>always</updatePolicy>
+			</snapshots>
 		</repository>
 	</repositories>
 </project>

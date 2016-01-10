@@ -61,7 +61,7 @@ public class GraphDisplay extends mxGraphComponent implements NucleicDisplay, Nu
 	private static final long serialVersionUID = 1;
 	
 	public static final String LABEL = "Graph";
-	public static final Icon ICON = getImage("chart_organisation");
+	public static final Icon ICON = getImageIcon("chart_organisation");
 	
 	private mxGraph graph;
 	private mxGraphControl control;
@@ -84,7 +84,7 @@ public class GraphDisplay extends mxGraphComponent implements NucleicDisplay, Nu
 		vertices = new HashMap<>();
 		edges = new HashMap<>();
 		
-		final JButton button = new JButton(getImage("chart_organisation"));
+		final JButton button = new JButton(getImageIcon("chart_organisation"));
 		button.setToolTipText("Change layout");
 		button.setBorderPainted(false);
 		button.setFocusPainted(false);

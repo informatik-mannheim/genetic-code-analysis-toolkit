@@ -15,10 +15,40 @@
  */
 package bio.gcat.gui;
 
-import static bio.gcat.Utilities.*;
-import static bio.gcat.batch.Action.TaskAttribute.*;
-import static bio.gcat.gui.helper.Guitilities.*;
-import static bio.gcat.nucleic.helper.GenBank.*;
+import static bio.gcat.Utilities.EMPTY;
+import static bio.gcat.Utilities.NEW_LINE;
+import static bio.gcat.Utilities.checkJNLP;
+import static bio.gcat.Utilities.getConfiguration;
+import static bio.gcat.Utilities.getFileOpenService;
+import static bio.gcat.Utilities.getFileSaveService;
+import static bio.gcat.Utilities.getFilterExtensions;
+import static bio.gcat.Utilities.readFile;
+import static bio.gcat.Utilities.readStream;
+import static bio.gcat.Utilities.safeSetSystemProperty;
+import static bio.gcat.Utilities.setConfiguration;
+import static bio.gcat.Utilities.writeFile;
+import static bio.gcat.batch.Action.TaskAttribute.ANALYSIS_HANDLER;
+import static bio.gcat.batch.Action.TaskAttribute.SPLIT_PICK;
+import static bio.gcat.batch.Action.TaskAttribute.TEST_CRITERIA;
+import static bio.gcat.batch.Action.TaskAttribute.TEST_CRITERIA_BREAK_IF_FALSE;
+import static bio.gcat.gui.helper.Guitilities.CATEGORY_BORDER;
+import static bio.gcat.gui.helper.Guitilities.EMPTY_BORDER;
+import static bio.gcat.gui.helper.Guitilities.TITLE_FOREGROUND;
+import static bio.gcat.gui.helper.Guitilities.createButtonGroup;
+import static bio.gcat.gui.helper.Guitilities.createMenuItem;
+import static bio.gcat.gui.helper.Guitilities.createSeparator;
+import static bio.gcat.gui.helper.Guitilities.createSplitPane;
+import static bio.gcat.gui.helper.Guitilities.createSubmenu;
+import static bio.gcat.gui.helper.Guitilities.createToolbarButton;
+import static bio.gcat.gui.helper.Guitilities.createToolbarMenuButton;
+import static bio.gcat.gui.helper.Guitilities.getImage;
+import static bio.gcat.gui.helper.Guitilities.getImageIcon;
+import static bio.gcat.gui.helper.Guitilities.getMenuItem;
+import static bio.gcat.gui.helper.Guitilities.getToolbarButton;
+import static bio.gcat.gui.helper.Guitilities.invokeAppropriate;
+import static bio.gcat.gui.helper.Guitilities.setBoxLayout;
+import static bio.gcat.nucleic.helper.GenBank.DATABASE_NUCLEOTIDE;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -47,8 +77,11 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.font.TextAttribute;
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
@@ -75,6 +108,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
+
+import javax.jnlp.FileContents;
+import javax.jnlp.UnavailableServiceException;
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -129,16 +165,28 @@ import javax.swing.text.NumberFormatter;
 import javax.swing.text.html.HTMLDocument;
 import javax.swing.text.html.HTMLEditorKit;
 import javax.swing.text.html.StyleSheet;
+
 import org.biojava3.core.sequence.AccessionID;
 import org.biojava3.core.sequence.DNASequence;
 import org.biojava3.core.sequence.io.FastaReaderHelper;
 import org.biojava3.core.sequence.io.FastaWriterHelper;
 import org.reflections.Reflections;
+import org.reflections.scanners.SubTypesScanner;
+import org.reflections.util.ClasspathHelper;
+import org.reflections.util.ConfigurationBuilder;
+
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
+
 import bio.gcat.Configurable;
 import bio.gcat.Documented;
 import bio.gcat.Option;
 import bio.gcat.Parameter;
-import bio.gcat.Utilities;
 import bio.gcat.Utilities.DefiniteFuture;
 import bio.gcat.Utilities.FileNameExtensionFileChooser;
 import bio.gcat.Utilities.OperatingSystem;
@@ -165,13 +213,6 @@ import bio.gcat.operation.analysis.Analysis.Result;
 import bio.gcat.operation.split.Split;
 import bio.gcat.operation.test.Test;
 import bio.gcat.operation.transformation.Transformation;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 
 public class AnalysisTool extends JFrame implements ActionListener {
 	private static final long serialVersionUID = 1l;
@@ -264,7 +305,7 @@ public class AnalysisTool extends JFrame implements ActionListener {
 	public AnalysisTool() {
 		TOOLS.add(this);
 		updateTitle();
-		setIconImages(Arrays.asList(getImage("icon").getImage(),getImage("icon_medium").getImage(),getImage("icon_large").getImage()));
+		setIconImages(Arrays.asList(getImage("icon"),getImage("icon_medium"),getImage("icon_large")));
 		setMinimumSize(new Dimension(800,600));
 		setPreferredSize(new Dimension(1480,840));
 		
@@ -283,7 +324,8 @@ public class AnalysisTool extends JFrame implements ActionListener {
 		addWindowListener(new WindowAdapter() {
 			@Override public void windowClosing(WindowEvent event) { closeTool(); }
 			@Override public void windowClosed(WindowEvent event) {
-				service.shutdownNow();
+				try { service.shutdownNow(); } 
+				catch(SecurityException e) { /* nothing to do here */ }
 				TOOLS.remove(AnalysisTool.this);
 				if(TOOLS.isEmpty()) {
 					if(batch!=null)
@@ -451,14 +493,15 @@ public class AnalysisTool extends JFrame implements ActionListener {
 		menu[MENU_WINDOW].add(createSeparator());
 		menu[MENU_WINDOW].add(createMenuItem("Open Batch Tool", "calculator", KeyStroke.getKeyStroke(KeyEvent.VK_B, InputEvent.CTRL_DOWN_MASK), ACTION_SHOW_BATCH, this));
 		menu[MENU_WINDOW].add(createMenuItem("Add Sequence", "calculator_add", ACTION_ADD_TO_BATCH, this));
-    menu[MENU_WINDOW].add(createMenuItem("BDA Tool", "bda", ACTION_SHOW_BDA, this));
-    menu[MENU_WINDOW].add(createSeparator());
-    menu[MENU_WINDOW].add(createMenuItem("Preferences", ACTION_PREFERENCES, this));
-    menu[MENU_HELP].add(createMenuItem("Help Contents", "help", ACTION_HELP, this));
-    menu[MENU_HELP].add(createSeparator());
+		menu[MENU_WINDOW].add(createMenuItem("BDA Tool", "bda", ACTION_SHOW_BDA, this));
+		menu[MENU_WINDOW].add(createSeparator());
+		menu[MENU_WINDOW].add(createMenuItem("Preferences", ACTION_PREFERENCES, this));
+		menu[MENU_HELP].add(createMenuItem("Help Contents", "help", ACTION_HELP, this));
+		menu[MENU_HELP].add(createSeparator());
 		menu[MENU_HELP].add(createMenuItem("About GCAT", "icon", ACTION_ABOUT, this));
 		for(String action:new String[]{ACTION_SAVE,ACTION_UNDO,ACTION_REDO,ACTION_CUT,ACTION_COPY,ACTION_DELETE})
 			getMenuItem(menubar,action).setEnabled(false);
+		getMenuItem(menubar,ACTION_SAVE).setVisible(!checkJNLP());
 		getMenuItem(menubar,ACTION_PREFERENCES).setEnabled(false);
 		updateRecent();
 		
@@ -483,8 +526,8 @@ public class AnalysisTool extends JFrame implements ActionListener {
 		toolbar[TOOLBAR_HELP] = new JToolBar("Help");
 		toolbar[TOOLBAR_HELP].add(createToolbarButton("Help Contents", "help", ACTION_HELP, this));
 		
-		for(String action:new String[]{ACTION_SAVE})
-			getToolbarButton(toolbar,action).setEnabled(false);
+		getToolbarButton(toolbar,ACTION_SAVE).setEnabled(false);
+		getToolbarButton(toolbar,ACTION_SAVE).setVisible(!checkJNLP());
 		
 		toolbars = new JPanel(new FlowLayout(FlowLayout.LEADING));
 		for(JToolBar bar:toolbar)
@@ -542,7 +585,7 @@ public class AnalysisTool extends JFrame implements ActionListener {
 			glassPane.setVisible(true);
 			glassPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
 			
-			final JButton button = new JButton(getImage("bin_closed"));
+			final JButton button = new JButton(getImageIcon("bin_closed"));
 			button.setToolTipText("Clean console");
 			button.setBorderPainted(false);
 			button.setFocusPainted(false);
@@ -563,7 +606,7 @@ public class AnalysisTool extends JFrame implements ActionListener {
 		status.setHorizontalAlignment(JLabel.RIGHT);
 		bottom.add(status);
 		
-		cancel = new JButton(getImage("cancel"));
+		cancel = new JButton(getImageIcon("cancel"));
 		cancel.setFocusable(false); cancel.setBorderPainted(false);
 		cancel.setContentAreaFilled(false); cancel.setBorder(EMPTY_BORDER);
 		cancel.addActionListener(new ActionListener() {
@@ -619,7 +662,7 @@ public class AnalysisTool extends JFrame implements ActionListener {
 		if(Test.class.isAssignableFrom(operation)&&!name.endsWith("?"))
 			button.setText(name+"?");
 		if(icon!=null&&!icon.isEmpty())
-			button.setIcon(getImage(icon));
+			button.setIcon(getImageIcon(icon));
 		button.addActionListener(new ActionListener() {
 			@Override public void actionPerformed(ActionEvent event) {
 				List<Object> values = new ArrayList<>(parameters!=null?parameters.length:0);
@@ -641,7 +684,7 @@ public class AnalysisTool extends JFrame implements ActionListener {
 		JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 		panel.add(buttons, BorderLayout.EAST);
 		
-		JButton batch = new JButton(getImage("calculator_add_small"));
+		JButton batch = new JButton(getImageIcon("calculator_add_small"));
 		batch.setToolTipText("Add operation to batch");
 		batch.setFocusable(false); batch.setBorderPainted(false);
 		batch.setContentAreaFilled(false); batch.setBorder(EMPTY_BORDER);
@@ -656,7 +699,7 @@ public class AnalysisTool extends JFrame implements ActionListener {
 		buttons.add(batch);
 		
 		if(operation.isAnnotationPresent(Documented.class)) {
-			JButton help = new JButton(getImage("help"));
+			JButton help = new JButton(getImageIcon("help"));
 			help.setToolTipText("Show help for this operation");
 			help.setFocusable(false); help.setBorderPainted(false);
 			help.setContentAreaFilled(false); help.setBorder(EMPTY_BORDER);
@@ -724,7 +767,7 @@ public class AnalysisTool extends JFrame implements ActionListener {
 			}
 			@Override public void onFailure(Throwable thrown) {
 				if(Test.class.isAssignableFrom(operation)&&thrown instanceof Test.Failed)
-					   consolePane.appendText(String.format("Sequence is <b>NOT</b> \"%s\"", name),consolePane.failure);
+					 consolePane.appendText(String.format("Sequence is <b>NOT</b> \"%s\"", name),consolePane.failure);
 				else consolePane.appendText(String.format("Exception in operation \"%s\": %s", name, Optional.ofNullable(thrown.getMessage()).orElse("Unknown cause")),consolePane.failure);
 			}
 		});
@@ -795,10 +838,24 @@ public class AnalysisTool extends JFrame implements ActionListener {
 	public void openFile() {
 		if(!confirmIfDirty())
 			return;
+		
+		try {
+			FileContents contents = getFileOpenService().openFileDialog(null,getFilterExtensions(GENETIC_EXTENSION_FILTER,TEXT_EXTENSION_FILTER));
+			if(contents!=null) {
+				newText(new String(readStream(contents.getInputStream())));
+				optionLabel.setValue(null);
 
-		JFileChooser chooser = new FileNameExtensionFileChooser(GENETIC_EXTENSION_FILTER,TEXT_EXTENSION_FILTER);
-		if(chooser.showOpenDialog(this)==JFileChooser.APPROVE_OPTION)
-			openFile(chooser.getSelectedFile());
+				editor.setDirty(); //clean on open, dirty on import
+				currentFile(null); //null because we anyway can't save for JNLP (only save as)
+			}
+		} catch(UnavailableServiceException e) {
+			JFileChooser chooser = new FileNameExtensionFileChooser(GENETIC_EXTENSION_FILTER,TEXT_EXTENSION_FILTER);
+			if(chooser.showOpenDialog(this)==JFileChooser.APPROVE_OPTION)
+				openFile(chooser.getSelectedFile());
+		} catch (IOException e) {
+			JOptionPane.showMessageDialog(this,"Could not open file:\n\n"+e.getMessage(),
+				"Open",JOptionPane.WARNING_MESSAGE);
+		}
 	}
 	public void openFile(File file) {
 		try {
@@ -808,21 +865,32 @@ public class AnalysisTool extends JFrame implements ActionListener {
 				ByteBuffer buffer = ByteBuffer.allocate(view.size(ATTRIBUTE_LABEL));
 				view.read(ATTRIBUTE_LABEL, buffer); buffer.flip();
 				optionLabel.setValue(Charset.defaultCharset().decode(buffer).toString());
-			}
+			} else optionLabel.setValue(null);
 			
 			editor.setClean(); //clean on open, dirty on import
 			currentFile(file);
 			recentFile(file);
-		}	catch(IOException e) { JOptionPane.showMessageDialog(this,"Could not open file:\n\n"+e.getMessage(),"Open",JOptionPane.WARNING_MESSAGE); }
+		} catch(IOException e) {
+			JOptionPane.showMessageDialog(this,"Could not open file:\n\n"+e.getMessage(),
+				"Open",JOptionPane.WARNING_MESSAGE);
+		}
 	}
 	
 	public void importFile() {
 		if(!confirmIfDirty())
 			return;
 
-		JFileChooser chooser = new FileNameExtensionFileChooser(FASTA_EXTENSION_FILTER);
-		if(chooser.showOpenDialog(this)==JFileChooser.APPROVE_OPTION)
-			importFile(chooser.getSelectedFile(), chooser.getFileFilter());
+		try {
+			FileContents contents = getFileOpenService().openFileDialog(null,getFilterExtensions(FASTA_EXTENSION_FILTER));
+			if(contents!=null) importFastaFile(contents.getInputStream());
+		} catch(UnavailableServiceException e) {
+			JFileChooser chooser = new FileNameExtensionFileChooser(FASTA_EXTENSION_FILTER);
+			if(chooser.showOpenDialog(this)==JFileChooser.APPROVE_OPTION)
+				importFile(chooser.getSelectedFile(), chooser.getFileFilter());
+		} catch (IOException e) {
+			JOptionPane.showMessageDialog(this,"Could not import file:\n\n"+e.getMessage(),
+				"Import",JOptionPane.WARNING_MESSAGE);
+		}
 	}
 	public void importFile(File file) { importFile(file, null); }
 	public void importFile(File file, FileFilter filter) {
@@ -830,10 +898,17 @@ public class AnalysisTool extends JFrame implements ActionListener {
 			importFastaFile(file);
 		else JOptionPane.showMessageDialog(this,String.format("File format of %s not recognized.",file.getName()),"Import",JOptionPane.WARNING_MESSAGE);
 	}
+	
 	protected void importFastaFile(File file) {
+		try(InputStream input=new FileInputStream(file)) {
+			importFastaFile(input);
+			recentFile(file);
+		} catch(IOException e) { /* nothing to do here */ } 
+	}
+	protected void importFastaFile(InputStream input) {
 		try {
 			DefiniteFuture<Entry<String,DNASequence>> future = new DefiniteFuture<>();
-			Map<String,DNASequence> fastaFile = FastaReaderHelper.readFastaDNASequence(file);
+			Map<String,DNASequence> fastaFile = FastaReaderHelper.readFastaDNASequence(input);
 			if(fastaFile==null||fastaFile.isEmpty())
 				throw new Exception("FASTA file does not contain any sequences.");
 			else if(fastaFile.size()==1)
@@ -928,7 +1003,6 @@ public class AnalysisTool extends JFrame implements ActionListener {
 
 				editor.setDirty(); //clean on open, dirty on import
 				currentFile(null); //null because FASTA will overwrite other entires in FASTA file
-				recentFile(file);
 			}
 		} catch(Error | Exception e) { JOptionPane.showMessageDialog(this,"Could not open FASTA file:\n\n"+e.getMessage(),"Import FASTA",JOptionPane.WARNING_MESSAGE); }
 	}
@@ -988,7 +1062,7 @@ public class AnalysisTool extends JFrame implements ActionListener {
 		list.setSelectedIndex(0);
 		JScrollPane scroll = new JScrollPane(list);
 		
-		search.setAction(new AbstractAction("Search", getImage("magnifier")) {
+		search.setAction(new AbstractAction("Search", getImageIcon("magnifier")) {
 			private static final long serialVersionUID = 1l;
 			@Override public void actionPerformed(ActionEvent event) {
 				search.setEnabled(false); search.setText("Searching...");
@@ -1067,19 +1141,30 @@ public class AnalysisTool extends JFrame implements ActionListener {
 			
 			editor.setDirty(); //clean on open, dirty on import
 			currentFile(null);
-		} catch(Error | Exception e) { JOptionPane.showMessageDialog(this,"Could not import "+accessionID+" from GenBank:\n\n"+e.getMessage(),"Import FASTA",JOptionPane.WARNING_MESSAGE); }
+		} catch(Error | Exception e) {
+			JOptionPane.showMessageDialog(this,"Could not import "+accessionID+" from GenBank:\n\n"+e.getMessage(),
+				"Import FASTA",JOptionPane.WARNING_MESSAGE);
+		}
 	}
 	
 	public boolean saveFile() {
 		if(currentFile!=null)
-			   return saveFile(currentFile);
+		     return saveFile(currentFile);
 		else return saveFileAs();
 	}
 	public boolean saveFileAs() {
-		JFileChooser chooser = new FileNameExtensionFileChooser(false,GENETIC_EXTENSION_FILTER,FASTA_EXTENSION_FILTER,TEXT_EXTENSION_FILTER); chooser.setDialogTitle("Save As");
-		if(chooser.showOpenDialog(this)==JFileChooser.APPROVE_OPTION)
-		     return saveFile(chooser.getSelectedFile(), chooser.getFileFilter());
-		else return false;
+		try {
+			return getFileSaveService().saveFileDialog(null,getFilterExtensions(GENETIC_EXTENSION_FILTER,TEXT_EXTENSION_FILTER),new ByteArrayInputStream(editor.getText().getBytes()),null)!=null;
+		} catch(UnavailableServiceException e) {
+			JFileChooser chooser = new FileNameExtensionFileChooser(false,GENETIC_EXTENSION_FILTER,FASTA_EXTENSION_FILTER,TEXT_EXTENSION_FILTER); chooser.setDialogTitle("Save As");
+			if(chooser.showOpenDialog(this)==JFileChooser.APPROVE_OPTION)
+			     return saveFile(chooser.getSelectedFile(), chooser.getFileFilter());
+			else return false;
+		} catch (IOException e) {
+			JOptionPane.showMessageDialog(this,"Could not save file:\n\n"+e.getMessage(),
+				"Save As",JOptionPane.WARNING_MESSAGE);
+			return false;
+		}
 	}
 	public boolean saveFile(File file) { return saveFile(file, null); }
 	public boolean saveFile(File file, FileFilter fileFilter) {
@@ -1166,10 +1251,11 @@ public class AnalysisTool extends JFrame implements ActionListener {
 		String[] paths = getConfiguration(CONFIGURATION_RECENT,EMPTY).split("\\|");
 		for(String path:paths) {
 			final File file = new File(path);
-			if(file.isFile()) submenu[SUBMENU_RECENT].add(new JMenuItem(new AbstractAction(file.getName()) {
-				private static final long serialVersionUID = 1l;
-				@Override public void actionPerformed(ActionEvent e) { openFile(file); }
-			}));
+			if(checkJNLP()||file.isFile()) submenu[SUBMENU_RECENT].add(
+				new JMenuItem(new AbstractAction(file.getName()) {
+					private static final long serialVersionUID = 1l;
+					@Override public void actionPerformed(ActionEvent e) { openFile(file); }
+				}));
 		}
 	}
 	private void updateTitle() {
@@ -1398,7 +1484,7 @@ public class AnalysisTool extends JFrame implements ActionListener {
 		((JPanel)about.getContentPane()).setBorder(new EmptyBorder(10,10,10,10));
 		
 		Border gap = new EmptyBorder(5,0,5,0); JLabel label;
-		about.add(label=new JLabel(getImage("logo"), SwingConstants.CENTER));
+		about.add(label=new JLabel(getImageIcon("logo"), SwingConstants.CENTER));
 		label.setBorder(gap); label.setAlignmentX(CENTER_ALIGNMENT);
 		about.add(label=new JLabel("\u00A9 2014-2015 Mannheim University of Applied Sciences - Version "+VERSION));
 		label.setBorder(gap); label.setAlignmentX(CENTER_ALIGNMENT);
@@ -1463,7 +1549,11 @@ public class AnalysisTool extends JFrame implements ActionListener {
 			add(trailer, constraints);
 			
 			Input input,defaultInput=null; inputs = new ArrayList<>();
-			for(Class<? extends Input> inputClass:new Reflections(Input.class.getPackage().getName()).getSubTypesOf(Input.class))
+			Reflections inputReflections = new Reflections(new ConfigurationBuilder()
+				.addClassLoaders(ClasspathHelper.staticClassLoader(),ClasspathHelper.contextClassLoader()/*,ClassLoader.getSystemClassLoader()*/)
+				.setUrls(ClasspathHelper.forPackage(Input.class.getPackage().getName()))
+				.setScanners(new SubTypesScanner()));
+			for(Class<? extends Input> inputClass:inputReflections.getSubTypesOf(Input.class))
 				try { inputs.add(input=inputClass.newInstance()); if(CodonCircle.class.equals(inputClass)) defaultInput = input; }
 				catch(InstantiationException|IllegalAccessException e) { /* nothing to do here */ }
 			inputPanel = addPage(new JPanel(new BorderLayout()),"Input",true);
@@ -1473,7 +1563,7 @@ public class AnalysisTool extends JFrame implements ActionListener {
 				private static final long serialVersionUID = 1l;
 				@Override public java.awt.Component getListCellRendererComponent(JList<?> list,Object value,int index,boolean isSelected,boolean cellHasFocus) {
 					super.getListCellRendererComponent(list,value,index,isSelected,cellHasFocus);
-					setText(((Input)value).getName());
+					if(value!=null) setText(((Input)value).getName());
 					return this;
 				}
 			});			
@@ -1485,7 +1575,7 @@ public class AnalysisTool extends JFrame implements ActionListener {
 			);
 			
 			inputPanel.addInfo(inputCombo);
-			inputPanel.addInfo((inputPreferences=new AbstractAction(null,getImage("cog")) {
+			inputPanel.addInfo((inputPreferences=new AbstractAction(null,getImageIcon("cog")) {
 				private static final long serialVersionUID = 1l;
 				@Override public void actionPerformed(ActionEvent event) {
 					Input input = (Input)inputCombo.getSelectedItem();
@@ -1514,8 +1604,8 @@ public class AnalysisTool extends JFrame implements ActionListener {
 		public void setInput(final Input input) {
 			SwingUtilities.invokeLater(new Runnable() {
 				@Override public void run() {
-					JPanel panel = (JPanel)inputPanel.getChild();
-					panel.removeAll(); panel.add(input.getComponent(editor), BorderLayout.CENTER);
+					JPanel panel = (JPanel)inputPanel.getChild(); panel.removeAll();
+					if(input!=null) panel.add(input.getComponent(editor), BorderLayout.CENTER);
 					inputPanel.revalidate(); inputPanel.repaint();
 					inputPreferences.setEnabled(input instanceof Configurable);
 				}
@@ -1580,7 +1670,7 @@ public class AnalysisTool extends JFrame implements ActionListener {
 				}
 			});
 			
-			findBatch = new JButton(getImage("calculator_add_small"));
+			findBatch = new JButton(getImageIcon("calculator_add_small"));
 			findBatch.setToolTipText("Add test to batch");
 			findBatch.setEnabled(false);
 			findBatch.addActionListener(new ActionListener() {
@@ -1605,7 +1695,7 @@ public class AnalysisTool extends JFrame implements ActionListener {
 				}
 			});
 			
-			replaceBatch = new JButton(getImage("calculator_add_small"));
+			replaceBatch = new JButton(getImageIcon("calculator_add_small"));
 			replaceBatch.setToolTipText("Add replace operation to batch");
 			replaceBatch.setEnabled(false);
 			replaceBatch.addActionListener(new ActionListener() {
@@ -1622,7 +1712,7 @@ public class AnalysisTool extends JFrame implements ActionListener {
 				}
 			});
 			
-			splitBatch = new JButton(getImage("calculator_add_small"));
+			splitBatch = new JButton(getImageIcon("calculator_add_small"));
 			splitBatch.setToolTipText("Add split to batch");
 			splitBatch.setEnabled(false);
 			splitBatch.addActionListener(new ActionListener() {
@@ -1631,7 +1721,7 @@ public class AnalysisTool extends JFrame implements ActionListener {
 				}
 			});
 			
-			JButton help = new JButton(getImage("help_small"));
+			JButton help = new JButton(getImageIcon("help_small"));
 			help.setToolTipText("Show help");
 			help.addActionListener(new ActionListener() {
 				@Override public void actionPerformed(ActionEvent e) {
@@ -1986,7 +2076,8 @@ public class AnalysisTool extends JFrame implements ActionListener {
 	
 	public static void main(final String[] args) {
 		// Set to use system proxies
-		System.setProperty("java.net.useSystemProxies", "true"); /*try {
+		safeSetSystemProperty("java.net.useSystemProxies",Boolean.TRUE.toString());
+		/*try {
 			List<Proxy> proxies = ProxySelector.getDefault().select(new URI("http://www.hs-mannheim.de/"));
 			if(!proxies.isEmpty()) {
 				System.setProperty("java.net.useSystemProxies", "false");
@@ -2008,26 +2099,29 @@ public class AnalysisTool extends JFrame implements ActionListener {
 		} catch (URISyntaxException e) { /* nothing to do here *//* }*/
 		
 		// Register resource:// & help:// protocols for help
-		URL.setURLStreamHandlerFactory(new URLStreamHandlerFactory() {
-			public URLStreamHandler createURLStreamHandler(String protocol) {
-				switch(protocol) {
-				case "resource":
-					return new URLStreamHandler() {
-						protected URLConnection openConnection(URL url) throws IOException {
-							String path = url.getPath();
-							return Optional.ofNullable(Utilities.getResource(path.startsWith("/")?
-								path.substring(1):path)).orElseThrow(()->new IOException("Resource not found")).openConnection();
-						}
-					};
-				case "help":
-					return new URLStreamHandler() {
-						protected URLConnection openConnection(URL url) throws IOException {
-							return new URLConnection(url) { public void connect() throws IOException { /* nothing to do here */ } };
-						}
-					};
-				default: return null; }
-			}
-		});
+		try {
+			URL.setURLStreamHandlerFactory(new URLStreamHandlerFactory() {
+				public URLStreamHandler createURLStreamHandler(String protocol) {
+					switch(protocol) {
+					case "resource":
+						return new URLStreamHandler() {
+							protected URLConnection openConnection(URL url) throws IOException {
+								//String path = url.getPath();
+								throw new IOException("Resource not found"); //TODO getResource to getResourceAsStream
+								/*return Optional.ofNullable(Utilities.getResource(path.startsWith("/")?
+									path.substring(1):path)).orElseThrow(()->new IOException("Resource not found")).openConnection();*/
+							}
+						};
+					case "help":
+						return new URLStreamHandler() {
+							protected URLConnection openConnection(URL url) throws IOException {
+								return new URLConnection(url) { public void connect() throws IOException { /* nothing to do here */ } };
+							}
+						};
+					default: return null; }
+				}
+			});
+		} catch(SecurityException e) { /* nothing to do here unfortunately */ }
 		
 		// Prepare Look and Feel
 		Guitilities.prepareLookAndFeel();

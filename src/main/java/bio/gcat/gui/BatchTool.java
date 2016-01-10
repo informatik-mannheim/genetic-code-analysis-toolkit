@@ -194,7 +194,7 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 	
 	public BatchTool() {		
 		super("Batch Tool - "+AnalysisTool.NAME);
-		setIconImage(getImage("calculator").getImage());
+		setIconImage(getImage("calculator"));
 		setMinimumSize(new Dimension(660,400));
 		setPreferredSize(new Dimension(1020,400));
 		setSize(getPreferredSize());
@@ -271,7 +271,7 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 		status.setHorizontalAlignment(JLabel.RIGHT);
 		bottom.add(status);
 		
-		cancel = new JButton(getImage("cancel"));
+		cancel = new JButton(getImageIcon("cancel"));
 		cancel.setFocusable(false); cancel.setBorderPainted(false);
 		cancel.setContentAreaFilled(false); cancel.setBorder(EMPTY_BORDER);
 		cancel.addActionListener(new ActionListener() {
@@ -792,10 +792,10 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 		
 		private class OperationListCellRenderer implements ListCellRenderer<Class<? extends Operation>> {
 			private final ImageIcon
-				transformationIcon = getImage("wand"),
-				testIcon = getImage("magnifier"),
-				analysisIcon = getImage("chart_curve"),
-				splitIcon = getImage("cut_red");
+				transformationIcon = getImageIcon("wand"),
+				testIcon = getImageIcon("magnifier"),
+				analysisIcon = getImageIcon("chart_curve"),
+				splitIcon = getImageIcon("cut_red");
 			
 			private JLabel label = new JLabel();
 			
@@ -835,14 +835,14 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 			private OperationListCellRenderer renderer = new OperationListCellRenderer();
 			
 			private final ImageIcon
-				testPositiveIcon = getImage("magnifier_zoom_in"),
-				testNegativeIcon = getImage("magnifier_zoom_out");
+				testPositiveIcon = getImageIcon("magnifier_zoom_in"),
+				testNegativeIcon = getImageIcon("magnifier_zoom_out");
 			private final ImageIcon
-				splitFirstIcon = getImage("cut_red_first"),
-				splitLastIcon = getImage("cut_red_last"),
-				splitAnyIcon = getImage("cut_red_any"),
-				splitAllIcon = getImage("cut_red_all"),
-				splitRandomIcon = getImage("cut_red_random");
+				splitFirstIcon = getImageIcon("cut_red_first"),
+				splitLastIcon = getImageIcon("cut_red_last"),
+				splitAnyIcon = getImageIcon("cut_red_any"),
+				splitAllIcon = getImageIcon("cut_red_all"),
+				splitRandomIcon = getImageIcon("cut_red_random");
 			
 			@Override public Component getListCellRendererComponent(JList<? extends Action> list,Action action,int index,boolean isSelected,boolean cellHasFocus) {
 				Class<? extends Operation> operation = action.getOperation();

@@ -15,92 +15,42 @@
  */
 package bio.gcat.gui.helper;
 
-import java.awt.AWTEvent;
+import java.awt.Component;
+import java.awt.Container;
 import java.awt.Cursor;
-import java.awt.Toolkit;
-import java.awt.event.AWTEventListener;
+import java.awt.Point;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+
 import javax.swing.JPanel;
 import javax.swing.JRootPane;
 import javax.swing.SwingUtilities;
-import javax.swing.event.EventListenerList;
 
-public class BetterGlassPane extends JPanel implements AWTEventListener {
+public class BetterGlassPane extends JPanel implements MouseListener, MouseMotionListener, MouseWheelListener {
 	private static final long serialVersionUID = 1l;
 
 	private JRootPane pane;
-	private EventListenerList listeners = new EventListenerList();
 	
 	public BetterGlassPane() {
 		super(); setOpaque(false); setVisible(true);
-		Toolkit.getDefaultToolkit().addAWTEventListener(this,
-			AWTEvent.MOUSE_WHEEL_EVENT_MASK|AWTEvent.MOUSE_MOTION_EVENT_MASK|AWTEvent.MOUSE_EVENT_MASK);
+		addMouseListener(this); addMouseMotionListener(this); addMouseWheelListener(this);
 	}
 	public BetterGlassPane(JRootPane pane) { this(); (this.pane=pane).setGlassPane(this); }
 
-	@Override public synchronized MouseListener[] getMouseListeners() { return listeners.getListeners(MouseListener.class); }
-	@Override public synchronized void addMouseListener(MouseListener listener) { listeners.add(MouseListener.class,listener); }
-	@Override public synchronized void removeMouseListener(MouseListener listener) { listeners.remove(MouseListener.class,listener); }
+	@Override public void mouseClicked(MouseEvent event) { dispatchEvent(event);  }
+	@Override public void mousePressed(MouseEvent event) { dispatchEvent(event); }
+	@Override public void mouseReleased(MouseEvent event) { dispatchEvent(event); }
+	@Override public void mouseEntered(MouseEvent event) { dispatchEvent(event); }
+	@Override public void mouseExited(MouseEvent event) { dispatchEvent(event); }
+    
+	@Override public void mouseDragged(MouseEvent event) { dispatchEvent(event); }
+	@Override public void mouseMoved(MouseEvent event) { dispatchEvent(event); }
+    
+	@Override public void mouseWheelMoved(MouseWheelEvent event) { dispatchEvent(event); }
 	
-	@Override public synchronized MouseMotionListener[] getMouseMotionListeners() { return listeners.getListeners(MouseMotionListener.class); }
-	@Override public synchronized void addMouseMotionListener(MouseMotionListener listener) { listeners.add(MouseMotionListener.class,listener); }
-	@Override public synchronized void removeMouseMotionListener(MouseMotionListener listener) { listeners.remove(MouseMotionListener.class,listener); }
-	
-	@Override public synchronized MouseWheelListener[] getMouseWheelListeners() { return listeners.getListeners(MouseWheelListener.class); }
-	@Override public synchronized void addMouseWheelListener(MouseWheelListener listener) { listeners.add(MouseWheelListener.class,listener); }
-	@Override public synchronized void removeMouseWheelListener(MouseWheelListener listener) { listeners.remove(MouseWheelListener.class,listener); }
-	
-	public void eventDispatched(AWTEvent event) {
-		if(pane!=null&&event instanceof MouseEvent) {
-			MouseEvent mouseEvent = (MouseEvent)event;
-			if(!SwingUtilities.isDescendingFrom(mouseEvent.getComponent(),pane))
-				return;
-			/* change source of event to glass pane, DON'T use setSource on AWTEvent's! */
-			MouseEvent newMouseEvent = !(mouseEvent instanceof MouseWheelEvent)?
-				new MouseEvent(this,mouseEvent.getID(),mouseEvent.getWhen(),mouseEvent.getModifiers(),mouseEvent.getX(),mouseEvent.getY(),mouseEvent.getClickCount(),mouseEvent.isPopupTrigger(),mouseEvent.getButton()):
-				new MouseWheelEvent(this,mouseEvent.getID(),mouseEvent.getWhen(),mouseEvent.getModifiers(),mouseEvent.getX(),mouseEvent.getY(),mouseEvent.getXOnScreen(),mouseEvent.getYOnScreen(),mouseEvent.getClickCount(),mouseEvent.isPopupTrigger(),((MouseWheelEvent)mouseEvent).getScrollType(),((MouseWheelEvent)mouseEvent).getScrollAmount(),((MouseWheelEvent)mouseEvent).getWheelRotation(),((MouseWheelEvent)mouseEvent).getPreciseWheelRotation());
-			switch(event.getID()) {
-			case MouseEvent.MOUSE_CLICKED:
-				for(MouseListener listener:listeners.getListeners(MouseListener.class))
-					listener.mouseClicked(newMouseEvent);
-				break;
-			case MouseEvent.MOUSE_ENTERED:
-				for(MouseListener listener:listeners.getListeners(MouseListener.class))
-					listener.mouseEntered(newMouseEvent);
-				break;
-			case MouseEvent.MOUSE_EXITED:
-				for(MouseListener listener:listeners.getListeners(MouseListener.class))
-					listener.mouseExited(newMouseEvent);
-				break;
-			case MouseEvent.MOUSE_PRESSED:
-				for(MouseListener listener:listeners.getListeners(MouseListener.class))
-					listener.mousePressed(newMouseEvent);
-				break;
-			case MouseEvent.MOUSE_RELEASED:
-				for(MouseListener listener:listeners.getListeners(MouseListener.class))
-					listener.mouseReleased(newMouseEvent);
-				break;
-			case MouseEvent.MOUSE_MOVED:
-				for(MouseMotionListener listener:listeners.getListeners(MouseMotionListener.class))
-					listener.mouseMoved(newMouseEvent);
-				break;
-			case MouseEvent.MOUSE_DRAGGED:
-				for(MouseMotionListener listener:listeners.getListeners(MouseMotionListener.class))
-					listener.mouseDragged(newMouseEvent);
-				break;
-			case MouseEvent.MOUSE_WHEEL:
-				for(MouseWheelListener listener:listeners.getListeners(MouseWheelListener.class))
-					listener.mouseWheelMoved((MouseWheelEvent)newMouseEvent);
-				break;
-			}
-		}
-	}
-	
-
 	/**
 	 * If someone sets a new cursor to the GlassPane
 	 * we expect that he knows what he is doing
@@ -109,8 +59,28 @@ public class BetterGlassPane extends JPanel implements AWTEventListener {
 	 * for the underneath components
 	 */
 	public boolean contains(int x, int y) {
-		if(getCursor()==Cursor.getDefaultCursor())
-			return false;
-		return super.contains(x,y);
+		Container container = pane.getContentPane();
+		Point containerPoint = SwingUtilities.convertPoint(this, x, y, container);
+		if (containerPoint.y>0) {
+			Component component = SwingUtilities.getDeepestComponentAt(
+				container, containerPoint.x, containerPoint.y);
+			return component==null||component.getCursor()==Cursor.getDefaultCursor();
+		} else return true;
+	}
+	
+	private void dispatchEvent(MouseEvent event) {
+		Container container = pane.getContentPane();
+		Point glassPanePoint = event.getPoint(), containerPoint = SwingUtilities.convertPoint(this, glassPanePoint, container);
+		if (containerPoint.y>0) {
+			Component component = SwingUtilities.getDeepestComponentAt(
+				container, containerPoint.x, containerPoint.y);
+			if(component!=null) {
+				Point componentPoint = SwingUtilities.convertPoint(this, glassPanePoint, component);
+				MouseEvent newMouseEvent = !(event instanceof MouseWheelEvent)?
+					new MouseEvent(component,event.getID(),event.getWhen(),event.getModifiers(),componentPoint.x,componentPoint.y,event.getClickCount(),event.isPopupTrigger(),event.getButton()):
+					new MouseWheelEvent(component,event.getID(),event.getWhen(),event.getModifiers(),componentPoint.x,componentPoint.y,event.getXOnScreen(),event.getYOnScreen(),event.getClickCount(),event.isPopupTrigger(),((MouseWheelEvent)event).getScrollType(),((MouseWheelEvent)event).getScrollAmount(),((MouseWheelEvent)event).getWheelRotation(),((MouseWheelEvent)event).getPreciseWheelRotation());
+				component.dispatchEvent(newMouseEvent);
+			}
+		}
 	}
 }

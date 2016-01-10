@@ -116,7 +116,7 @@ public class BDATool extends JFrame implements ActionListener, ListDataListener,
 	
 	public BDATool() {
 		super("BDA Tool - "+AnalysisTool.NAME);
-		setIconImage(getImage("bda").getImage());
+		setIconImage(getImage("bda"));
 		setMinimumSize(new Dimension(660,400));
 		setPreferredSize(new Dimension(1020,400));
 		setSize(getPreferredSize());

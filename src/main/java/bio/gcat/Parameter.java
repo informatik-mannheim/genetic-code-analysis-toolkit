@@ -15,8 +15,11 @@
  */
 package bio.gcat;
 
-import static bio.gcat.Utilities.*;
-import static bio.gcat.gui.helper.Guitilities.*;
+import static bio.gcat.Utilities.EMPTY;
+import static bio.gcat.Utilities.SPACE;
+import static bio.gcat.Utilities.getFileOpenService;
+import static bio.gcat.gui.helper.Guitilities.setBoxLayout;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
@@ -24,6 +27,9 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemListener;
 import java.beans.VetoableChangeListener;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
@@ -33,6 +39,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.jnlp.FileContents;
+import javax.jnlp.FileOpenService;
+import javax.jnlp.UnavailableServiceException;
 import javax.swing.AbstractAction;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListCellRenderer;
@@ -48,7 +58,9 @@ import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileFilter;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.NumberFormatter;
+
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.ObjectArrays;
@@ -191,7 +203,7 @@ public class Parameter {
 				((JComboBox<?>)component).setSelectedItem(value);
 				break;
 			case FILE:
-				((FileComponent)(component = new FileComponent(filter))).setFile((File)value);
+				component = new FileComponent(filter);
 				break;
 			} add(component, BorderLayout.CENTER);
 			if(component instanceof JComponent)
@@ -214,7 +226,7 @@ public class Parameter {
 			case NUMBER: case DECIMAL: return ((JSpinner)component).getValue();
 			case BOOLEAN: return ((JCheckBox)component).isSelected();					
 			case LIST: return ((JComboBox<?>)component).getSelectedItem();
-			case FILE: return ((FileComponent)component).getFile(); }
+			case FILE: try { return ((FileComponent)component).openFile(); } catch (IOException e) { return null; } }
 			return null;
 		}
 		
@@ -325,15 +337,23 @@ public class Parameter {
 	private static class FileComponent extends JPanel {
 		private static final long serialVersionUID = 1l;
 		
+		private FileFilter filter;
+		
+		private FileOpenService service;
+		private FileContents contents;
+		
 		private JTextField display;
 		private JFileChooser chooser;
 		
 		public FileComponent() {
 			setBoxLayout(this,BoxLayout.X_AXIS);
 			
-			chooser = new JFileChooser();
-			chooser.setDialogTitle("Open File");
-			chooser.setCurrentDirectory(new File(System.getProperty("user.home")));
+			try { service = getFileOpenService(); } 
+			catch(UnavailableServiceException e) {
+				chooser = new JFileChooser();
+				chooser.setDialogTitle("Open File");
+				chooser.setCurrentDirectory(new File(System.getProperty("user.home")));
+			}
 			
 			add(display = new JTextField());
 			display.setEditable(false);
@@ -341,24 +361,44 @@ public class Parameter {
 			
 			add(new JButton(new AbstractAction("Choose File") {
 				private static final long serialVersionUID = 1l;
-				@Override public void actionPerformed(ActionEvent e) {
-					if(chooser.showOpenDialog(FileComponent.this)==JFileChooser.APPROVE_OPTION)
-						setFile(chooser.getSelectedFile());
+				@Override public void actionPerformed(ActionEvent event) {
+					if(service!=null) {
+						try {
+							contents = service.openFileDialog(null, filter instanceof FileNameExtensionFilter?
+								((FileNameExtensionFilter)filter).getExtensions():null);
+							if(contents!=null) {
+								display.setText(contents.getName());
+							}
+						} catch(IOException e) { /* nothing to do here */ }
+					} else if(chooser!=null) {
+						if(chooser.showOpenDialog(FileComponent.this)==JFileChooser.APPROVE_OPTION)
+							display.setText(chooser.getSelectedFile().getName());
+					}
 				}
 			}));
 		}
 		public FileComponent(FileFilter filter) {
-			this(); chooser.setFileFilter(filter);
+			this(); this.filter = filter;
+			if(chooser!=null)
+			   chooser.setFileFilter(filter);
 		}
 		
-		public void addActionListener(ActionListener listener) { chooser.addActionListener(listener); }
-		@SuppressWarnings("unused") public void removeActionListener(ActionListener listener) { chooser.removeActionListener(listener); }
-		@SuppressWarnings("unused") public ActionListener[] getActionListeners() { return chooser.getActionListeners(); }
+		public void addActionListener(ActionListener listener) { if(chooser!=null) chooser.addActionListener(listener); }
+		@SuppressWarnings("unused") public void removeActionListener(ActionListener listener) { if(chooser!=null) chooser.removeActionListener(listener); }
+		@SuppressWarnings("unused") public ActionListener[] getActionListeners() { return chooser!=null?chooser.getActionListeners():null; }
   
-		public File getFile() { return chooser.getSelectedFile(); }
 		public void setFile(File file) {
+			if(chooser!=null) chooser.setSelectedFile(file);
 			display.setText(file!=null?file.getName():null);
-			chooser.setSelectedFile(file);
+		}
+		public InputStream openFile() throws IOException {
+			if(contents!=null)
+				return contents.getInputStream();
+			else if(chooser!=null) {
+				File selected = chooser.getSelectedFile();
+				if(selected!=null)
+					return new FileInputStream(selected);
+			} return null;
 		}
 	}
 }
