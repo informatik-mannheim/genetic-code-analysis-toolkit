@@ -103,8 +103,6 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 
-/* JNLP_SANDBOX import javax.jnlp.FileContents;
-import javax.jnlp.UnavailableServiceException; */
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -496,7 +494,6 @@ public class AnalysisTool extends JFrame implements ActionListener {
 		menu[MENU_HELP].add(createMenuItem("About GCAT", "icon", ACTION_ABOUT, this));
 		for(String action:new String[]{ACTION_SAVE,ACTION_UNDO,ACTION_REDO,ACTION_CUT,ACTION_COPY,ACTION_DELETE})
 			getMenuItem(menubar,action).setEnabled(false);
-		// JNLP_SANDBOX getMenuItem(menubar,ACTION_SAVE).setVisible(!checkJNLP());
 		getMenuItem(menubar,ACTION_PREFERENCES).setEnabled(false);
 		updateRecent();
 		
@@ -522,7 +519,6 @@ public class AnalysisTool extends JFrame implements ActionListener {
 		toolbar[TOOLBAR_HELP].add(createToolbarButton("Help Contents", "help", ACTION_HELP, this));
 		
 		getToolbarButton(toolbar,ACTION_SAVE).setEnabled(false);
-		// JNLP_SANDBOX getToolbarButton(toolbar,ACTION_SAVE).setVisible(!checkJNLP());
 		
 		toolbars = new JPanel(new FlowLayout(FlowLayout.LEADING));
 		for(JToolBar bar:toolbar)
@@ -833,24 +829,10 @@ public class AnalysisTool extends JFrame implements ActionListener {
 	public void openFile() {
 		if(!confirmIfDirty())
 			return;
-		
-		/* JNLP_SANDBOX try {
-			FileContents contents = getFileOpenService().openFileDialog(null,getFilterExtensions(GENETIC_EXTENSION_FILTER,TEXT_EXTENSION_FILTER));
-			if(contents!=null) {
-				newText(new String(readStream(contents.getInputStream())));
-				optionLabel.setValue(null);
-
-				editor.setDirty(); //clean on open, dirty on import
-				currentFile(null); //null because we anyway can't save for JNLP (only save as)
-			}
-		} catch(UnavailableServiceException e) { */
-			JFileChooser chooser = new FileNameExtensionFileChooser(GENETIC_EXTENSION_FILTER,TEXT_EXTENSION_FILTER);
-			if(chooser.showOpenDialog(this)==JFileChooser.APPROVE_OPTION)
-				openFile(chooser.getSelectedFile());
-		/* JNLP_SANDBOX } catch (IOException e) {
-			JOptionPane.showMessageDialog(this,"Could not open file:\n\n"+e.getMessage(),
-				"Open",JOptionPane.WARNING_MESSAGE);
-		} */
+	
+		JFileChooser chooser = new FileNameExtensionFileChooser(GENETIC_EXTENSION_FILTER,TEXT_EXTENSION_FILTER);
+		if(chooser.showOpenDialog(this)==JFileChooser.APPROVE_OPTION)
+			openFile(chooser.getSelectedFile());
 	}
 	public void openFile(File file) {
 		try {
@@ -874,18 +856,10 @@ public class AnalysisTool extends JFrame implements ActionListener {
 	public void importFile() {
 		if(!confirmIfDirty())
 			return;
-
-		/* JNLP_SANDBOX try {
-			FileContents contents = getFileOpenService().openFileDialog(null,getFilterExtensions(FASTA_EXTENSION_FILTER));
-			if(contents!=null) importFastaFile(contents.getInputStream());
-		} catch(UnavailableServiceException e) { */
-			JFileChooser chooser = new FileNameExtensionFileChooser(FASTA_EXTENSION_FILTER);
-			if(chooser.showOpenDialog(this)==JFileChooser.APPROVE_OPTION)
-				importFile(chooser.getSelectedFile(), chooser.getFileFilter());
-		/* JNLP_SANDBOX } catch (IOException e) {
-			JOptionPane.showMessageDialog(this,"Could not import file:\n\n"+e.getMessage(),
-				"Import",JOptionPane.WARNING_MESSAGE);
-		} */
+		
+		JFileChooser chooser = new FileNameExtensionFileChooser(FASTA_EXTENSION_FILTER);
+		if(chooser.showOpenDialog(this)==JFileChooser.APPROVE_OPTION)
+			importFile(chooser.getSelectedFile(), chooser.getFileFilter());
 	}
 	public void importFile(File file) { importFile(file, null); }
 	public void importFile(File file, FileFilter filter) {
@@ -1148,18 +1122,10 @@ public class AnalysisTool extends JFrame implements ActionListener {
 		else return saveFileAs();
 	}
 	public boolean saveFileAs() {
-		/* JNLP_SANDBOX try {
-			return getFileSaveService().saveFileDialog(null,getFilterExtensions(GENETIC_EXTENSION_FILTER,TEXT_EXTENSION_FILTER),new ByteArrayInputStream(editor.getText().getBytes()),null)!=null;
-		} catch(UnavailableServiceException e) { */
-			JFileChooser chooser = new FileNameExtensionFileChooser(false,GENETIC_EXTENSION_FILTER,FASTA_EXTENSION_FILTER,TEXT_EXTENSION_FILTER); chooser.setDialogTitle("Save As");
-			if(chooser.showOpenDialog(this)==JFileChooser.APPROVE_OPTION)
-			     return saveFile(chooser.getSelectedFile(), chooser.getFileFilter());
-			else return false;
-		/* JNLP_SANDBOX } catch (IOException e) {
-			JOptionPane.showMessageDialog(this,"Could not save file:\n\n"+e.getMessage(),
-				"Save As",JOptionPane.WARNING_MESSAGE);
-			return false;
-		} */
+		JFileChooser chooser = new FileNameExtensionFileChooser(false,GENETIC_EXTENSION_FILTER,FASTA_EXTENSION_FILTER,TEXT_EXTENSION_FILTER); chooser.setDialogTitle("Save As");
+		if(chooser.showOpenDialog(this)==JFileChooser.APPROVE_OPTION)
+		     return saveFile(chooser.getSelectedFile(), chooser.getFileFilter());
+		else return false;
 	}
 	public boolean saveFile(File file) { return saveFile(file, null); }
 	public boolean saveFile(File file, FileFilter fileFilter) {
@@ -1246,7 +1212,7 @@ public class AnalysisTool extends JFrame implements ActionListener {
 		String[] paths = getConfiguration(CONFIGURATION_RECENT,EMPTY).split("\\|");
 		for(String path:paths) {
 			final File file = new File(path);
-			if(/* JNLP_SANDBOX checkJNLP()|| */file.isFile()) submenu[SUBMENU_RECENT].add(
+			if(file.isFile()) submenu[SUBMENU_RECENT].add(
 				new JMenuItem(new AbstractAction(file.getName()) {
 					private static final long serialVersionUID = 1l;
 					@Override public void actionPerformed(ActionEvent e) { openFile(file); }
