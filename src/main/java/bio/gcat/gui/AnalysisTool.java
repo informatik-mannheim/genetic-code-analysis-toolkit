@@ -17,13 +17,8 @@ package bio.gcat.gui;
 
 import static bio.gcat.Utilities.EMPTY;
 import static bio.gcat.Utilities.NEW_LINE;
-import static bio.gcat.Utilities.checkJNLP;
 import static bio.gcat.Utilities.getConfiguration;
-import static bio.gcat.Utilities.getFileOpenService;
-import static bio.gcat.Utilities.getFileSaveService;
-import static bio.gcat.Utilities.getFilterExtensions;
 import static bio.gcat.Utilities.readFile;
-import static bio.gcat.Utilities.readStream;
 import static bio.gcat.Utilities.safeSetSystemProperty;
 import static bio.gcat.Utilities.setConfiguration;
 import static bio.gcat.Utilities.writeFile;
@@ -77,7 +72,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.font.TextAttribute;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -109,8 +103,8 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 
-import javax.jnlp.FileContents;
-import javax.jnlp.UnavailableServiceException;
+/* JNLP_SANDBOX import javax.jnlp.FileContents;
+import javax.jnlp.UnavailableServiceException; */
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -502,7 +496,7 @@ public class AnalysisTool extends JFrame implements ActionListener {
 		menu[MENU_HELP].add(createMenuItem("About GCAT", "icon", ACTION_ABOUT, this));
 		for(String action:new String[]{ACTION_SAVE,ACTION_UNDO,ACTION_REDO,ACTION_CUT,ACTION_COPY,ACTION_DELETE})
 			getMenuItem(menubar,action).setEnabled(false);
-		getMenuItem(menubar,ACTION_SAVE).setVisible(!checkJNLP());
+		// JNLP_SANDBOX getMenuItem(menubar,ACTION_SAVE).setVisible(!checkJNLP());
 		getMenuItem(menubar,ACTION_PREFERENCES).setEnabled(false);
 		updateRecent();
 		
@@ -528,7 +522,7 @@ public class AnalysisTool extends JFrame implements ActionListener {
 		toolbar[TOOLBAR_HELP].add(createToolbarButton("Help Contents", "help", ACTION_HELP, this));
 		
 		getToolbarButton(toolbar,ACTION_SAVE).setEnabled(false);
-		getToolbarButton(toolbar,ACTION_SAVE).setVisible(!checkJNLP());
+		// JNLP_SANDBOX getToolbarButton(toolbar,ACTION_SAVE).setVisible(!checkJNLP());
 		
 		toolbars = new JPanel(new FlowLayout(FlowLayout.LEADING));
 		for(JToolBar bar:toolbar)
@@ -840,7 +834,7 @@ public class AnalysisTool extends JFrame implements ActionListener {
 		if(!confirmIfDirty())
 			return;
 		
-		try {
+		/* JNLP_SANDBOX try {
 			FileContents contents = getFileOpenService().openFileDialog(null,getFilterExtensions(GENETIC_EXTENSION_FILTER,TEXT_EXTENSION_FILTER));
 			if(contents!=null) {
 				newText(new String(readStream(contents.getInputStream())));
@@ -849,14 +843,14 @@ public class AnalysisTool extends JFrame implements ActionListener {
 				editor.setDirty(); //clean on open, dirty on import
 				currentFile(null); //null because we anyway can't save for JNLP (only save as)
 			}
-		} catch(UnavailableServiceException e) {
+		} catch(UnavailableServiceException e) { */
 			JFileChooser chooser = new FileNameExtensionFileChooser(GENETIC_EXTENSION_FILTER,TEXT_EXTENSION_FILTER);
 			if(chooser.showOpenDialog(this)==JFileChooser.APPROVE_OPTION)
 				openFile(chooser.getSelectedFile());
-		} catch (IOException e) {
+		/* JNLP_SANDBOX } catch (IOException e) {
 			JOptionPane.showMessageDialog(this,"Could not open file:\n\n"+e.getMessage(),
 				"Open",JOptionPane.WARNING_MESSAGE);
-		}
+		} */
 	}
 	public void openFile(File file) {
 		try {
@@ -881,17 +875,17 @@ public class AnalysisTool extends JFrame implements ActionListener {
 		if(!confirmIfDirty())
 			return;
 
-		try {
+		/* JNLP_SANDBOX try {
 			FileContents contents = getFileOpenService().openFileDialog(null,getFilterExtensions(FASTA_EXTENSION_FILTER));
 			if(contents!=null) importFastaFile(contents.getInputStream());
-		} catch(UnavailableServiceException e) {
+		} catch(UnavailableServiceException e) { */
 			JFileChooser chooser = new FileNameExtensionFileChooser(FASTA_EXTENSION_FILTER);
 			if(chooser.showOpenDialog(this)==JFileChooser.APPROVE_OPTION)
 				importFile(chooser.getSelectedFile(), chooser.getFileFilter());
-		} catch (IOException e) {
+		/* JNLP_SANDBOX } catch (IOException e) {
 			JOptionPane.showMessageDialog(this,"Could not import file:\n\n"+e.getMessage(),
 				"Import",JOptionPane.WARNING_MESSAGE);
-		}
+		} */
 	}
 	public void importFile(File file) { importFile(file, null); }
 	public void importFile(File file, FileFilter filter) {
@@ -1154,18 +1148,18 @@ public class AnalysisTool extends JFrame implements ActionListener {
 		else return saveFileAs();
 	}
 	public boolean saveFileAs() {
-		try {
+		/* JNLP_SANDBOX try {
 			return getFileSaveService().saveFileDialog(null,getFilterExtensions(GENETIC_EXTENSION_FILTER,TEXT_EXTENSION_FILTER),new ByteArrayInputStream(editor.getText().getBytes()),null)!=null;
-		} catch(UnavailableServiceException e) {
+		} catch(UnavailableServiceException e) { */
 			JFileChooser chooser = new FileNameExtensionFileChooser(false,GENETIC_EXTENSION_FILTER,FASTA_EXTENSION_FILTER,TEXT_EXTENSION_FILTER); chooser.setDialogTitle("Save As");
 			if(chooser.showOpenDialog(this)==JFileChooser.APPROVE_OPTION)
 			     return saveFile(chooser.getSelectedFile(), chooser.getFileFilter());
 			else return false;
-		} catch (IOException e) {
+		/* JNLP_SANDBOX } catch (IOException e) {
 			JOptionPane.showMessageDialog(this,"Could not save file:\n\n"+e.getMessage(),
 				"Save As",JOptionPane.WARNING_MESSAGE);
 			return false;
-		}
+		} */
 	}
 	public boolean saveFile(File file) { return saveFile(file, null); }
 	public boolean saveFile(File file, FileFilter fileFilter) {
@@ -1252,7 +1246,7 @@ public class AnalysisTool extends JFrame implements ActionListener {
 		String[] paths = getConfiguration(CONFIGURATION_RECENT,EMPTY).split("\\|");
 		for(String path:paths) {
 			final File file = new File(path);
-			if(checkJNLP()||file.isFile()) submenu[SUBMENU_RECENT].add(
+			if(/* JNLP_SANDBOX checkJNLP()|| */file.isFile()) submenu[SUBMENU_RECENT].add(
 				new JMenuItem(new AbstractAction(file.getName()) {
 					private static final long serialVersionUID = 1l;
 					@Override public void actionPerformed(ActionEvent e) { openFile(file); }

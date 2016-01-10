@@ -49,13 +49,13 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
-import javax.jnlp.BasicService;
+/* JNLP_SANDBOX import javax.jnlp.BasicService;
 import javax.jnlp.FileContents;
 import javax.jnlp.FileOpenService;
 import javax.jnlp.FileSaveService;
 import javax.jnlp.PersistenceService;
 import javax.jnlp.ServiceManager;
-import javax.jnlp.UnavailableServiceException;
+import javax.jnlp.UnavailableServiceException; */
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
@@ -74,14 +74,14 @@ public final class Utilities {
 	public static final String EMPTY = "", SPACE = " ", TAB = "\t", NEW_LINE = "\n", WHITESPACE = " \t\n\r\f", TRUE = "true", FALSE = "false", CHARSET = "UTF-8";
 	public static final double TWO_PI = PI*2, HALF_PI = PI/2, QUARTER_PI = PI/4, EIGHTH_PI = PI/8, SIXTEENTH_PI = PI/16;
 
-	private static final boolean USE_JNLP = false;
+	// JNLP_SANDBOX private static final boolean USE_JNLP = false;
 	
 	private static final int BUFFER_SIZE = 8192;
 	private static final int TEMP_DIRECTORY_ATTEMPTS = 10000;
 	
 	private static final String CONFIGURATION_NAME = AnalysisTool.class.getSimpleName()+".properties";
 	
-	private static Boolean jnlp;
+	// JNLP_SANDBOX private static Boolean jnlp;
 	private static Properties configuration;
 	private static ClassLoader localClassLoader;
 	static { localClassLoader = Utilities.class.getClassLoader(); }
@@ -92,7 +92,7 @@ public final class Utilities {
 		});
 	}
 	
-	public static BasicService getBasicService() throws UnavailableServiceException {
+	/* JNLP_SANDBOX public static BasicService getBasicService() throws UnavailableServiceException {
 		if(USE_JNLP) return (BasicService)ServiceManager.lookup("javax.jnlp.BasicService"); 
 		else throw new UnavailableServiceException();
 	}
@@ -114,7 +114,7 @@ public final class Utilities {
 		try { getBasicService(); return jnlp=true; }
 		catch(UnavailableServiceException e) {
 			return jnlp=false; }
-	}
+	} */
 	
 	public static URL getResource(String name) {
 		if(!name.startsWith("bio/gcat/"))
@@ -128,18 +128,18 @@ public final class Utilities {
 	}
 	
 	private static File configurationFile() { return new File(tempDirectory(),CONFIGURATION_NAME); }
-	private static FileContents configurationFileContents() throws IOException, UnavailableServiceException {
-		return getPersistenceService().get(new URL(getBasicService().getCodeBase(),CONFIGURATION_NAME)); }
+	/* JNLP_SANDBOX private static FileContents configurationFileContents() throws IOException, UnavailableServiceException {
+		return getPersistenceService().get(new URL(getBasicService().getCodeBase(),CONFIGURATION_NAME)); } */
 
 	private static boolean loadConfiguration() {
 		if(configuration!=null) return true;
 		try {
 			InputStream input;
-			try {
+			/* JNLP_SANDBOX try {
 				input = configurationFileContents().getInputStream();
-			} catch(UnavailableServiceException eu) {
+			} catch(UnavailableServiceException eu) { */
 				input = new FileInputStream(configurationFile());
-			} (configuration=new Properties()).load(input);
+			/* } */ (configuration=new Properties()).load(input);
 			return true;
 		} catch(FileNotFoundException e) {
 			configuration = new Properties();
@@ -149,12 +149,12 @@ public final class Utilities {
 	private static boolean writeConfiguration() {
 		if(configuration==null) return true;
 		try {
-			try {
+			/* JNLP_SANDBOX try {
 				configuration.store(configurationFileContents().
 					getOutputStream(true),new String());
-			} catch(UnavailableServiceException eu) {
+			} catch(UnavailableServiceException eu) { */
 				configuration.store(new FileOutputStream(configurationFile()),EMPTY);
-			}
+			/* } */
 			return true;
 		} catch (IOException e) { return false; }
 	}	

@@ -17,7 +17,7 @@ package bio.gcat;
 
 import static bio.gcat.Utilities.EMPTY;
 import static bio.gcat.Utilities.SPACE;
-import static bio.gcat.Utilities.getFileOpenService;
+// JNLP_SANDBOX import static bio.gcat.Utilities.getFileOpenService;
 import static bio.gcat.gui.helper.Guitilities.setBoxLayout;
 
 import java.awt.BorderLayout;
@@ -40,9 +40,9 @@ import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.jnlp.FileContents;
+/* JNLP_SANDBOX import javax.jnlp.FileContents;
 import javax.jnlp.FileOpenService;
-import javax.jnlp.UnavailableServiceException;
+import javax.jnlp.UnavailableServiceException; */
 import javax.swing.AbstractAction;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListCellRenderer;
@@ -58,7 +58,6 @@ import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileFilter;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.NumberFormatter;
 
 import com.google.common.base.Function;
@@ -337,10 +336,10 @@ public class Parameter {
 	private static class FileComponent extends JPanel {
 		private static final long serialVersionUID = 1l;
 		
-		private FileFilter filter;
+		@SuppressWarnings("unused") private FileFilter filter;
 		
-		private FileOpenService service;
-		private FileContents contents;
+		/* JNLP_SANDBOX private FileOpenService service;
+		private FileContents contents; */
 		
 		private JTextField display;
 		private JFileChooser chooser;
@@ -348,12 +347,12 @@ public class Parameter {
 		public FileComponent() {
 			setBoxLayout(this,BoxLayout.X_AXIS);
 			
-			try { service = getFileOpenService(); } 
-			catch(UnavailableServiceException e) {
+			/* JNLP_SANDBOX try { service = getFileOpenService(); } 
+			catch(UnavailableServiceException e) { */
 				chooser = new JFileChooser();
 				chooser.setDialogTitle("Open File");
 				chooser.setCurrentDirectory(new File(System.getProperty("user.home")));
-			}
+			/* } */
 			
 			add(display = new JTextField());
 			display.setEditable(false);
@@ -362,18 +361,18 @@ public class Parameter {
 			add(new JButton(new AbstractAction("Choose File") {
 				private static final long serialVersionUID = 1l;
 				@Override public void actionPerformed(ActionEvent event) {
-					if(service!=null) {
+					/* JNLP_SANDBOX if(service!=null) {
 						try {
 							contents = service.openFileDialog(null, filter instanceof FileNameExtensionFilter?
 								((FileNameExtensionFilter)filter).getExtensions():null);
 							if(contents!=null) {
 								display.setText(contents.getName());
 							}
-						} catch(IOException e) { /* nothing to do here */ }
-					} else if(chooser!=null) {
+						} catch(IOException e) { /* nothing to do here *//* }
+					} else if(chooser!=null) { */
 						if(chooser.showOpenDialog(FileComponent.this)==JFileChooser.APPROVE_OPTION)
 							display.setText(chooser.getSelectedFile().getName());
-					}
+					/* } */
 				}
 			}));
 		}
@@ -392,13 +391,12 @@ public class Parameter {
 			display.setText(file!=null?file.getName():null);
 		}
 		public InputStream openFile() throws IOException {
-			if(contents!=null)
+			/* JNLP_SANDBOX if(contents!=null)
 				return contents.getInputStream();
-			else if(chooser!=null) {
+			else if(chooser!=null) { */
 				File selected = chooser.getSelectedFile();
-				if(selected!=null)
-					return new FileInputStream(selected);
-			} return null;
+				return selected!=null?new FileInputStream(selected):null;
+			//} return null;
 		}
 	}
 }

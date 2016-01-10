@@ -113,13 +113,14 @@
 			<artifactId>characters</artifactId>
 			<version>0.1.0</version>
 		</dependency>
-		<dependency>
+		<!-- <dependency>
 			<groupId>javax.jnlp</groupId>
 			<artifactId>jnlp-api</artifactId>
 			<version>7.0</version>
 			<scope>system</scope>
 			<systemPath>${java.home}/lib/javaws.jar</systemPath>
-		</dependency>
+		</dependency> -->
+		<!-- Needed for JNLP sandbox -->
 	</dependencies>
 	
 	<build>
@@ -209,7 +210,9 @@
 									<manifestEntries>
 										<Application-Name>Genetic Code Analysis Toolkit</Application-Name>
 										<Main-Class>bio.gcat.gui.AnalysisTool</Main-Class>
-										<!-- <Permissions>sandbox</Permissions> uncomment, comment next 3 lines and change in launch.jnlp file(s) to switch to sandbox -->
+										<Class-Path>. \u0024{java.home}/lib/javaws.jar</Class-Path>
+										<!-- <Permissions>sandbox</Permissions> -->
+										<!-- To switch to sandbox uncomment line above and comment next three lines, also change launch.jnlp file(s) -->
 										<Permissions>all-permissions</Permissions>										
 										<Trusted-Library>true</Trusted-Library>
 										<Trusted-Only>true</Trusted-Only>										 
