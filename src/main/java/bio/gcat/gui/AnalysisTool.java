@@ -187,6 +187,7 @@ import bio.gcat.Configurable;
 import bio.gcat.Documented;
 import bio.gcat.Option;
 import bio.gcat.Parameter;
+import bio.gcat.Utilities;
 import bio.gcat.Utilities.DefiniteFuture;
 import bio.gcat.Utilities.FileNameExtensionFileChooser;
 import bio.gcat.Utilities.OperatingSystem;
@@ -2106,10 +2107,9 @@ public class AnalysisTool extends JFrame implements ActionListener {
 					case "resource":
 						return new URLStreamHandler() {
 							protected URLConnection openConnection(URL url) throws IOException {
-								//String path = url.getPath();
-								throw new IOException("Resource not found"); //TODO getResource to getResourceAsStream
-								/*return Optional.ofNullable(Utilities.getResource(path.startsWith("/")?
-									path.substring(1):path)).orElseThrow(()->new IOException("Resource not found")).openConnection();*/
+								String path = url.getPath();
+								return Optional.ofNullable(Utilities.getResource(path.startsWith("/")?
+									path.substring(1):path)).orElseThrow(()->new IOException("Resource not found")).openConnection();
 							}
 						};
 					case "help":

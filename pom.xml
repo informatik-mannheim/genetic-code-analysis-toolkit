@@ -209,9 +209,10 @@
 									<manifestEntries>
 										<Application-Name>Genetic Code Analysis Toolkit</Application-Name>
 										<Main-Class>bio.gcat.gui.AnalysisTool</Main-Class>
-										<!-- <Trusted-Library>true</Trusted-Library>
-										<Trusted-Only>true</Trusted-Only> -->
-										<Permissions>sandbox</Permissions> 
+										<!-- <Permissions>sandbox</Permissions> uncomment, comment next 3 lines and change in launch.jnlp file(s) to switch to sandbox -->
+										<Permissions>all-permissions</Permissions>										
+										<Trusted-Library>true</Trusted-Library>
+										<Trusted-Only>true</Trusted-Only>										 
 										<Codebase>*</Codebase>
 										<Build-By>University of Applied Sciences Mannheim</Build-By>
 									</manifestEntries>

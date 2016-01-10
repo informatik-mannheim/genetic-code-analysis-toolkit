@@ -74,6 +74,8 @@ public final class Utilities {
 	public static final String EMPTY = "", SPACE = " ", TAB = "\t", NEW_LINE = "\n", WHITESPACE = " \t\n\r\f", TRUE = "true", FALSE = "false", CHARSET = "UTF-8";
 	public static final double TWO_PI = PI*2, HALF_PI = PI/2, QUARTER_PI = PI/4, EIGHTH_PI = PI/8, SIXTEENTH_PI = PI/16;
 
+	private static final boolean USE_JNLP = false;
+	
 	private static final int BUFFER_SIZE = 8192;
 	private static final int TEMP_DIRECTORY_ATTEMPTS = 10000;
 	
@@ -91,19 +93,33 @@ public final class Utilities {
 	}
 	
 	public static BasicService getBasicService() throws UnavailableServiceException {
-		return (BasicService)ServiceManager.lookup("javax.jnlp.BasicService"); }
+		if(USE_JNLP) return (BasicService)ServiceManager.lookup("javax.jnlp.BasicService"); 
+		else throw new UnavailableServiceException();
+	}
 	public static PersistenceService getPersistenceService() throws UnavailableServiceException {
-		return (PersistenceService)ServiceManager.lookup("javax.jnlp.PersistenceService"); }
+		if(USE_JNLP) return (PersistenceService)ServiceManager.lookup("javax.jnlp.PersistenceService"); 
+		else throw new UnavailableServiceException();
+	}
 	public static FileOpenService getFileOpenService() throws UnavailableServiceException {
-		return (FileOpenService)ServiceManager.lookup("javax.jnlp.FileOpenService"); }
+		if(USE_JNLP) return (FileOpenService)ServiceManager.lookup("javax.jnlp.FileOpenService");
+		else throw new UnavailableServiceException();
+	}
 	public static FileSaveService getFileSaveService() throws UnavailableServiceException {
-		return (FileSaveService)ServiceManager.lookup("javax.jnlp.FileSaveService"); }
+		if(USE_JNLP)  return (FileSaveService)ServiceManager.lookup("javax.jnlp.FileSaveService");
+		else throw new UnavailableServiceException();
+	}
 	
 	public static boolean checkJNLP() {
 		if(jnlp!=null) return jnlp;
 		try { getBasicService(); return jnlp=true; }
 		catch(UnavailableServiceException e) {
 			return jnlp=false; }
+	}
+	
+	public static URL getResource(String name) {
+		if(!name.startsWith("bio/gcat/"))
+			name = "bio/gcat"+(name.startsWith("/")?EMPTY:"/")+name;
+		return localClassLoader.getResource(name);
 	}
 	public static InputStream getResourceAsStream(String name) {
 		if(!name.startsWith("bio/gcat/"))
