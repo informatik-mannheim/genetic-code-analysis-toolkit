@@ -25,7 +25,7 @@ import bio.gcat.nucleic.Tuple;
 import bio.gcat.operation.Cataloged;
 import bio.gcat.operation.Named;
 
-@Named(name="n-shift all tuples", icon="text_kerning") @Cataloged(group="Permutation: Tuples / Bases")
+@Named(name="n-shift all tuples", icon="text_kerning") @Cataloged(group="Permute Nucleotide Bases Positions")
 @Parameter.Annotation(key="shift",label="Shift",type=Type.NUMBER,value="1,10")
 @Documented(title="Shift Tuples", category={OPERATIONS,TRANSFORMATIONS}, resource="help/operation/transformation/shift_tuples.html")
 public class ShiftTuples implements Transformation {

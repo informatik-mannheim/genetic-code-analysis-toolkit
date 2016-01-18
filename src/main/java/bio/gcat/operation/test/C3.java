@@ -25,7 +25,7 @@ import bio.gcat.operation.Named;
 import bio.gcat.operation.transformation.ShiftTuples;
 import bio.gcat.operation.transformation.Transformation;
 
-@Named(name="c3", icon="c3") @Cataloged(group="Tests", order=30)
+@Named(name="c3", icon="c3") @Cataloged(group="Test Sequence", order=30)
 @Documented(title="C3", category={OPERATIONS,TESTS}, resource="help/operation/test/c3.html")
 public class C3 implements Test {
 	private static final Test

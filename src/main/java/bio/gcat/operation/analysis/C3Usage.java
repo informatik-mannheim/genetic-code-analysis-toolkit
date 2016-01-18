@@ -26,7 +26,7 @@ import bio.gcat.nucleic.helper.C3Code;
 import bio.gcat.operation.Cataloged;
 import bio.gcat.operation.Named;
 
-@Named(name = "C3 code usage", icon = "c3") @Cataloged(group = "Analyses")
+@Named(name = "C3 code usage", icon = "c3") @Cataloged(group="Analyse Sequence")
 @Parameter.Annotation(key = "codeNumber", label = "Code Number", type = Parameter.Type.NUMBER, value = "1,1,216")
 @Documented(title="C3 Usage", category={OPERATIONS,ANALYSES}, resource="help/operation/analysis/c3_usage.html")
 public class C3Usage implements Analysis {

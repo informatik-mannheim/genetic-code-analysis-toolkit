@@ -23,7 +23,7 @@ import bio.gcat.nucleic.Tuple;
 import bio.gcat.operation.Cataloged;
 import bio.gcat.operation.Named;
 
-@Named(name="remove duplicates", icon="style_delete") @Cataloged(group="Permutation: Input")
+@Named(name="remove duplicates", icon="style_delete") @Cataloged(group="Add / Remove Tuples")
 @Documented(title="Remove Duplicates", category={OPERATIONS,TRANSFORMATIONS}, resource="help/operation/transformation/remove_duplicates.html")
 public class RemoveDuplicates implements Transformation { 	
 	@Override public Collection<Tuple> transform(Collection<Tuple> tuples,Object... values) {

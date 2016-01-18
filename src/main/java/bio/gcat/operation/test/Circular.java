@@ -30,7 +30,7 @@ import bio.gcat.operation.Named;
 import bio.gcat.operation.transformation.ShiftSequence;
 import bio.gcat.operation.transformation.Transformation;
 
-@Named(name="n-circular", icon="arrow_rotate_clockwise") @Cataloged(group="Tests", order=21)
+@Named(name="n-circular", icon="arrow_rotate_clockwise") @Cataloged(group="Test Sequence", order=21)
 @Parameter.Annotation(key="n",label="n-Circular",type=Type.NUMBER,value="1,10")
 @Documented(title="Circular", category={OPERATIONS,TESTS}, resource="help/operation/test/circular.html")
 public class Circular implements Test {	
@@ -83,7 +83,7 @@ public class Circular implements Test {
 		return true;
 	}
 	
-	@Named(name="circular", icon="arrow_rotate_clockwise") @Cataloged(group="Tests", order=20)
+	@Named(name="circular", icon="arrow_rotate_clockwise") @Cataloged(group="Test Sequence", order=20)
 	@Documented(title="Circular", category={OPERATIONS,TESTS}, resource="help/operation/test/circular.html")
 	public static class CommonCircular extends Circular {
 		@Override public boolean test(Collection<Tuple> tuples,Object... values) {

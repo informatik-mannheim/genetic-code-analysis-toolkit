@@ -11,7 +11,7 @@ import bio.gcat.operation.Named;
 import scala.Tuple3;
 import bio.gcat.geneticcode.dich.Codon;
 
-@Named(name = "BDA sequence", icon = "bda") @Cataloged(group = "Analyses")
+@Named(name = "BDA sequence", icon = "bda") @Cataloged(group="Analyse Sequence")
 @Documented(title="BDA Sequence", category={OPERATIONS,ANALYSES}, resource="help/operation/analysis/bda_sequence.html")
 public class BDASequence implements Analysis {
 	@Override public Result analyse(Collection<Tuple> tuples, Object... values) {

@@ -31,7 +31,7 @@ import bio.gcat.operation.Cataloged;
 import bio.gcat.operation.Named;
 import com.google.common.collect.ImmutableMap;
 
-@Named(name="audio", icon="sound") @Cataloged(group="Analyses")
+@Named(name="audio", icon="sound") @Cataloged(group="Analyse Sequence")
 @Documented(title="Audio", category={OPERATIONS,ANALYSES}, resource="help/operation/analysis/audio.html")
 public class Audio implements Analysis {
 	private static Map<Base,Note> notes = ImmutableMap.of(

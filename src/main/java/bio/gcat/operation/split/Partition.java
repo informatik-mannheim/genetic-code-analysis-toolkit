@@ -27,7 +27,7 @@ import bio.gcat.operation.Cataloged;
 import bio.gcat.operation.Named;
 import com.google.common.collect.Lists;
 
-@Named(name="n-partition", icon="timeline_marker") @Cataloged(group="Splits")
+@Named(name="n-partition", icon="timeline_marker") @Cataloged(group="Split Sequence")
 @Parameter.Annotation(key="parts",label="Parts",type=Type.NUMBER,value="2,32767")
 @Documented(title="Partition", category={OPERATIONS,SPLITS}, resource="help/operation/split/partition.html")
 public class Partition implements Split {

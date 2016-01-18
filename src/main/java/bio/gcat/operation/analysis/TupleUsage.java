@@ -40,7 +40,7 @@ import bio.gcat.nucleic.Tuple;
 import bio.gcat.operation.Cataloged;
 import bio.gcat.operation.Named;
 
-@Named(name="tuple usage", icon="report") @Cataloged(group="Analyses")
+@Named(name="tuple usage", icon="report") @Cataloged(group="Analyse Sequence")
 @Parameter.Annotation(key="file",label="File",type=Type.FILE)
 @Documented(title="Tuple Usage", category={OPERATIONS,ANALYSES}, resource="help/operation/analysis/tuple_usage.html")
 public class TupleUsage implements Analysis {	

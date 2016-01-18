@@ -30,7 +30,7 @@ import bio.gcat.nucleic.Tuple;
 import bio.gcat.operation.Cataloged;
 import bio.gcat.operation.Named;
 
-@Named(name="pick", icon="basket_remove") @Cataloged(group="Splits")
+@Named(name="pick", icon="basket_remove") @Cataloged(group="Split Sequence")
 @Parameter.Annotation(key="pattern",label="Split",type=Type.TEXT)
 @Parameter.Annotation(key="regex",label="Regex",type=Type.BOOLEAN,value=Utilities.TRUE)
 @Documented(title="Pick", category={OPERATIONS,SPLITS}, resource="help/operation/split/pick.html")

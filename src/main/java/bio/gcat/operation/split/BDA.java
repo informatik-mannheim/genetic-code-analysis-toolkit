@@ -28,7 +28,7 @@ import bio.gcat.nucleic.Tuple;
 import bio.gcat.operation.Cataloged;
 import bio.gcat.operation.Named;
 
-@Named(name="binary dichotomic algorithm", icon="bda") @Cataloged(group="Splits")
+@Named(name="binary dichotomic algorithm", icon="bda") @Cataloged(group="Split Sequence")
 @Documented(title="BDA", category={OPERATIONS,SPLITS}, resource="help/operation/split/bda.html")
 public class BDA implements Split {
 	@Override public List<Collection<Tuple>> split(Collection<Tuple> tuples,Object... values) {

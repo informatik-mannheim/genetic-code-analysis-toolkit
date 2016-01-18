@@ -17,7 +17,7 @@ import bio.gcat.nucleic.Tuple;
 import bio.gcat.operation.Cataloged;
 import bio.gcat.operation.Named;
 
-@Named(name="add random tuples", icon="arrow_switch") @Cataloged(group="Permutation: Input")
+@Named(name="add random tuples", icon="arrow_switch") @Cataloged(group="Add / Remove Tuples")
 @Parameter.Annotation(key="number",label="Number of Tuples",type=Type.NUMBER,value="1,32767")
 @Documented(title="Random Tuples", category={OPERATIONS,TRANSFORMATIONS}, resource="help/operation/transformation/random_tuples.html")
 public class RandomTuples implements Transformation {

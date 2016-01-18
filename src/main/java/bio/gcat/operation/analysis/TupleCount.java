@@ -10,7 +10,7 @@ import bio.gcat.operation.Cataloged;
 import bio.gcat.operation.Named;
 import com.google.common.collect.HashMultiset;
 
-@Named(name="tuple count", icon="chart_bar") @Cataloged(group="Analyses")
+@Named(name="tuple count", icon="chart_bar") @Cataloged(group="Analyse Sequence")
 @Documented(title="Tuple Count", category={OPERATIONS,ANALYSES}, resource="help/operation/analysis/tuple_count.html")
 public class TupleCount implements Analysis {
 	private static final String DELIMITER = ": ", NEW_LINE = "<br/>";

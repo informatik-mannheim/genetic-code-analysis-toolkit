@@ -10,7 +10,7 @@ import bio.gcat.nucleic.Tuple;
 import bio.gcat.operation.Cataloged;
 import bio.gcat.operation.Named;
 
-@Named(name="reverse tuples", icon="text_letterspacing") @Cataloged(group="Permutation: Tuples / Bases")
+@Named(name="reverse tuples", icon="text_letterspacing") @Cataloged(group="Permute Nucleotide Bases Positions")
 @Documented(title="Reverse Tuples", category={OPERATIONS,TRANSFORMATIONS}, resource="help/operation/transformation/reverse_tuples.html")
 public class ReverseTuples implements Transformation {
 	@Override public Collection<Tuple> transform(Collection<Tuple> tuples,Object... values) {

@@ -24,7 +24,7 @@ import bio.gcat.nucleic.Tuple;
 import bio.gcat.operation.Cataloged;
 import bio.gcat.operation.Named;
 
-@Named(name="self-complementary", icon="style_go") @Cataloged(group="Tests", order=40)
+@Named(name="self-complementary", icon="style_go") @Cataloged(group="Test Sequence", order=40)
 @Documented(title="Self-Complementary", category={OPERATIONS,TESTS}, resource="help/operation/test/self_complementary.html")
 public class SelfComplementary implements Test {
 	@Override public boolean test(Collection<Tuple> tuples,Object... values) {

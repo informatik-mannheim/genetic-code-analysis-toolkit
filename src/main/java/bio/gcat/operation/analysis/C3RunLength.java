@@ -32,7 +32,7 @@ import bio.gcat.nucleic.helper.SequenceUtilities.Pair;
 import bio.gcat.operation.Cataloged;
 import bio.gcat.operation.Named;
 
-@Named(name = "C3 run lengths", icon = "c3") @Cataloged(group = "Analyses")
+@Named(name = "C3 run lengths", icon = "c3") @Cataloged(group="Analyse Sequence")
 @Parameter.Annotation(key = "codeNumber", label = "Code Number", type = Parameter.Type.NUMBER, value = "1,1,216")
 @Documented(title="C3 Code Run Lenghts", category={OPERATIONS,ANALYSES}, resource="help/operation/analysis/c3_run_length.html")
 public class C3RunLength implements Analysis {

@@ -32,7 +32,7 @@ import bio.gcat.operation.Cataloged;
 import bio.gcat.operation.Named;
 import bio.gcat.geneticcode.dich.Codon;
 
-@Named(name = "BDA run lengths", icon = "bda") @Cataloged(group = "Analyses")
+@Named(name = "BDA run lengths", icon = "bda") @Cataloged(group="Analyse Sequence")
 @Documented(title="BDA Run Length", category={OPERATIONS,ANALYSES}, resource="help/operation/analysis/bda_run_length.html")
 public class BDARunLength implements Analysis {
 	@Override public Result analyse(Collection<Tuple> tuples, Object... values) {

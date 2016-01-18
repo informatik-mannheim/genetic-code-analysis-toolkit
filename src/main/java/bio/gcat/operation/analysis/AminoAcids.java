@@ -27,7 +27,7 @@ import com.google.common.collect.Multiset;
 import com.google.common.collect.Multiset.Entry;
 import static bio.gcat.Help.*;
 
-@Named(name="amino acids", icon="bricks") @Cataloged(group="Analyses")
+@Named(name="amino acids", icon="bricks") @Cataloged(group="Analyse Sequence")
 @Documented(title="Amino Acids", category={OPERATIONS,ANALYSES}, resource="help/operation/analysis/amino_acids.html")
 public class AminoAcids implements Analysis {
 	private static final String DELIMITER = ", ", TIMES = "x ";

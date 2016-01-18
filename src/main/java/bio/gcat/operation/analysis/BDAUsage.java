@@ -31,7 +31,7 @@ import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Multiset.Entry;
 
-@Named(name = "BDA usage", icon = "bda") @Cataloged(group = "Analyses")
+@Named(name = "BDA usage", icon = "bda") @Cataloged(group="Analyse Sequence")
 @Documented(title="BDA Usage", category={OPERATIONS,ANALYSES}, resource="help/operation/analysis/bda_usage.html")
 public class BDAUsage implements Analysis {
 	@Override public Result analyse(Collection<Tuple> tuples, Object... values) {

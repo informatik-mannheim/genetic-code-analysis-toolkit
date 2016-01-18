@@ -24,7 +24,7 @@ import bio.gcat.nucleic.Tuple;
 import bio.gcat.operation.Cataloged;
 import bio.gcat.operation.Named;
 
-@Named(name="remove unknown compounds", icon="bug_delete") @Cataloged(group="Permutation: Input")
+@Named(name="remove unknown compounds", icon="bug_delete") @Cataloged(group="Add / Remove Tuples")
 @Documented(title="Remove Unknown Compounds", category={OPERATIONS,TRANSFORMATIONS}, resource="help/operation/transformation/remove_unknown_compounds.html")
 public class RemoveUnknownCompounds implements Transformation {
 	@Override public Collection<Tuple> transform(Collection<Tuple> tuples,Object... values) {

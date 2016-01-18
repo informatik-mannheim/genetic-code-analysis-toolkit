@@ -27,7 +27,7 @@ import bio.gcat.nucleic.Tuple;
 import bio.gcat.operation.Cataloged;
 import bio.gcat.operation.Named;
 
-@Named(name="power set", icon="chart_organisation") @Cataloged(group="Splits")
+@Named(name="power set", icon="chart_organisation") @Cataloged(group="Split Sequence")
 @Documented(title="Power Set", category={OPERATIONS,SPLITS}, resource="help/operation/split/power_set.html")
 public class PowerSet implements Split {
  	@Override public List<Collection<Tuple>> split(Collection<Tuple> tuples,Object... values) { return new ArrayList<>(powerSet(new HashSet<>(tuples))); }

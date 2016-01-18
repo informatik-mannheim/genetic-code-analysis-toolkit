@@ -10,7 +10,7 @@ import bio.gcat.operation.Named;
 import bio.gcat.operation.transformation.CommonSubstitution;
 import bio.gcat.operation.transformation.Transformation;
 
-@Named(name="invariant to", icon="book_next") @Cataloged(group="Tests", order=50)
+@Named(name="invariant to", icon="book_next") @Cataloged(group="Test Sequence", order=50)
 @Documented(title="Invariant To", category={OPERATIONS,TESTS}, resource="help/operation/test/invariant_to.html")
 public class InvariantTo implements Test {
 	private static final Transformation

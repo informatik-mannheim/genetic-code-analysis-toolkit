@@ -14,7 +14,7 @@ import bio.gcat.operation.Cataloged;
 import bio.gcat.operation.Named;
 import bio.gcat.operation.test.Test;
 
-@Named(name="comma-free", icon="comma_free") @Cataloged(group="Splits")
+@Named(name="comma-free", icon="comma_free") @Cataloged(group="Split Sequence")
 @Parameter.Annotation(key="parts",label="Parts",type=Type.NUMBER,value="2,32767")
 @Parameter.Annotation(key="equal-sized",label="Equal Sized",type=Type.BOOLEAN)
 @Documented(title="Comma-Free", category={OPERATIONS,SPLITS}, resource="help/operation/split/comma_free.html")

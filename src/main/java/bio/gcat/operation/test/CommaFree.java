@@ -27,7 +27,7 @@ import bio.gcat.operation.Named;
 import bio.gcat.operation.transformation.ShiftSequence;
 import bio.gcat.operation.transformation.Transformation;
 
-@Named(name="comma-free", icon="comma_free") @Cataloged(group="Tests", order=10)
+@Named(name="comma-free", icon="comma_free") @Cataloged(group="Test Sequence", order=10)
 @Documented(title="Comma-Free", category={OPERATIONS,TESTS}, resource="help/operation/test/comma_free.html")
 public class CommaFree implements Test {
 	private static final Test

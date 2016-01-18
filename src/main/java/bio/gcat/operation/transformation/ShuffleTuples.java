@@ -25,7 +25,7 @@ import bio.gcat.nucleic.Tuple;
 import bio.gcat.operation.Cataloged;
 import bio.gcat.operation.Named;
 
-@Named(name="shuffle all tuples", icon="arrow_refresh") @Cataloged(group="Permutation: Positions")
+@Named(name="shuffle all tuples", icon="arrow_refresh") @Cataloged(group="Permute Tuple Position")
 @Documented(title="Shuffle All Tuples", category={OPERATIONS,TRANSFORMATIONS}, resource="help/operation/transformation/shuffle_tuples.html")
 public class ShuffleTuples implements Transformation {		
 	@Override public Collection<Tuple> transform(Collection<Tuple> tuples,Object... values) {

@@ -26,7 +26,7 @@ import bio.gcat.nucleic.Tuple;
 import bio.gcat.operation.Cataloged;
 import bio.gcat.operation.Named;
 
-@Named(name="add all (missing) tuples", icon="color_swatch") @Cataloged(group="Permutation: Input")
+@Named(name="add all (missing) tuples", icon="color_swatch") @Cataloged(group="Add / Remove Tuples")
 @Parameter.Annotation(key="length",label="Length",type=Type.NUMBER,value="1,3,10")
 @Documented(title="All (Missing) Tuples", category={OPERATIONS,TRANSFORMATIONS}, resource="help/operation/transformation/all_tuples.html")
 public class AllTuples implements Transformation {	
