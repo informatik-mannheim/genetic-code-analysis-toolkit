@@ -9,4 +9,11 @@ public class NucleicOptions {
 	public Acid defaultAcid = Acid.RNA;
 	
 	protected EditorMode editorMode = EditorMode.SEQUENCE;
+	
+	public NucleicOptions() { /* default constructor */ }
+	protected NucleicOptions(NucleicOptions options) { // copy constructor
+		tupleLength = options.tupleLength;
+		defaultAcid = options.defaultAcid;
+		editorMode = options.editorMode;
+	}
 }

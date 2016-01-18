@@ -31,7 +31,7 @@ public interface NucleicListener extends EventListener {
 		private static final long serialVersionUID = 1l;
 		
 		private Collection<Tuple> tuples;
-		private NucleicOptions options;
+		private NucleicOptions options,oldOptions;
 		
 		public NucleicEvent(Object source, Collection<Tuple> tuples) {
 			super(source);
@@ -41,8 +41,13 @@ public interface NucleicListener extends EventListener {
 			super(source);
 			this.options = options;
 		}
+		public NucleicEvent(Object source, NucleicOptions options, NucleicOptions oldOptions) {
+			this(source,options);
+			this.oldOptions = oldOptions;
+		}
 		
 		public Collection<Tuple> getTuples() { return tuples; }
 		public NucleicOptions getOptions() { return options; }
+		public NucleicOptions getOldOptions() { return oldOptions; }
 	}
 }

@@ -95,6 +95,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.Executors;
@@ -189,12 +190,15 @@ import bio.gcat.batch.Action.TaskAttribute;
 import bio.gcat.gui.editor.NucleicAdapter;
 import bio.gcat.gui.editor.NucleicDocument;
 import bio.gcat.gui.editor.NucleicEditor;
+import bio.gcat.gui.editor.NucleicListener;
+import bio.gcat.gui.editor.NucleicOptions;
 import bio.gcat.gui.editor.NucleicOptions.EditorMode;
 import bio.gcat.gui.helper.FoldingPanel;
 import bio.gcat.gui.helper.Guitilities;
 import bio.gcat.gui.helper.PopupMouseAdapter;
 import bio.gcat.gui.input.CodonCircle;
 import bio.gcat.gui.input.Input;
+import bio.gcat.gui.input.TesseraTable;
 import bio.gcat.log.InjectionLogger;
 import bio.gcat.log.Logger;
 import bio.gcat.nucleic.Acid;
@@ -207,7 +211,7 @@ import bio.gcat.operation.split.Split;
 import bio.gcat.operation.test.Test;
 import bio.gcat.operation.transformation.Transformation;
 
-public class AnalysisTool extends JFrame implements ActionListener {
+public class AnalysisTool extends JFrame implements ActionListener, NucleicListener {
 	private static final long serialVersionUID = 1l;
 	
 	public static final String GENETIC_EXTENSION = "gen";
@@ -525,7 +529,7 @@ public class AnalysisTool extends JFrame implements ActionListener {
 			if(bar!=null) toolbars.add(bar);
 		add(toolbars,BorderLayout.NORTH);
 		
-		editor = new NucleicEditor();
+		(editor=new NucleicEditor()).addNucleicListener(this);
 		editor.getTextPane().addCaretListener(new CaretListener() {
 			@Override public void caretUpdate(CaretEvent event) {
 				boolean selection = event.getDot()!=event.getMark();
@@ -1484,6 +1488,23 @@ public class AnalysisTool extends JFrame implements ActionListener {
 		about.setVisible(true);
 	}
 	
+	@Override public void tuplesInsert(NucleicEvent event) { /* nothing to do here */ }
+	@Override public void tuplesRemoved(NucleicEvent event) { /* nothing to do here */ }
+	@Override public void tuplesUndoableChange(NucleicEvent event) { /* nothing to do here */ }
+	@Override public void optionsChange(NucleicEvent event) {
+		NucleicOptions options = event.getOptions(),
+			oldOptions = event.getOldOptions();
+		if(oldOptions==null)
+			return;
+		if(oldOptions.tupleLength==3&&options.tupleLength==4) {
+			// switch to tessera table input
+			catalogPanel.showInput(TesseraTable.class);
+		} else if(oldOptions.tupleLength==4&&options.tupleLength==3) {
+			// switch to codon wheel input
+			catalogPanel.showInput(CodonCircle.class);
+		}
+	}
+	
 	class CatalogPanel extends JPanel {
 		private static final long serialVersionUID = 1l;
 		
@@ -1515,8 +1536,11 @@ public class AnalysisTool extends JFrame implements ActionListener {
 				.setUrls(ClasspathHelper.forPackage(Input.class.getPackage().getName()))
 				.setScanners(new SubTypesScanner()));
 			for(Class<? extends Input> inputClass:inputReflections.getSubTypesOf(Input.class))
-				try { inputs.add(input=inputClass.newInstance()); if(CodonCircle.class.equals(inputClass)) defaultInput = input; }
-				catch(InstantiationException|IllegalAccessException e) { /* nothing to do here */ }
+				try {
+					inputs.add(input=inputClass.newInstance());
+					if(CodonCircle.class.equals(inputClass))
+						defaultInput = input;
+				} catch(InstantiationException|IllegalAccessException e) { /* nothing to do here */ }
 			inputPanel = addPage(new JPanel(new BorderLayout()),"Input",true);
 			
 			inputCombo = new JComboBox<Input>(inputs.toArray(new Input[0]));
@@ -1531,7 +1555,7 @@ public class AnalysisTool extends JFrame implements ActionListener {
 			inputCombo.setSelectedItem(defaultInput);
 			inputCombo.addActionListener(new ActionListener() {
 				@Override public void actionPerformed(ActionEvent event) {
-					setInput((Input)inputCombo.getSelectedItem()); }
+					showInput((Input)inputCombo.getSelectedItem()); }
 				}
 			);
 			
@@ -1541,11 +1565,13 @@ public class AnalysisTool extends JFrame implements ActionListener {
 				@Override public void actionPerformed(ActionEvent event) {
 					Input input = (Input)inputCombo.getSelectedItem();
 					if(input instanceof Configurable) {
-						((Configurable)input).showPreferencesDialog(AnalysisTool.this,"Input Preferences"); setInput(input); }
+						((Configurable)input).showPreferencesDialog(AnalysisTool.this,"Input Preferences");
+						showInput(input);
+					}
 				}
 			}));
 			
-			setInput(defaultInput);
+			showInput(defaultInput);
 		}
 		
 		public List<FoldingPanel> getPages() { return Collections.unmodifiableList(pagePanels); }
@@ -1561,14 +1587,20 @@ public class AnalysisTool extends JFrame implements ActionListener {
 			return page;
 		}
 		
-		public void setInput(Class<? extends Input> input) throws InstantiationException, IllegalAccessException { setInput(input.newInstance()); }
-		public void setInput(final Input input) {
+		public Input showInput(Class<? extends Input> inputClass) throws NoSuchElementException {
+			Input input = inputs.stream().filter(inputCandidate->inputClass
+				.isAssignableFrom(inputCandidate.getClass())).findFirst().get();
+			showInput(input); return input;
+		}
+		protected void showInput(final Input input) {
 			SwingUtilities.invokeLater(new Runnable() {
 				@Override public void run() {
 					JPanel panel = (JPanel)inputPanel.getChild(); panel.removeAll();
 					if(input!=null) panel.add(input.getComponent(editor), BorderLayout.CENTER);
 					inputPanel.revalidate(); inputPanel.repaint();
 					inputPreferences.setEnabled(input instanceof Configurable);
+					if(inputCombo.getSelectedItem()!=input)
+					   inputCombo.setSelectedItem(input);
 				}
 			});
 		}

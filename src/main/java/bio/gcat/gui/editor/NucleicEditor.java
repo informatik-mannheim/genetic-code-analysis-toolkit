@@ -535,24 +535,27 @@ public class NucleicEditor extends JRootPane {
 		
 	public int getTupleLength() { return options.tupleLength; }
 	public void setTupleLength(int tupleLength) {
+		NucleicOptions oldOptions = new NucleicOptions(options);
 		optionLength.setValue(options.tupleLength=tupleLength);
 		document.setTupleLength(tupleLength);
 		document.adaptText(); adaptTabSet(); 
-		repaint(); fireOptionsChange();
+		repaint(); fireOptionsChange(oldOptions);
 	}
 	
 	public Acid getDefaultAcid() { return options.defaultAcid; }
 	public void setDefaultAcid(Acid defaultAcid) {
+		NucleicOptions oldOptions = new NucleicOptions(options);
 		optionAcid.setValue(options.defaultAcid=defaultAcid);
 		document.setDefaultAcid(defaultAcid);
 		if(defaultAcid!=null) document.adaptText();
-		fireOptionsChange();
+		fireOptionsChange(oldOptions);
 	}
 	
 	public EditorMode getEditorMode() { return options.editorMode; }
 	public void setEditorMode(EditorMode editorMode) {
+		NucleicOptions oldOptions = new NucleicOptions(options);
 		optionMode.setValue(options.editorMode=editorMode);
-		document.adaptText();  fireOptionsChange();
+		document.adaptText(); fireOptionsChange(oldOptions);
 	}
 	
 	public void setDirty() { cleanHash = -1; }
@@ -606,12 +609,14 @@ public class NucleicEditor extends JRootPane {
   		if(listeners[index]==NucleicListener.class)
   			((NucleicListener)listeners[index+1]).tuplesUndoableChange(event!=null?event:(event=new NucleicEvent(NucleicEditor.this,getTuples())));
   }
-  protected void fireOptionsChange() {
+  protected void fireOptionsChange() { fireOptionsChange(null); }
+  protected void fireOptionsChange(NucleicOptions oldOptions) { fireOptionsChange(options,oldOptions); }
+  protected void fireOptionsChange(NucleicOptions options,NucleicOptions oldOptions) {
   	NucleicEvent event = null;
   	Object[] listeners = listenerList.getListenerList();
   	for(int index = listeners.length-2;index>=0;index-=2)
   		if(listeners[index]==NucleicListener.class)
-  			((NucleicListener)listeners[index+1]).optionsChange(event!=null?event:(event=new NucleicEvent(NucleicEditor.this,options)));
+  			((NucleicListener)listeners[index+1]).optionsChange(event!=null?event:(event=new NucleicEvent(NucleicEditor.this,options,oldOptions)));
   }
   
 	class NumberPanel extends JPanel implements NucleicListener {

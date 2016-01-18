@@ -15,9 +15,18 @@
  */
 package bio.gcat.gui.input;
 
-import static bio.gcat.Utilities.*;
-import static bio.gcat.gui.helper.Guitilities.*;
-import static java.lang.Math.*;
+import static bio.gcat.Utilities.EIGHTH_PI;
+import static bio.gcat.Utilities.HALF_PI;
+import static bio.gcat.Utilities.QUARTER_PI;
+import static bio.gcat.Utilities.SIXTEENTH_PI;
+import static bio.gcat.Utilities.TWO_PI;
+import static bio.gcat.gui.helper.Guitilities.EMPTY_BORDER;
+import static java.lang.Math.PI;
+import static java.lang.Math.cos;
+import static java.lang.Math.min;
+import static java.lang.Math.round;
+import static java.lang.Math.sin;
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -33,8 +42,12 @@ import java.awt.geom.Arc2D;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
+import java.util.Comparator;
 import java.util.Map;
+import java.util.stream.Stream;
+
 import javax.swing.border.EmptyBorder;
+
 import bio.gcat.nucleic.Base;
 import bio.gcat.nucleic.Tuple;
 
@@ -45,6 +58,9 @@ public class CodonCircle extends DefaultInput {
 	private static final float[] CIRCLES = new float[]{1f,.825f,.5f};
 	
 	private int circles = 3;
+	private boolean representable = true;
+	
+	private Font boldFont;
 	
 	@Override public String getName() { return NAME; }
 	
@@ -89,7 +105,8 @@ public class CodonCircle extends DefaultInput {
 	
 	public int getCircles() { return circles; }
 	public void setCircles(int circles) {
-		this.circles = Math.min(circles>0?circles:3,CIRCLES.length);
+		// only display of 1, 2, or 3 circles are supported, rest is unsupported, set to 1 
+		this.circles = (this.representable=circles>0&&circles<=3)?circles:1;
 		for(TupleButton button:buttons.values())
 			button.setVisible(this.circles>=button.tuple.length());
 		repaint();
@@ -136,6 +153,22 @@ public class CodonCircle extends DefaultInput {
 			graphics.draw(new Line2D.Float(
 				center.x-(float)(x*inner),center.y-(float)(y*inner),
 				center.x-(float)(x*outer),center.y-(float)(y*outer)));
+		}
+		
+		if(!representable) {
+			graphics.setColor(Color.RED);
+			graphics.setFont(boldFont!=null?boldFont:(boldFont=getFont().deriveFont(Font.BOLD)));
+			FontMetrics metrics = getFontMetrics(boldFont);
+			String lines[] = new String[] {
+				"There is no representation of this input for tuples",
+				"of this length. Consider switching to another input.",
+			};
+			// determine length of longest line via stream
+			final float lineLeft = width-Stream.of(lines).map(line->metrics.stringWidth(line)).max(Comparator.naturalOrder()).get()-10,
+				lineHeight = metrics.getHeight()+2; // gap between lines
+			for(int line=0;line<lines.length;line++)
+				graphics.drawString(lines[line], lineLeft,
+					height-((lines.length-line-1)*lineHeight)-10);
 		}
 	}
 	
