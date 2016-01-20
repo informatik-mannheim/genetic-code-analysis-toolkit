@@ -31,7 +31,7 @@ import bio.gcat.operation.Cataloged;
 import bio.gcat.operation.Named;
 import com.google.common.collect.ImmutableMap;
 
-@Named(name="common substitution", icon="book_next") @Cataloged(group="Subsitute Nucleotide Bases")
+@Named(name="common substitution", icon="book_next") @Cataloged(group="Substitute Nucleotide Bases")
 @Documented(title="Common Substitution", category={OPERATIONS,TRANSFORMATIONS}, resource="help/operation/transformation/common_substitution.html")
 public class CommonSubstitution implements Transformation {
 	public static final Map<String,Map<Base,Base>> SUBSTITUTIONS;

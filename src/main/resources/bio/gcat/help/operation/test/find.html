@@ -1,1 +1,27 @@
-<p>TODO
+<p>The &quot;<b>Find</b>&quot; functionallity can be used to search for certain patterns in a sequence.
+<p>The search is always performed from top to bottom, starting from the current position of the cursor in the sequence. The option &quot;<b>Wrap Search</b>&quot; can be used to begin searching from the start of the sequence if the end was reached before a matching string was found. As soon as a match was found the sequence will be selected and marked in the editor.
+<p>By default the search input does only allow single nucliotide bases. For a more complex search, regular expressions can be used by enabeling the &quot;<b>Regular Expression</b>&quot; checkbox. Any combination of the constructs listed in the following table can be used to search for a given pattern.
+<h2>Summary of regular-expression constructs</h2>
+<table>
+	<tr><th>Construct</th><th>Matches</th></tr>
+	<tr><i>x</i><td></td><td>The character <i>x</i></td></tr>
+	<tr>[abc]<td></td><td>a, b, or c (simple class)</td></tr>
+	<tr>[^abc]<td></td><td>Any character except a, b, or c (negation)</td></tr>
+	<tr>[a-zA-Z]<td></td><td>a through z or A through Z, inclusive (range)</td></tr>
+	<tr>[a-d[m-p]]<td></td><td>a through d, or m through p: [a-dm-p] (union)</td></tr>
+	<tr>[a-z&&[def]]<td></td><td>d, e, or f (intersection)</td></tr>
+	<tr>[a-z&&[^bc]]<td></td><td>a through z, except for b and c: [ad-z] (subtraction)</td></tr>
+	<tr>[a-z&&[^m-p]]<td></td><td>a through z, and not m through p: [a-lq-z] (subtraction)</td></tr>
+	<tr>.<td></td><td>Any character</td></tr>
+	<tr>X?<td></td><td>X, once or not at all</td></tr>
+	<tr>X*<td></td><td>X, zero or more times</td></tr>
+	<tr>X+<td></td><td>X, one or more times</td></tr>
+	<tr>X{n}<td></td><td>X, exactly n times</td></tr>
+	<tr>X{n,}<td></td><td>X, at least n times</td></tr>
+	<tr>X{n,m}<td></td><td>X, at least n but not more than m times</td></tr>
+	<tr>XY<td></td><td>X followed by Y</td></tr>
+	<tr>X|Y<td></td><td>Either X or Y</td></tr>
+	<tr>(X)<td></td><td>X, as a capturing group</td></tr>
+</table>
+<p>To match e.g. all codons (tuples of length 3) ending in U, the regular expression <b>??U</b> may be used. For tessera (tuples of length 4) starting with U and ending either in A or C the regular expression <b>U??(A|C)</b> applies.
+<p>For more information on regular expression constructs, please see the <a href="https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html">Java documentation on Patterns</a>.

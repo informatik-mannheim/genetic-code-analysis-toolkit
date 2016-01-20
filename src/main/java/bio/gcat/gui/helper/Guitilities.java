@@ -55,10 +55,12 @@ import java.util.StringTokenizer;
 import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
+import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.GroupLayout;
+import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComponent;
@@ -803,10 +805,47 @@ public class Guitilities {
 		pCons.setConstraint(SpringLayout.EAST,x);
 	}
 	
+	public static BufferedImage getComponentImage(Component component) { return getComponentImage(component,null); }
+	public static BufferedImage getComponentImage(Component component, Color clearBackground) {
+		int width = component.getWidth(), height = component.getHeight();
+		BufferedImage image = new BufferedImage(width,height,BufferedImage.TYPE_INT_RGB);
+		Graphics graphics = image.getGraphics();
+		if(clearBackground!=null) {
+			graphics.setColor(clearBackground);
+			graphics.fillRect(0,0,width,height);
+		}
+		component.paint(graphics);
+		return image;
+	}
+	
+	
 	public static void prepareLookAndFeel() {
 		UIManager.put("FileChooser.readOnly", Boolean.TRUE);
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		}	catch(Exception e) { e.printStackTrace(); };
+	}
+	
+	public static class IconButton extends JButton {
+		private static final long serialVersionUID = 1l;
+
+		public IconButton(Action action) {
+			super(action); 
+			if(action.getValue(Action.SMALL_ICON)==null)
+				throw new NullPointerException();
+			setText(null); setIconButton();
+		}
+
+		public IconButton(Icon icon) { super(icon); setIconButton(); }
+		public IconButton(Icon icon, String tooltipText) {
+			super(icon); setToolTipText(tooltipText); setIconButton();
+		}
+		
+		private void setIconButton() {
+			setBorder(EMPTY_BORDER);
+			setBorderPainted(false);
+			setFocusPainted(false);
+			setContentAreaFilled(false);
+		}
 	}
 }

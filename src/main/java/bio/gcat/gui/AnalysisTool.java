@@ -27,7 +27,6 @@ import static bio.gcat.batch.Action.TaskAttribute.SPLIT_PICK;
 import static bio.gcat.batch.Action.TaskAttribute.TEST_CRITERIA;
 import static bio.gcat.batch.Action.TaskAttribute.TEST_CRITERIA_BREAK_IF_FALSE;
 import static bio.gcat.gui.helper.Guitilities.CATEGORY_BORDER;
-import static bio.gcat.gui.helper.Guitilities.EMPTY_BORDER;
 import static bio.gcat.gui.helper.Guitilities.TITLE_FOREGROUND;
 import static bio.gcat.gui.helper.Guitilities.createButtonGroup;
 import static bio.gcat.gui.helper.Guitilities.createMenuItem;
@@ -58,6 +57,8 @@ import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Rectangle;
+import java.awt.Toolkit;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
@@ -76,6 +77,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
@@ -95,9 +97,10 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Map.Entry;
+import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -195,6 +198,8 @@ import bio.gcat.gui.editor.NucleicOptions;
 import bio.gcat.gui.editor.NucleicOptions.EditorMode;
 import bio.gcat.gui.helper.FoldingPanel;
 import bio.gcat.gui.helper.Guitilities;
+import bio.gcat.gui.helper.Guitilities.IconButton;
+import bio.gcat.gui.helper.HTMLText;
 import bio.gcat.gui.helper.PopupMouseAdapter;
 import bio.gcat.gui.input.CodonCircle;
 import bio.gcat.gui.input.Input;
@@ -210,6 +215,7 @@ import bio.gcat.operation.analysis.Analysis.Result;
 import bio.gcat.operation.split.Split;
 import bio.gcat.operation.test.Test;
 import bio.gcat.operation.transformation.Transformation;
+import lc.kra.Characters;
 
 public class AnalysisTool extends JFrame implements ActionListener, NucleicListener {
 	private static final long serialVersionUID = 1l;
@@ -220,7 +226,23 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 		FASTA_EXTENSION_FILTER = new FileNameExtensionFilter("FASTA Files (*.fasta;*.fna,*.fa)","fasta","fna","fa"),
 		TEXT_EXTENSION_FILTER = new FileNameExtensionFilter("Text Documents (*.txt)", "txt");
 	
-	public static final String NAME = "Genetic Code Analysis Toolkit (GCAT)", VERSION = "1.9.4";
+	public static final String NAME = "Genetic Code Analysis Toolkit (GCAT)", VERSION;
+	static {
+		String version = "UNKNOWN";
+		try(InputStream versionInput=Optional.ofNullable(AnalysisTool.class.getClassLoader().
+				getResourceAsStream("bio/gcat/version.properties")).orElseThrow(IOException::new)) {
+			Properties versionProperties = new Properties();
+			versionProperties.load(versionInput);
+			version = versionProperties.getProperty("version",version);
+		} catch(IOException e1) {
+			try(InputStream mavenInput=Optional.ofNullable(AnalysisTool.class.getClassLoader().
+					getResourceAsStream("META-INF/maven/bio.gcat/gcat/pom.properties")).orElseThrow(IOException::new)) {
+				Properties mavenProperties = new Properties();
+				mavenProperties.load(mavenInput);
+				version = mavenProperties.getProperty("version",version);
+			} catch(IOException e2) { /* nothing to do here */ }
+		} finally { VERSION = version; }
+	}
 	
 	private static final int
 		MENU_FILE = 0,
@@ -579,16 +601,18 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 			JPanel glassPane = (JPanel)getGlassPane();
 			glassPane.setVisible(true);
 			glassPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
+
+			JButton copyButton = new IconButton(getImageIcon("page_copy"),"Copy to clipboard");
+			copyButton.addActionListener(new ActionListener() {
+				@Override public void actionPerformed(ActionEvent e) { consolePane.copyText(); }
+			});
+			glassPane.add(copyButton);
 			
-			final JButton button = new JButton(getImageIcon("bin_closed"));
-			button.setToolTipText("Clean console");
-			button.setBorderPainted(false);
-			button.setFocusPainted(false);
-			button.setContentAreaFilled(false);
-			button.addActionListener(new ActionListener() {
+			JButton clearButton = new IconButton(getImageIcon("bin_closed"),"Clean console");
+			clearButton.addActionListener(new ActionListener() {
 				@Override public void actionPerformed(ActionEvent e) { consolePane.clearText(); }
 			});
-			glassPane.add(button);
+			glassPane.add(clearButton);
 			
 		}});
 		split[1] = createSplitPane(JSplitPane.HORIZONTAL_SPLIT,false,true,410,0.195,new JScrollPane(catalogPanel=createCatalog()),split[0]);
@@ -601,9 +625,7 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 		status.setHorizontalAlignment(JLabel.RIGHT);
 		bottom.add(status);
 		
-		cancel = new JButton(getImageIcon("cancel"));
-		cancel.setFocusable(false); cancel.setBorderPainted(false);
-		cancel.setContentAreaFilled(false); cancel.setBorder(EMPTY_BORDER);
+		cancel = new IconButton(getImageIcon("cancel"),"Cancel");
 		cancel.addActionListener(new ActionListener() {
 			@Override public void actionPerformed(ActionEvent event) {
 				try { futures.get(0).cancel(true); }
@@ -678,11 +700,8 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 		
 		JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 		panel.add(buttons, BorderLayout.EAST);
-		
-		JButton batch = new JButton(getImageIcon("calculator_add_small"));
-		batch.setToolTipText("Add operation to batch");
-		batch.setFocusable(false); batch.setBorderPainted(false);
-		batch.setContentAreaFilled(false); batch.setBorder(EMPTY_BORDER);
+
+		JButton batch = new IconButton(getImageIcon("calculator_add_small"),"Add operation to batch");
 		batch.addActionListener(new ActionListener() {
 			@Override public void actionPerformed(ActionEvent e) {
 				List<Object> values = new ArrayList<>(parameters!=null?parameters.length:0);
@@ -694,10 +713,7 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 		buttons.add(batch);
 		
 		if(operation.isAnnotationPresent(Documented.class)) {
-			JButton help = new JButton(getImageIcon("help"));
-			help.setToolTipText("Show help for this operation");
-			help.setFocusable(false); help.setBorderPainted(false);
-			help.setContentAreaFilled(false); help.setBorder(EMPTY_BORDER);
+			JButton help = new IconButton(getImageIcon("help"),"Show help for this operation");
 			help.addActionListener(new ActionListener() {
 				@Override public void actionPerformed(ActionEvent event) {
 					editor.toggleHelpPage(operation.getAnnotation(Documented.class));
@@ -1127,7 +1143,7 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 	}
 	public boolean saveFileAs() {
 		JFileChooser chooser = new FileNameExtensionFileChooser(false,GENETIC_EXTENSION_FILTER,FASTA_EXTENSION_FILTER,TEXT_EXTENSION_FILTER); chooser.setDialogTitle("Save As");
-		if(chooser.showOpenDialog(this)==JFileChooser.APPROVE_OPTION)
+		if(chooser.showSaveDialog(this)==JFileChooser.APPROVE_OPTION)
 		     return saveFile(chooser.getSelectedFile(), chooser.getFileFilter());
 		else return false;
 	}
@@ -1158,7 +1174,7 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 	
 	public boolean exportFile() {
 		JFileChooser chooser = new FileNameExtensionFileChooser(false,FASTA_EXTENSION_FILTER); chooser.setDialogTitle("Export");
-		if(chooser.showOpenDialog(this)==JFileChooser.APPROVE_OPTION)
+		if(chooser.showSaveDialog(this)==JFileChooser.APPROVE_OPTION)
 		     return exportFile(chooser.getSelectedFile(), chooser.getFileFilter());
 		else return false;
 	}
@@ -1178,7 +1194,7 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 	}
 	protected boolean exportFastaFile(File file) {
 		try {
-			DNASequence sequence = new DNASequence(editor.getText());
+			DNASequence sequence = new DNASequence(Characters.WHITESPACE.replace(editor.getText(),EMPTY));
 			sequence.setAccession(new AccessionID((String)optionLabel.getValue()));
 			FastaWriterHelper.writeSequence(file,sequence);
 			return true;
@@ -1991,20 +2007,26 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 		public final String success = "success", failure = "failure";
 		
 		private HTMLDocument document;
-		private HTMLEditorKit kit;
+		private HTMLEditorKit editorKit;
 		
 		public ConsolePane() {
 			setBorder(new EmptyBorder(5,5,5,5));
 			setContentType("text/html");
-			setEditorKit(kit=new HTMLEditorKit());
-			StyleSheet style = kit.getStyleSheet();
+			setEditorKit(editorKit=new HTMLEditorKit());
+			StyleSheet style = editorKit.getStyleSheet();
 			style.addRule("body { color:#000; font-family:monospace; font-size:10px; }");
 			style.addRule(".success { color:#468C46; }");
 			style.addRule(".failure { color:#C83232; }");
-			setDocument(document=(HTMLDocument)kit.createDefaultDocument());
+			setDocument(document=(HTMLDocument)editorKit.createDefaultDocument());
 			
 			setEditable(false); setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));
-			addMouseListener(new PopupMouseAdapter(new JPopupMenu() {	private static final long serialVersionUID = 1l; {
+			addMouseListener(new PopupMouseAdapter(new JPopupMenu() { private static final long serialVersionUID = 1l; {
+				add(new AbstractAction("Copy to Clipboard") {
+					private static final long serialVersionUID = 1l;
+					@Override public void actionPerformed(ActionEvent event) {
+						ConsolePane.this.copyText();
+					}
+				});
 				add(new AbstractAction("Clear") {
 					private static final long serialVersionUID = 1l;
 					@Override public void actionPerformed(ActionEvent event) {
@@ -2014,9 +2036,23 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 			}}));
 		}
 		
+		@Override public String getText() {
+			HTMLText text = new HTMLText();			
+			try { editorKit.read(new StringReader(super.getText()), text, 0);	}
+			catch (BadLocationException|IOException e) { e.printStackTrace(); /* nothing to do here */ }
+			return text.getText();
+		}
+		
+		public void copyText() {
+			Toolkit toolkit = Toolkit.getDefaultToolkit();
+			toolkit.getSystemClipboard().setContents(
+				new StringSelection(getText()),null);
+			toolkit.beep();
+		}
+		
 		public void insertText(String text) {
-			try { kit.insertHTML(document,document.getLength(),text,0,0,null); }
-			catch(BadLocationException|IOException e) { /* nothing to do here */ }
+			try { editorKit.insertHTML(document,document.getLength(),text,0,0,null); }
+			catch(BadLocationException|IOException e) { e.printStackTrace();  /* nothing to do here */ }
 		}
 		public void insertText(String text, String styleClass) {
 			insertText(applyStyleClass(text,styleClass));

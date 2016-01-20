@@ -4,7 +4,7 @@
 
 	<groupId>bio.gcat</groupId>
 	<artifactId>gcat</artifactId>
-	<version>1.9.4-SNAPSHOT</version>
+	<version>1.9.6</version>
 
 	<name>Genetic Code Analysis Toolkit</name>
 	<url>http://www.gcat.bio/</url>
@@ -124,6 +124,23 @@
 	</dependencies>
 	
 	<build>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+				<includes>
+					<include>**/version.properties</include>
+				</includes>
+			</resource>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>false</filtering>
+				<excludes>
+					<exclude>**/version.properties</exclude>
+				</excludes>
+			</resource>
+		</resources>
+		
 		<pluginManagement>
 			<plugins>
 				<!--
@@ -210,7 +227,6 @@
 									<manifestEntries>
 										<Application-Name>Genetic Code Analysis Toolkit</Application-Name>
 										<Main-Class>bio.gcat.gui.AnalysisTool</Main-Class>
-										<Class-Path>. \u0024{java.home}/lib/javaws.jar</Class-Path>
 										<!-- <Permissions>sandbox</Permissions> -->
 										<!-- To switch to sandbox uncomment line above and comment next three lines, also change launch.jnlp file(s) -->
 										<Permissions>all-permissions</Permissions>										
@@ -247,7 +263,50 @@
 					<tsa>${signing.tsa}</tsa>
 				</configuration>
 			</plugin>
-			
+
+			<plugin>
+				<groupId>com.akathist.maven.plugins.launch4j</groupId>
+				<artifactId>launch4j-maven-plugin</artifactId>
+				<version>1.7.8</version>
+				<executions>
+					<execution>
+						<id>l4j-clui</id>
+						<phase>package</phase>
+						<goals>
+							<goal>launch4j</goal>
+						</goals>
+						<configuration>
+							<headerType>gui</headerType>
+							<outfile>${project.build.directory}/${project.build.finalName}.exe</outfile>
+							<jar>${project.build.directory}/${project.build.finalName}.jar</jar>
+							<downloadUrl>http://java.com/download</downloadUrl>
+							<classPath>
+								<mainClass>bio.gcat.gui.AnalysisTool</mainClass>
+								<addDependencies>false</addDependencies>
+								<preCp>anything</preCp>
+							</classPath>
+							<icon>src/main/resources/bio/gcat/icon.ico</icon>
+							<jre>
+								<minVersion>1.8.0</minVersion>
+								<jdkPreference>preferJre</jdkPreference>
+							</jre>
+							<versionInfo>
+								<fileVersion>${project.version}.0</fileVersion>
+								<txtFileVersion>${project.version}.0</txtFileVersion>
+								<fileDescription>${project.name}</fileDescription>
+								<copyright>2016 Hochschule Mannheim</copyright>
+								<productVersion>${project.version}.0</productVersion>
+								<txtProductVersion>${project.version}.0</txtProductVersion>
+								<productName>${project.name}</productName>
+								<companyName>Hochschule Mannheim</companyName>
+								<internalName>Genetic Code Analysis Toolkit</internalName>
+								<originalFilename>${project.artifactId}.exe</originalFilename>
+							</versionInfo>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+        
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-antrun-plugin</artifactId>
@@ -266,6 +325,10 @@
 								<copy
 									file="${project.build.directory}/${project.build.finalName}.jar"
 									tofile="${project.build.directory}/webapp/${project.artifactId}.jar"
+									overwrite="true" />
+								<copy
+									file="${project.build.directory}/${project.build.finalName}.exe"
+									tofile="${project.build.directory}/webapp/${project.artifactId}.exe"
 									overwrite="true" />
 							</target>
 						</configuration>

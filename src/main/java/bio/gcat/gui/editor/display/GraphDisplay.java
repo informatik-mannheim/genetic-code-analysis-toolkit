@@ -15,10 +15,13 @@
  */
 package bio.gcat.gui.editor.display;
 
-import static bio.gcat.gui.helper.Guitilities.*;
+import static bio.gcat.gui.helper.Guitilities.getComponentImage;
+import static bio.gcat.gui.helper.Guitilities.getImageIcon;
+
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.FlowLayout;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
@@ -34,15 +37,13 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Map.Entry;
+
 import javax.swing.AbstractAction;
 import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
-import bio.gcat.gui.editor.NucleicDisplay;
-import bio.gcat.gui.editor.NucleicEditor;
-import bio.gcat.gui.editor.NucleicListener;
-import bio.gcat.nucleic.Tuple;
+
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.TreeMultimap;
 import com.mxgraph.layout.mxCircleLayout;
@@ -56,6 +57,12 @@ import com.mxgraph.model.mxIGraphModel;
 import com.mxgraph.swing.mxGraphComponent;
 import com.mxgraph.util.mxRectangle;
 import com.mxgraph.view.mxGraph;
+
+import bio.gcat.gui.editor.NucleicDisplay;
+import bio.gcat.gui.editor.NucleicEditor;
+import bio.gcat.gui.editor.NucleicListener;
+import bio.gcat.gui.helper.ImageTransferable;
+import bio.gcat.nucleic.Tuple;
 
 public class GraphDisplay extends mxGraphComponent implements NucleicDisplay, NucleicListener {
 	private static final long serialVersionUID = 1;
@@ -96,16 +103,28 @@ public class GraphDisplay extends mxGraphComponent implements NucleicDisplay, Nu
 				private static final long serialVersionUID = 1l; {
 					addLayout("Default Layout", null);
 					addLayout("Circle Layout", new mxCircleLayout(graph) {{ setX0(25); setY0(25); }});
-				//addLayout("Compact Tree Layout", new mxCompactTreeLayout(graph));
-				//addLayout("Edge Label Layout", new mxEdgeLabelLayout(graph));
+					//addLayout("Compact Tree Layout", new mxCompactTreeLayout(graph));
+					//addLayout("Edge Label Layout", new mxEdgeLabelLayout(graph));
 					addLayout("Hierarchical Layout", new mxHierarchicalLayout(graph));
 					addLayout("Organic Layout", new mxOrganicLayout(graph));
 					addLayout("Fast Organic Layout", new mxFastOrganicLayout(graph));
-				//addLayout("Orthogonal Layout", new mxOrthogonalLayout(graph));
-				//addLayout("Parallel Edge Layout", new mxParallelEdgeLayout(graph));
-				//addLayout("Partition Layout", new mxPartitionLayout(graph));
+					//addLayout("Orthogonal Layout", new mxOrthogonalLayout(graph));
+					//addLayout("Parallel Edge Layout", new mxParallelEdgeLayout(graph));
+					//addLayout("Partition Layout", new mxPartitionLayout(graph));
 					addLayout("Stack Layout", new mxStackLayout(graph, false, 25, 25, 0, 0));
 					((JMenuItem)getComponent(0)).getAction().setEnabled(false);
+					
+					addSeparator();
+					add(new AbstractAction("Copy to clipboard") {
+						private static final long serialVersionUID = 1l;
+						@Override public void actionPerformed(ActionEvent e) {
+							Toolkit toolkit = Toolkit.getDefaultToolkit();
+				            toolkit.getSystemClipboard().setContents(
+				            	new ImageTransferable(getComponentImage(control,Color.WHITE)),null);
+				            toolkit.beep();
+						}
+					});
+					
 					button.addActionListener(new ActionListener() {
 						@Override public void actionPerformed(ActionEvent event) {
 							menu.show(control, button.getX(), button.getY()+button.getHeight());
