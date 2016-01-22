@@ -1,6 +1,5 @@
 package bio.gcat.geneticcode.core
 
-import bio.gcat.geneticcode.feedback.Codon
 import org.biojava3.core.sequence.compound.RNACompoundSet
 
 /**

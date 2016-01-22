@@ -12,7 +12,6 @@ import org.junit.{Ignore, Test}
 class DichPartDemo {
 
   @Test
-  @Ignore
   def rumerDich {
     val rumerDich = new DichProperty("Rumer") {
 

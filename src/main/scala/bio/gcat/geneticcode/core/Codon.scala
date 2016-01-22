@@ -1,4 +1,4 @@
-package bio.gcat.geneticcode.feedback
+package bio.gcat.geneticcode.core
 
 import org.biojava3.core.sequence.RNASequence
 

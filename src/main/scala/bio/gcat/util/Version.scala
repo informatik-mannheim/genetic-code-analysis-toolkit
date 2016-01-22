@@ -8,17 +8,17 @@ import java.util.Properties
  */
 object Version {
 
-  def label = "Mannheim Genetic Code (" + version + ")"
+  def label = "GCAT B(D)A Scanner (" + version + ")"
 
   def version = {
-    val path = "/dev.properties"
+    val path = "/bio/gcat/version.properties"
     val stream = getClass().getResourceAsStream(path)
     if (stream == null) "UNKNOWN"
     val props = new Properties()
     try {
       props.load(stream)
       stream.close()
-      props.get("project.version")
+      props.get("version")
     } catch {
       case _ : Throwable => "UNKNOWN"
     }

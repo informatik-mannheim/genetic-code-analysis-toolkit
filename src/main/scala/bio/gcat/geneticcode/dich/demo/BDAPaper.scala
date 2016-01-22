@@ -1,13 +1,23 @@
+/*
+ * Copyright [2014] [Mannheim University of Applied Sciences]
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package bio.gcat.geneticcode.dich.demo
 
 import bio.gcat.geneticcode.dich.ct.{ClassTable, CodingClassTable}
-import bio.gcat.geneticcode.dich._
-import bio.gcat.geneticcode.dich.scan.{ClassPower2Scan, AminoMappingScan, ScanNumberOfClassesScan, RandomScan}
-import bio.gcat.geneticcode.dich.{BinaryDichotomicAlgorithm => BDA}
-import bio.gcat.geneticcode.dich.{Adenine => A}
-import bio.gcat.geneticcode.dich.{Uracil => U}
-import bio.gcat.geneticcode.dich.{Guanine => G}
-import bio.gcat.geneticcode.dich.{Cytosine => C}
+import bio.gcat.geneticcode.dich.scan.{ClassPower2Scan, RandomScan, ScanNumberOfClassesScan}
+import bio.gcat.geneticcode.dich.{Adenine => A, BinaryDichotomicAlgorithm => BDA, Cytosine => C, Guanine => G, Uracil => U, _}
 import org.junit.{Ignore, Test}
 
 import scala.Predef._
@@ -19,7 +29,7 @@ import scala.Predef._
  * @author Markus Gumbel (m.gumbel@hs-mannheim.de)
  *         (c) 2014 Markus Gumbel
  */
-class Paper {
+class BDAPaper {
 
   // Figure and tables:
 
@@ -44,12 +54,12 @@ class Paper {
   def model24ClassesRumer() {
     val bdas = List(
       RumerBDA,
-      new BinaryDichotomicAlgorithm(0, 1, (A, U), Set(A, U)),
-      new BinaryDichotomicAlgorithm(0, 1, (A, U), Set(A, C)),
-      new BinaryDichotomicAlgorithm(0, 1, (A, U), Set(U, C)),
-      new BinaryDichotomicAlgorithm(0, 1, (C, G), Set(A, U)),
-      new BinaryDichotomicAlgorithm(0, 1, (C, G), Set(A, C)),
-      new BinaryDichotomicAlgorithm(1, 2, (U, C), Set(A, G))
+      new BDA(0, 1, (A, U), Set(A, U)),
+      new BDA(0, 1, (A, U), Set(A, C)),
+      new BDA(0, 1, (A, U), Set(U, C)),
+      new BDA(0, 1, (C, G), Set(A, U)),
+      new BDA(0, 1, (C, G), Set(A, C)),
+      new BDA(1, 2, (U, C), Set(A, G))
     )
     val ct = new ClassTable(bdas, IUPAC.STANDARD)
     println(ct.classes.size)
@@ -92,15 +102,14 @@ class Paper {
    * Table 2.
    */
   @Test
-  @Ignore
   def classes64withRumer() {
     val bdas = List(
       RumerBDA,
-      new BinaryDichotomicAlgorithm(1, 0, (A, C), Set(G, C)),
-      new BinaryDichotomicAlgorithm(1, 0, (U, G), Set(A, U)),
-      new BinaryDichotomicAlgorithm(2, 0, (A, U), Set(A, C)),
-      new BinaryDichotomicAlgorithm(2, 0, (A, U), Set(U, G)),
-      new BinaryDichotomicAlgorithm(2, 0, (C, G), Set(A, C))
+      new BDA(1, 0, (A, C), Set(G, C)),
+      new BDA(1, 0, (U, G), Set(A, U)),
+      new BDA(2, 0, (A, U), Set(A, C)),
+      new BDA(2, 0, (A, U), Set(U, G)),
+      new BDA(2, 0, (C, G), Set(A, C))
     )
     val t = new ClassTable(bdas, IUPAC.STANDARD)
     println(t.classes.size)
@@ -120,10 +129,10 @@ class Paper {
       RumerBDA,
       ParityBDA,
       AntiCodonBDA,
-      new BinaryDichotomicAlgorithm(0, 1, (A, U), Set(A, U)),
-      new BinaryDichotomicAlgorithm(1, 0, (U, G), Set(A, U)),
-      new BinaryDichotomicAlgorithm(2, 1, (A, U), Set(A, C)),
-      new BinaryDichotomicAlgorithm(2, 1, (U, C), Set(A, C))
+      new BDA(0, 1, (A, U), Set(A, U)),
+      new BDA(1, 0, (U, G), Set(A, U)),
+      new BDA(2, 1, (A, U), Set(A, C)),
+      new BDA(2, 1, (U, C), Set(A, C))
     )
     val ct = new CodingClassTable(bdas, IUPAC.STANDARD)
     println(ct.classes.size)
@@ -167,20 +176,10 @@ class Paper {
   }
 
   /**
-   * Scan for amino acid mapping (section 4.2).
-   */
-  @Test
-  @Ignore
-  def scanAminoClasses() {
-    new AminoMappingScan(List(), 5, 21)     // 5 bits, 21 classes.
-  }
-
-  /**
    * 53856 solutions for |M|=64 when using 6 BDAs (section 4.3).
    * Warning: Quite long runtime!
    */
   @Test
-  @Ignore
   def scanFor64Classes() {
     new ClassPower2Scan(List(), 6).run()
   }
