@@ -19,11 +19,9 @@ import static bio.gcat.Help.*;
 import static bio.gcat.nucleic.Tuple.*;
 import static bio.gcat.nucleic.helper.SequenceUtilities.*;
 import static java.util.stream.Collectors.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.IntSummaryStatistics;
-import java.util.List;
+
+import java.util.*;
+
 import bio.gcat.Documented;
 import bio.gcat.Parameter;
 import bio.gcat.nucleic.Tuple;
@@ -37,6 +35,7 @@ import bio.gcat.operation.Named;
 @Documented(title="C3 Code Run Lenghts", category={OPERATIONS,ANALYSES}, resource="help/operation/analysis/c3_run_length.html")
 public class C3RunLength implements Analysis {
 	@Override public Result analyse(Collection<Tuple> tuples, Object... values) { return analyse(tuples, ((int)values[0])-1); }
+
 	public Result analyse(Collection<Tuple> tuples, int codeNumber) {
 		if(condenseTuples(tuples).isEmpty())
 			return new SimpleResult(this, "No tuples.");
@@ -55,9 +54,12 @@ public class C3RunLength implements Analysis {
 			List<Integer> li = lp.stream().map(it -> it.size()).collect(toList());
 
 			IntSummaryStatistics stats = li.stream().mapToInt(it -> it).summaryStatistics();
-			sb.append((isInClass ? "C3" : "not C3") + ": ").append(stats.getMin() + ", ").
-			append(stats.getAverage() + ", ").
-			append(stats.getMax()).append("<br/>");
+
+			Formatter formatter = new Formatter(sb, Locale.US);
+			sb.append((isInClass ? "C3" : "not C3") + ": ");
+			formatter.format("min = %5d", stats.getMin());
+			formatter.format(", avg = %5.2f, ", stats.getAverage());
+			formatter.format("max = %5d <br/>", stats.getMax());
 		}
 
 		return new SimpleResult(this, sb.toString());

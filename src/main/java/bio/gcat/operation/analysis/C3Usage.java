@@ -39,8 +39,8 @@ public class C3Usage implements Analysis {
 
 		int usage = tuples.stream().filter(C3Code.CODES.get(codeNumber)::contains).collect(toList()).size();
 		String result =
-			"    in C3(" + codeNumber + "): " + usage + "<br/>" +
-			"not in C3(" + codeNumber + "): " + (tuples.size()-usage);
+			"    in C3(" + codeNumber + 1 + "): " + usage + "<br/>" +
+			"not in C3(" + codeNumber + 1 + "): " + (tuples.size()-usage);
 		return new SimpleResult(this,"\n"+result);
 	}
 }
