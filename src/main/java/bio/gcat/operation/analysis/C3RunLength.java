@@ -48,22 +48,21 @@ public class C3RunLength implements Analysis {
 			t -> code.contains(t));
 
 		StringBuffer sb = new StringBuffer();
-		Formatter formatter = new Formatter(sb, Locale.US);
-
-		for (boolean isInClass : Arrays.asList(true, false)) {
-			List<List<Tuple>> lp = nl.stream().filter(p -> p.id.equals(isInClass))
-					.map(p -> p.list).collect(toList());
-			List<Integer> li = lp.stream().map(it -> it.size()).collect(toList());
-
-			IntSummaryStatistics stats = li.stream().mapToInt(it -> it).summaryStatistics();
-
-			sb.append((isInClass ? "&nbsp;&nbsp;&nbsp;&nbsp;C3" : "not C3") +
-							"(" + (codeNumber + 1) + "): ");
-			formatter.format("min = %5d", stats.getMin());
-			formatter.format(", avg = %5.2f, ", stats.getAverage());
-			formatter.format("max = %5d <br/>", stats.getMax());
+		try(Formatter formatter = new Formatter(sb, Locale.US)) {
+			for (boolean isInClass : Arrays.asList(true, false)) {
+				List<List<Tuple>> lp = nl.stream().filter(p -> p.id.equals(isInClass))
+						.map(p -> p.list).collect(toList());
+				List<Integer> li = lp.stream().map(it -> it.size()).collect(toList());
+	
+				IntSummaryStatistics stats = li.stream().mapToInt(it -> it).summaryStatistics();
+	
+				sb.append((isInClass ? "&nbsp;&nbsp;&nbsp;&nbsp;C3" : "not C3") +
+								"(" + (codeNumber + 1) + "): ");
+				formatter.format("min = %5d", stats.getMin());
+				formatter.format(", avg = %5.2f, ", stats.getAverage());
+				formatter.format("max = %5d <br/>", stats.getMax());
+			}
 		}
-		String x = sb.toString();
 
 		return new SimpleResult(this, sb.toString());
 	}

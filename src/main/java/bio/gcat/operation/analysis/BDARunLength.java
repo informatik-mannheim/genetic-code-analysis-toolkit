@@ -62,20 +62,20 @@ public class BDARunLength implements Analysis {
 
     // TODO requires unit tests...
     StringBuilder sb = new StringBuilder();
-    Formatter formatter = new Formatter(sb, Locale.US);
-
-    // Iterate over all classes...
-    for (scala.collection.immutable.List<Object> clazz : classTable.classes()) {
-      // Get run lengths for this class:
-      List<List<Tuple>> lp = nl.stream().filter(p -> p.id.equals(clazz))
-              .map(p -> p.list).collect(toList());
-      List<Integer> li = lp.stream().map(it -> it.size()).collect(toList());
-
-      IntSummaryStatistics stats = li.stream().mapToInt(it -> it).summaryStatistics();
-      sb.append(clazz.mkString() + ": ");
-      formatter.format("min = %5d", stats.getMin());
-      formatter.format(", avg = %5.2f, ", stats.getAverage());
-      formatter.format("max = %5d <br/>", stats.getMax());
+    try(Formatter formatter = new Formatter(sb, Locale.US)) {
+	    // Iterate over all classes...
+	    for (scala.collection.immutable.List<Object> clazz : classTable.classes()) {
+	      // Get run lengths for this class:
+	      List<List<Tuple>> lp = nl.stream().filter(p -> p.id.equals(clazz))
+	              .map(p -> p.list).collect(toList());
+	      List<Integer> li = lp.stream().map(it -> it.size()).collect(toList());
+	
+	      IntSummaryStatistics stats = li.stream().mapToInt(it -> it).summaryStatistics();
+	      sb.append(clazz.mkString() + ": ");
+	      formatter.format("min = %5d", stats.getMin());
+	      formatter.format(", avg = %5.2f, ", stats.getAverage());
+	      formatter.format("max = %5d <br/>", stats.getMax());
+	    }
     }
 
     return new SimpleResult(this, sb.toString());
