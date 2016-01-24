@@ -15,9 +15,31 @@
  */
 package bio.gcat.gui;
 
-import static bio.gcat.Utilities.*;
+import static bio.gcat.Utilities.EMPTY;
+import static bio.gcat.Utilities.SPACE;
+import static bio.gcat.Utilities.ellipsisText;
+import static bio.gcat.Utilities.firstToUpper;
+import static bio.gcat.batch.Action.TaskAttribute.SPLIT_PICK;
+import static bio.gcat.batch.Action.TaskAttribute.SPLIT_PICK_ANY;
+import static bio.gcat.batch.Action.TaskAttribute.SPLIT_PICK_FIRST;
 import static bio.gcat.batch.Action.TaskAttribute.*;
-import static bio.gcat.gui.helper.Guitilities.*;
+import static bio.gcat.batch.Action.TaskAttribute.TEST_CRITERIA;
+import static bio.gcat.batch.Action.TaskAttribute.TEST_CRITERIA_BREAK_IF_FALSE;
+import static bio.gcat.batch.Action.TaskAttribute.TEST_CRITERIA_BREAK_IF_TRUE;
+import static bio.gcat.batch.Action.TaskAttribute.TEST_CRITERIA_NEVER_BREAK;
+import static bio.gcat.gui.helper.Guitilities.EMPTY_BORDER;
+import static bio.gcat.gui.helper.Guitilities.createMenuItem;
+import static bio.gcat.gui.helper.Guitilities.createMenuText;
+import static bio.gcat.gui.helper.Guitilities.createSeparator;
+import static bio.gcat.gui.helper.Guitilities.createSplitPane;
+import static bio.gcat.gui.helper.Guitilities.createToolbarButton;
+import static bio.gcat.gui.helper.Guitilities.getImage;
+import static bio.gcat.gui.helper.Guitilities.getImageIcon;
+import static bio.gcat.gui.helper.Guitilities.getMenuItem;
+import static bio.gcat.gui.helper.Guitilities.invokeAppropriate;
+import static bio.gcat.gui.helper.Guitilities.registerKeyStroke;
+import static bio.gcat.gui.helper.Guitilities.seperateMenuItem;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -52,10 +74,12 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.Executors;
-import java.util.function.Function;
+import java.util.function.BooleanSupplier;
 import java.util.stream.Collectors;
+
 import javax.swing.DefaultListModel;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
@@ -89,27 +113,13 @@ import javax.swing.event.ListDataListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
+
 import org.biojava3.core.sequence.AccessionID;
 import org.biojava3.core.sequence.DNASequence;
 import org.biojava3.core.sequence.io.FastaReaderHelper;
 import org.biojava3.core.sequence.io.FastaWriterHelper;
 import org.biojava3.core.sequence.template.Sequence;
-import bio.gcat.Option;
-import bio.gcat.Parameter;
-import bio.gcat.Utilities.FileNameExtensionFileChooser;
-import bio.gcat.batch.Action;
-import bio.gcat.batch.Action.TaskAttribute;
-import bio.gcat.batch.Batch;
-import bio.gcat.batch.Batch.Result;
-import bio.gcat.gui.helper.AttachedScrollPane;
-import bio.gcat.gui.helper.CollectionListModel;
-import bio.gcat.gui.helper.Guitilities;
-import bio.gcat.nucleic.Tuple;
-import bio.gcat.operation.Operation;
-import bio.gcat.operation.analysis.Analysis;
-import bio.gcat.operation.split.Split;
-import bio.gcat.operation.test.Test;
-import bio.gcat.operation.transformation.Transformation;
+
 import com.google.common.collect.EnumMultiset;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Multiset.Entry;
@@ -118,6 +128,25 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+
+import bio.gcat.Option;
+import bio.gcat.Parameter;
+import bio.gcat.Utilities.FileNameExtensionFileChooser;
+import bio.gcat.batch.Action;
+import bio.gcat.batch.Action.TaskAttribute;
+import bio.gcat.batch.Batch;
+import bio.gcat.batch.Batch.Result;
+import bio.gcat.batch.Batch.Result.Message;
+import bio.gcat.gui.helper.AttachedScrollPane;
+import bio.gcat.gui.helper.CollectionListModel;
+import bio.gcat.gui.helper.ConsolePane;
+import bio.gcat.gui.helper.Guitilities;
+import bio.gcat.nucleic.Tuple;
+import bio.gcat.operation.Operation;
+import bio.gcat.operation.analysis.Analysis;
+import bio.gcat.operation.split.Split;
+import bio.gcat.operation.test.Test;
+import bio.gcat.operation.transformation.Transformation;
 
 public class BatchTool extends JFrame implements ActionListener, ListDataListener, ListSelectionListener {
 	private static final long serialVersionUID = 1l;
@@ -188,6 +217,7 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 	
 	private ActionPanel actionPanel;
 	private SequenceList sequenceList;
+	private ConsolePane consolePane;
 	private NumberDisplay numbers;
 	
 	private List<ListenableFuture<Result>> futures = Collections.synchronizedList(new LinkedList<>());;
@@ -195,8 +225,8 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 	public BatchTool() {		
 		super("Batch Tool - "+AnalysisTool.NAME);
 		setIconImage(getImage("calculator"));
-		setMinimumSize(new Dimension(660,400));
-		setPreferredSize(new Dimension(1020,400));
+		setMinimumSize(new Dimension(660,600));
+		setPreferredSize(new Dimension(1020,600));
 		setSize(getPreferredSize());
 		setLocationByPlatform(true);
 		setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
@@ -260,7 +290,9 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 		sequenceList.addListSelectionListener(this);
 		
 		add(createSplitPane(JSplitPane.HORIZONTAL_SPLIT,false,true,360,0.195,
-			new JScrollPane(actionPanel=new ActionPanel()),scroll), BorderLayout.CENTER);
+			new JScrollPane(actionPanel=new ActionPanel()),
+			createSplitPane(JSplitPane.VERTICAL_SPLIT,false,false,0.525,
+				scroll,new JScrollPane(consolePane=new ConsolePane()))), BorderLayout.CENTER);
 		actionPanel.list.getModel().addListDataListener(this);
 		actionPanel.list.addListSelectionListener(this);
 		
@@ -282,7 +314,7 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 		});
 		bottom.add(cancel);
 		
-		updateStatus();
+		updateStatus(); updateConsole();
 	}
 	
 	public void addOperation(Class<? extends Operation> operation) {
@@ -295,10 +327,10 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 	public void addSequence(Collection<Tuple> sequence) {
 		if(sequenceList.countSequences()==0)
 			sequenceList.setDefaultTupleLength(Tuple.tuplesLength(sequence));
-		sequenceList.addSequence(sequence); updateStatus();
+		sequenceList.addSequence(sequence); updateStatus(); updateConsole();
 	}
 	public void addSequences(List<Collection<Tuple>> sequences) {
-		sequenceList.addSequences(sequences); updateStatus();
+		sequenceList.addSequences(sequences); updateStatus(); updateConsole();
 	}
 	
 	@Override public void actionPerformed(ActionEvent event) {
@@ -328,6 +360,8 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 	}
 	@Override public void valueChanged(ListSelectionEvent event) {
 		enableActionMenus(); enableSequenceMenus();
+		if(event.getSource()==sequenceList)
+			updateConsole();
 	}
 
 	public void addAction() { actionPanel.addAction(); }
@@ -410,8 +444,8 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 			tool.setVisible(true);
 		}
 	}
-	public void removeSequences() { sequenceList.removeSequences(); updateStatus(); }
-	public void clearSequences() { sequenceList.clearSequences(); updateStatus(); }
+	public void removeSequences() { sequenceList.removeSequences(); updateStatus(); updateConsole(); }
+	public void clearSequences() { sequenceList.clearSequences(); updateStatus(); updateConsole(); }
 	
 	private void enableSequenceMenus() {
 		JList<SequenceListItem> list = sequenceList;
@@ -426,19 +460,30 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 
 	public void executeBatch() {
 		SequenceListModel model = (SequenceListModel)sequenceList.getModel();
-		final Batch batch = new Batch(actionPanel.getActions());
+		
+		// Prepare actions (other action attributes are set by action parameters in dialog)
+		Collection<Action> actions = actionPanel.getActions();
+		actions.forEach(action->action.attributes.put(ANALYSIS_HANDLER, new Analysis.Handler() {
+			@Override public void handle(bio.gcat.operation.analysis.Analysis.Result result) {
+				result.getAnalysis().getLogger()
+					.log(result.toString());
+			}
+		}));
+		
+		final Batch batch = new Batch(actions);
 		for(final SequenceListItem item:new ArrayList<>(model)) {
 			item.status = Status.IDLE;
+			item.result = new Result(item.tuples);
 			model.change(item);
 			
-			ListenableFuture<Result> future = batch.submit(item.tuples,service,new Function<Collection<Tuple>,Boolean>() {
-				@Override public Boolean apply(Collection<Tuple> tuples) {
+			ListenableFuture<Result> future = batch.submit(item.result,service,new BooleanSupplier() {
+				@Override public boolean getAsBoolean() {
 					item.status = Status.ACTIVE; model.change(item);
 					return true;
 				}
 			});
 			futures.add(future);
-			updateStatus();
+			updateStatus(); updateConsole();
 			
 			Futures.addCallback(future, new FutureCallback<Result>() {
 				@Override public void onSuccess(Result result) {
@@ -448,14 +493,14 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 					model.change(item);
 					
 					futures.remove(future);
-					updateStatus();
+					updateStatus(); updateConsole();
 				}
 				@Override public void onFailure(Throwable thrown) {
 					item.status = Status.FAILURE;
 					model.change(item);
 					
 					futures.remove(future);
-					updateStatus();
+					updateStatus(); updateConsole();
 				}
 			});
 		}
@@ -483,6 +528,20 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 					status.setText(text.append("Ready").toString());
 					cancel.setVisible(false);
 				}
+			}
+		});
+	}
+	protected void updateConsole() {
+		invokeAppropriate(new Runnable() {
+			public void run() {
+				consolePane.setText(null);
+				SequenceListItem item = sequenceList.getSelectedValue();
+				if(item!=null&&item.result!=null) for(Message message:item.result.getLog()) {
+					if(message.throwable!=null) {
+						consolePane.appendText(message.message, ConsolePane.FAILURE);
+						consolePane.appendText(Optional.ofNullable(message.throwable.getMessage()).orElse("Unknown cause"), ConsolePane.FAILURE);
+					} else consolePane.appendText(message.message);
+				}				
 			}
 		});
 	}
@@ -910,7 +969,7 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 		}
 		
 		@Override public Component getListCellRendererComponent(JList<? extends SequenceListItem> list,SequenceListItem item,int index,boolean isSelected,boolean cellHasFocus) {
-	    label.setText(Tuple.joinTuples(item.tuples));
+	    label.setText(ellipsisText(Tuple.joinTuples(item.tuples),200));
 	    
 	    if(isSelected) {
 	    	label.setBackground(list.getSelectionBackground());

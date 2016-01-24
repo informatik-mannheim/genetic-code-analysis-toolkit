@@ -16,7 +16,6 @@
 package bio.gcat.gui;
 
 import static bio.gcat.Utilities.EMPTY;
-import static bio.gcat.Utilities.NEW_LINE;
 import static bio.gcat.Utilities.ellipsisText;
 import static bio.gcat.Utilities.getConfiguration;
 import static bio.gcat.Utilities.readFile;
@@ -58,8 +57,6 @@ import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Rectangle;
-import java.awt.Toolkit;
-import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
@@ -78,7 +75,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringReader;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
@@ -130,10 +126,8 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
 import javax.swing.JRadioButton;
 import javax.swing.JRootPane;
-import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextField;
@@ -159,9 +153,6 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.NumberFormatter;
-import javax.swing.text.html.HTMLDocument;
-import javax.swing.text.html.HTMLEditorKit;
-import javax.swing.text.html.StyleSheet;
 
 import org.biojava3.core.sequence.AccessionID;
 import org.biojava3.core.sequence.DNASequence;
@@ -197,16 +188,14 @@ import bio.gcat.gui.editor.NucleicEditor;
 import bio.gcat.gui.editor.NucleicListener;
 import bio.gcat.gui.editor.NucleicOptions;
 import bio.gcat.gui.editor.NucleicOptions.EditorMode;
+import bio.gcat.gui.helper.ConsolePane;
 import bio.gcat.gui.helper.FoldingPanel;
 import bio.gcat.gui.helper.Guitilities;
 import bio.gcat.gui.helper.Guitilities.IconButton;
-import bio.gcat.gui.helper.HTMLText;
-import bio.gcat.gui.helper.PopupMouseAdapter;
 import bio.gcat.gui.input.CodonCircle;
 import bio.gcat.gui.input.Input;
 import bio.gcat.gui.input.TesseraTable;
 import bio.gcat.log.InjectionLogger;
-import bio.gcat.log.Logger;
 import bio.gcat.nucleic.Acid;
 import bio.gcat.nucleic.Tuple;
 import bio.gcat.nucleic.helper.GenBank;
@@ -361,9 +350,9 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 		attributes.put(ANALYSIS_HANDLER,new Analysis.Handler() {
 			@Override public void handle(Result result) {
 				if(result!=null) {
-					consolePane.appendText(String.format("Analysis \"%s\" result: ",result.getAnalysis().getName()),consolePane.success);
+					consolePane.appendText(String.format("Analysis \"%s\" result: ",result.getAnalysis().getName()),ConsolePane.SUCCESS);
 					consolePane.insertText(result.toString());
-				} else consolePane.appendText("No result from analysis.",consolePane.failure);
+				} else consolePane.appendText("No result from analysis.",ConsolePane.FAILURE);
 			}
 		});
 		attributes.put(SPLIT_PICK,new Split.Pick() {
@@ -775,12 +764,12 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 				if(Transformation.class.isAssignableFrom(operation)||Split.class.isAssignableFrom(operation))
 					editor.setTuples(tuples);
 				else if(Test.class.isAssignableFrom(operation))
-					consolePane.appendText(String.format("Sequence <b>IS</b> \"%s\"", name),consolePane.success);
+					consolePane.appendText(String.format("Sequence <b>IS</b> \"%s\"", name),ConsolePane.SUCCESS);
 			}
 			@Override public void onFailure(Throwable thrown) {
 				if(Test.class.isAssignableFrom(operation)&&thrown instanceof Test.Failed)
-					 consolePane.appendText(String.format("Sequence is <b>NOT</b> \"%s\"", name),consolePane.failure);
-				else consolePane.appendText(String.format("Exception in operation \"%s\": %s", name, Optional.ofNullable(thrown.getMessage()).orElse("Unknown cause")),consolePane.failure);
+					 consolePane.appendText(String.format("Sequence is <b>NOT</b> \"%s\"", name),ConsolePane.FAILURE);
+				else consolePane.appendText(String.format("Exception in operation \"%s\": %s", name, Optional.ofNullable(thrown.getMessage()).orElse("Unknown cause")),ConsolePane.FAILURE);
 			}
 		});
 		if(Transformation.class.isAssignableFrom(operation)||Split.class.isAssignableFrom(operation)) {
@@ -2000,108 +1989,6 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 		
 		public void setNumber(int number) { this.number.setValue(number); }
 		public int getNumber() { return ((Number)number.getValue()).intValue(); }
-	}
-	
-	class ConsolePane extends JTextPane implements Logger {
-		private static final long serialVersionUID = 1l;
-		
-		public final String success = "success", failure = "failure";
-		
-		private HTMLDocument document;
-		private HTMLEditorKit editorKit;
-		
-		public ConsolePane() {
-			setBorder(new EmptyBorder(5,5,5,5));
-			setContentType("text/html");
-			setEditorKit(editorKit=new HTMLEditorKit());
-			StyleSheet style = editorKit.getStyleSheet();
-			style.addRule("body { color:#000; font-family:monospace; font-size:10px; }");
-			style.addRule(".success { color:#468C46; }");
-			style.addRule(".failure { color:#C83232; }");
-			setDocument(document=(HTMLDocument)editorKit.createDefaultDocument());
-			
-			setEditable(false); setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));
-			addMouseListener(new PopupMouseAdapter(new JPopupMenu() { private static final long serialVersionUID = 1l; {
-				add(new AbstractAction("Copy to Clipboard") {
-					private static final long serialVersionUID = 1l;
-					@Override public void actionPerformed(ActionEvent event) {
-						ConsolePane.this.copyText();
-					}
-				});
-				add(new AbstractAction("Clear") {
-					private static final long serialVersionUID = 1l;
-					@Override public void actionPerformed(ActionEvent event) {
-						ConsolePane.this.clearText();
-					}
-				});
-			}}));
-		}
-		
-		@Override public String getText() {
-			HTMLText text = new HTMLText();			
-			try { editorKit.read(new StringReader(super.getText()), text, 0);	}
-			catch (BadLocationException|IOException e) { e.printStackTrace(); /* nothing to do here */ }
-			return text.getText();
-		}
-		
-		public void copyText() {
-			Toolkit toolkit = Toolkit.getDefaultToolkit();
-			toolkit.getSystemClipboard().setContents(
-				new StringSelection(getText()),null);
-			toolkit.beep();
-		}
-		
-		public void insertText(String text) {
-			try { editorKit.insertHTML(document,document.getLength(),text,0,0,null); }
-			catch(BadLocationException|IOException e) { e.printStackTrace();  /* nothing to do here */ }
-		}
-		public void insertText(String text, String styleClass) {
-			insertText(applyStyleClass(text,styleClass));
-		}
-		
-		public void appendText(String text) {
-			boolean atBottom = isAtBottom();
-			if(document.getLength()!=0)
-				insertText(NEW_LINE);
-			insertText(text);
-			if(atBottom) scrollToBottom();
-		}
-		public void appendText(String text, String styleClass) {
-			appendText(applyStyleClass(text,styleClass));
-		}
-		
-		public void clearText() { setText(null); }
-		
-		@Override public void log(String format,Object... arguments) {
-			appendText(String.format(format,arguments));
-		}
-		@Override public void log(String message,Throwable throwable) {
-			appendText(message,failure); appendText(throwable.getMessage(),failure);
-		}
-		
-		private String applyStyleClass(String text, String styleClass) {
-			return String.format("<span class=\"%s\">%s</span>",styleClass,text);
-		}
-		private boolean isAtBottom() {
-			JScrollBar scrollBar = getScrollBar(); if(scrollBar==null) return true;
-			return scrollBar.getValue()+scrollBar.getVisibleAmount()+scrollBar.getBlockIncrement()>scrollBar.getMaximum();
-		}
-		private void scrollToBottom() {
-			SwingUtilities.invokeLater(new Runnable() {
-				public void run() {
-					JScrollBar scrollBar = getScrollBar(); if(scrollBar==null) return;
-					setCaretPosition(getDocument().getLength());
-					scrollBar.setValue(scrollBar.getMaximum());
-				}
-			});
-		}
-		private JScrollBar getScrollBar() {
-			Component parent = this;
-			do if((parent=parent.getParent())==null)
-				return null;
-			while(!(parent instanceof JScrollPane));
-			return ((JScrollPane)parent).getVerticalScrollBar();
-		}
 	}
 	
 	public static void main(final String[] args) {

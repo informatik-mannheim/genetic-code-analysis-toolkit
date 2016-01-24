@@ -29,16 +29,18 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.function.Function;
+import java.util.function.BooleanSupplier;
+
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
+
 import bio.gcat.Utilities.DefiniteFuture;
 import bio.gcat.Utilities.DefiniteListenableFuture;
 import bio.gcat.log.InjectionLogger;
 import bio.gcat.log.Logger;
 import bio.gcat.nucleic.Tuple;
 import bio.gcat.operation.Operation;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 
 public class Batch {
 	private List<Action> actions = new LinkedList<>(), facade;
@@ -57,8 +59,8 @@ public class Batch {
 	public void removeAction(int index) { actions.remove(index); }
 	public void removeAction(Action action) { actions.remove(action); }
 	
-	public Callable<Result> build(Collection<Tuple> tuples) {
-		final Result result = new Result(tuples);
+	public Callable<Result> build(Collection<Tuple> tuples) { return build(new Result(tuples)); }
+	public Callable<Result> build(final Result result) {
 		Queue<Action> queue = new LinkedList<>(actions);
 		return new Callable<Result>() {
 			@Override public Result call() throws Exception {
@@ -70,14 +72,16 @@ public class Batch {
 		};
 	}
 	
-	public ListenableFuture<Result> submit(Collection<Tuple> tuples, ListeningExecutorService service) { return submit(tuples,service,null); }
-	public ListenableFuture<Result> submit(Collection<Tuple> tuples, ListeningExecutorService service, Function<Collection<Tuple>,Boolean> start) {
-		Callable<Result> result = build(tuples);
+	public ListenableFuture<Result> submit(Collection<Tuple> tuples, ListeningExecutorService service) { return submit(build(tuples),service); }
+	public ListenableFuture<Result> submit(Collection<Tuple> tuples, ListeningExecutorService service, BooleanSupplier start) { return submit(build(tuples),service,start); }
+	public ListenableFuture<Result> submit(Result result, ListeningExecutorService service) { return submit(build(result),service); }
+	public ListenableFuture<Result> submit(Result result, ListeningExecutorService service, BooleanSupplier start) { return submit(build(result),service,start); }	
+	private ListenableFuture<Result> submit(Callable<Result> result, ListeningExecutorService service) { return service.submit(result); }
+	private ListenableFuture<Result> submit(Callable<Result> result, ListeningExecutorService service, BooleanSupplier start) {
 		return service.submit(start!=null?new Callable<Result>() {
 			@Override public Result call() throws Exception {
-				if(start.apply(tuples))
-					return result.call();
-				else throw new Exception();
+				if(start.getAsBoolean()) return result.call(); else 
+					throw new InterruptedException();
 			}
 		}:result);
 	}
