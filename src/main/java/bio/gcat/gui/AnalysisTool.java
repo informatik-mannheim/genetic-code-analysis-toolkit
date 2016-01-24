@@ -17,6 +17,7 @@ package bio.gcat.gui;
 
 import static bio.gcat.Utilities.EMPTY;
 import static bio.gcat.Utilities.NEW_LINE;
+import static bio.gcat.Utilities.ellipsisText;
 import static bio.gcat.Utilities.getConfiguration;
 import static bio.gcat.Utilities.readFile;
 import static bio.gcat.Utilities.safeSetSystemProperty;
@@ -918,7 +919,7 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 				list.setCellRenderer(new ListCellRenderer<Entry<String,DNASequence>>() {
 					private JLabel label = new JLabel();
 					@Override public Component getListCellRendererComponent(JList<? extends Entry<String,DNASequence>> list,Entry<String,DNASequence> entry,int index,boolean isSelected,boolean cellHasFocus) {						
-				    label.setText("<html><b>"+entry.getKey()+"</b>: "+entry.getValue());
+				    label.setText("<html><b>"+entry.getKey()+"</b>: "+ellipsisText(entry.getValue().toString(),100));
 				    
 				    if(isSelected) {
 				    	label.setBackground(list.getSelectionBackground());

@@ -140,6 +140,10 @@ public final class Utilities {
 		return new File(file.append(path.split("!",2)[0]).toString());
 	}
 	
+	public static String ellipsisText(String text,int maxLength) {
+		return text.length()<=maxLength?text:text.substring(0,maxLength-3)+"...";
+	}
+	
 	public static boolean safeSetSystemProperty(String key, String value) {
 		try {
 			if(!value.equals(System.getProperty(key)))
