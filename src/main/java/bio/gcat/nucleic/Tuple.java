@@ -187,7 +187,7 @@ public class Tuple implements Comparable<Tuple> {
 	
 	public static List<Tuple> sliceTuples(String string, int length) {
 		List<Tuple> tuples = new ArrayList<Tuple>();
-		Matcher tuple = Pattern.compile(".{"+length+"}|.*$").matcher(Characters.WHITESPACE.replace(string,EMPTY));
+		Matcher tuple = Pattern.compile(".{"+length+"}|.+$").matcher(Characters.WHITESPACE.replace(string,EMPTY));
 		while(tuple.find()) tuples.add(new Tuple(tuple.group()));
 		return tuples;
 	}
