@@ -74,7 +74,7 @@ import javax.swing.JRootPane;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTabbedPane;
-import javax.swing.JTextPane;
+import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.Border;
@@ -91,12 +91,8 @@ import javax.swing.event.UndoableEditEvent;
 import javax.swing.plaf.basic.BasicTabbedPaneUI;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
+import javax.swing.text.JTextComponent;
 import javax.swing.text.Position;
-import javax.swing.text.SimpleAttributeSet;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyleContext;
-import javax.swing.text.TabSet;
-import javax.swing.text.TabStop;
 import javax.swing.text.html.HTMLEditorKit;
 import javax.swing.undo.CannotRedoException;
 import javax.swing.undo.CannotUndoException;
@@ -121,7 +117,6 @@ import bio.gcat.gui.editor.display.GraphDisplay;
 import bio.gcat.gui.helper.AttachedScrollPane;
 import bio.gcat.gui.helper.BetterGlassPane;
 import bio.gcat.gui.helper.VerticalLabelUI;
-import bio.gcat.gui.helper.WrapEditorKit;
 import bio.gcat.nucleic.Acid;
 import bio.gcat.nucleic.Tuple;
 
@@ -136,7 +131,7 @@ public class NucleicEditor extends JRootPane {
 	
 	private NavigableMap<Position,Tuple> tuples;
 	
-	private JTextPane textPane;
+	private JTextArea textPane;
 	private NumberPanel numberPanel;
 	
 	private JTabbedPane displayPane;
@@ -157,7 +152,7 @@ public class NucleicEditor extends JRootPane {
 	public NucleicEditor() {
 		setLayout(new BorderLayout());
 		
-		textPane = new JTextPane() {
+		textPane = new JTextArea() {
 			private static final long serialVersionUID = 1l;
 			private final Color lineColor = new Color(0,0,0,64);
 			@Override public void paint(Graphics defaultGraphics) {
@@ -172,7 +167,8 @@ public class NucleicEditor extends JRootPane {
 				}
 			}
 		};
-		textPane.setEditorKit(new WrapEditorKit());
+		textPane.setLineWrap(true);
+		textPane.setWrapStyleWord(true);
 		textPane.setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));
 		textPane.setForeground(Color.BLACK);
 		textPane.addKeyListener(new KeyAdapter() {
@@ -474,7 +470,7 @@ public class NucleicEditor extends JRootPane {
 	public void toggleHelpPage(String... page) { displayHelp.showPage(page); toggleHelp();		 }
 	public void toggleHelpPage(Documented documented) { toggleHelpPage(Utilities.add(documented.category(), documented.title())); }
 	
-	public JTextPane getTextPane() { return textPane; }
+	public JTextComponent getTextPane() { return textPane; }
 	public JPanel getNumberPanel() { return numberPanel; }
 	public NucleicDocument getDocument() { return document; }
 	
@@ -515,11 +511,7 @@ public class NucleicEditor extends JRootPane {
 		}});
 	}
 	
-	protected void adaptTabSet() {
-		int width = getWidth(),charWidth = textPane.getFontMetrics(textPane.getFont()).charWidth('0'),tupleWidth = charWidth*(getTupleLength()+1);
-		TabStop[] tabs = new TabStop[width/tupleWidth]; Arrays.setAll(tabs,tab->new TabStop((tab+1)*tupleWidth));
-		textPane.setParagraphAttributes(StyleContext.getDefaultStyleContext().addAttribute(SimpleAttributeSet.EMPTY, StyleConstants.TabSet, new TabSet(tabs)), false);
-	}
+	protected void adaptTabSet() { textPane.setTabSize(getTupleLength()+1); }
 	
 	public JPanel getOptionPanel() { return optionPanel; }
 	public Option.Component addOption(Option option) {

@@ -132,7 +132,6 @@ import javax.swing.JRootPane;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextField;
-import javax.swing.JTextPane;
 import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
 import javax.swing.ListCellRenderer;
@@ -153,6 +152,7 @@ import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
+import javax.swing.text.JTextComponent;
 import javax.swing.text.NumberFormatter;
 
 import org.biojava3.core.sequence.AccessionID;
@@ -1260,10 +1260,10 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 		editor.requestFocus();
 	}
 	public void deleteText() {
-		JTextPane textPane = editor.getTextPane();
-		int selectionStart = textPane.getSelectionStart(), selectionEnd = textPane.getSelectionEnd();
+		JTextComponent textArea = editor.getTextPane();
+		int selectionStart = textArea.getSelectionStart(), selectionEnd = textArea.getSelectionEnd();
 		if(selectionStart!=selectionEnd)
-			try { textPane.getDocument().remove(selectionStart, selectionEnd-selectionStart); }
+			try { textArea.getDocument().remove(selectionStart, selectionEnd-selectionStart); }
 			catch(BadLocationException e) { /** nothing to do here */ }
 	}
 	
@@ -1293,9 +1293,9 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 	public void findNext() {
 		String term = findDialog.getTerm();
 		if(!term.isEmpty()) {
-			JTextPane textPane = editor.getTextPane();
+			JTextComponent textPane = editor.getTextPane();
 			String text = textPane.getText();
-			int start = -1, end = 0, carret = findDialog.searchDown()?textPane.getSelectionEnd():editor.getTextPane().getSelectionStart();
+			int start = -1, end = 0, carret = findDialog.searchDown()?textPane.getSelectionEnd():textPane.getSelectionStart();
 			if(!findDialog.regexSearch()) {
 				if(findDialog.searchDown()) {
 					if((start=text.indexOf(term, carret))==-1&&findDialog.wrapSearch())
@@ -1341,7 +1341,7 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 		} else findText();
 	}
 	protected void replaceNext() {
-		JTextPane textPane = editor.getTextPane();
+		JTextComponent textPane = editor.getTextPane();
 		int start = textPane.getSelectionStart(), end = textPane.getSelectionEnd();
 		if(start!=end) {
 			String term = findDialog.getTerm(), selected = textPane.getSelectedText(), replace = null;
@@ -1930,7 +1930,7 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 						Matcher matcher = Pattern.compile(/*"(.*?)( |$)"*/"(?: |^)([^ ]*)").matcher(editor.getText());
 						while(matcher.find())
 							if(++number==goToNumber) {
-								JTextPane textPane = editor.getTextPane();
+								JTextComponent textPane = editor.getTextPane();
 								textPane.setSelectionStart(matcher.start(1));
 								textPane.setSelectionEnd(matcher.end(1));
 								setVisible(false);

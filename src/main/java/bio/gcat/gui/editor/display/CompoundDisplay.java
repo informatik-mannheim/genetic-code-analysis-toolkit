@@ -15,8 +15,10 @@
  */
 package bio.gcat.gui.editor.display;
 
-import static bio.gcat.Utilities.*;
-import static bio.gcat.gui.helper.Guitilities.*;
+import static bio.gcat.Utilities.fixPosition;
+import static bio.gcat.gui.helper.Guitilities.getImageIcon;
+import static bio.gcat.gui.helper.Guitilities.invokeAppropriate;
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FontMetrics;
@@ -25,14 +27,16 @@ import java.awt.Insets;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.geom.Rectangle2D;
+
 import javax.swing.Icon;
 import javax.swing.JPanel;
-import javax.swing.JTextPane;
 import javax.swing.border.Border;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.MatteBorder;
 import javax.swing.text.BadLocationException;
+import javax.swing.text.JTextComponent;
+
 import bio.gcat.gui.editor.NucleicDisplay;
 import bio.gcat.gui.editor.NucleicEditor;
 import bio.gcat.gui.editor.NucleicListener;
@@ -54,7 +58,7 @@ public class CompoundDisplay extends JPanel implements NucleicDisplay, NucleicLi
 	private final int defaultCharWidth;
 	
 	private NucleicEditor editor;
-	private JTextPane textPane;
+	private JTextComponent textPane;
 	
 	private int border;
 	
