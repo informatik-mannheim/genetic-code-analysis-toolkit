@@ -181,7 +181,7 @@ public class GraphDisplay extends mxGraphComponent implements NucleicDisplay, Nu
 		for(Tuple tuple:tuples) {
 			String string = tuple.toString();
 			if(string.length()>5) continue;
-			for(int cut=1;cut<=tuple.length()/2;cut++) {
+			for(int cut=1;cut<=tuple.length()-1;cut++) {
 				vertices.add(tupleFrom=new Tuple(string.substring(0,cut)));
 				vertices.add(tupleTo=new Tuple(string.substring(cut)));
 				edges.put(tupleFrom,tupleTo);

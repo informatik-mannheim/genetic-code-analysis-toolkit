@@ -871,11 +871,13 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 			int index = list.getSelectedIndex();
 			if(index!=-1) {
 				actions.remove(index);
-				if(!actions.isEmpty()&&index<=actions.size())
+				if(actions.isEmpty())
+					list.clearSelection();
+				if(index<=actions.size())
 					list.setSelectedIndex(index!=0?index-1:0);
 			}
 		}
-		public void clearActions() { actions.clear(); }
+		public void clearActions() { actions.clear(); list.clearSelection(); }
 		
 		private void enableActionButtons() {
 			int size = actions.getSize(),
@@ -1070,8 +1072,9 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 		public void removeSequences() {
 			int adapt = 0; for(int index:getSelectedIndices())
 				items.remove(index-adapt++);
+			clearSelection();
 		}
-		public void clearSequences() { items.clear(); }
+		public void clearSequences() { items.clear(); clearSelection(); }
 		
 		@Override public void paint(Graphics graphics) {
 			super.paint(graphics);
