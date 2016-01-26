@@ -122,8 +122,10 @@ public class Tuple implements Comparable<Tuple> {
 	}
 	
 	public static String tupleString(String string) {
-		return Characters.WHITESPACE.condense(PATTERN_NO_BASE.matcher(
-			PATTERN_NO_WORD.matcher(string.toUpperCase()).replaceAll(SPACE)).replaceAll(EMPTY));
+		string = Characters.NEW_LINE.replace(string,EMPTY).toUpperCase();
+		string = PATTERN_NO_WORD.matcher(string).replaceAll(SPACE);
+		string = PATTERN_NO_BASE.matcher(string).replaceAll(EMPTY);
+		return Characters.WHITESPACE.condense(string);
 	}
 	
 	public static Acid tupleAcid(Tuple tuple) {
