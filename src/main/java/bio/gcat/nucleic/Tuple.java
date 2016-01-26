@@ -35,13 +35,14 @@ import static bio.gcat.nucleic.Compound.isStart;
 import static bio.gcat.nucleic.Compound.isStop;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.StringTokenizer;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -186,10 +187,8 @@ public class Tuple implements Comparable<Tuple> {
 	}
 	
 	public static List<Tuple> sliceTuples(String string, int length) {
-		List<Tuple> tuples = new ArrayList<Tuple>();
-		Matcher tuple = Pattern.compile(".{"+length+"}|.+$").matcher(Characters.WHITESPACE.replace(string,EMPTY));
-		while(tuple.find()) tuples.add(new Tuple(tuple.group()));
-		return tuples;
+		return Arrays.stream(Characters.WHITESPACE.replace(string,EMPTY).split("(?<=\\G.{3})"))
+			.map(tuple->new Tuple(tuple)).collect(Collectors.toList());
 	}
 	public static List<Tuple> sliceTuples(String[] strings, int length) {
 		List<Tuple> tuples = new ArrayList<Tuple>();
