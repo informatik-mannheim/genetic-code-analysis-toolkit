@@ -92,6 +92,7 @@ import javax.swing.plaf.basic.BasicTabbedPaneUI;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
+import javax.swing.text.PlainDocument;
 import javax.swing.text.Position;
 import javax.swing.text.html.HTMLEditorKit;
 import javax.swing.undo.CannotRedoException;
@@ -125,13 +126,14 @@ public class NucleicEditor extends JRootPane {
 	
 	private static final long serialVersionUID = 1l;
 	
-	protected NucleicDocument document,blankDocument;
+	protected NucleicDocument document;
 	protected UndoManager undo = new UndoManager();
 	protected UndoableEditListener edit;
 	
 	private NavigableMap<Position,Tuple> tuples;
 	
 	private JTextArea textPane;
+	private Document blankDocument;
 	private NumberPanel numberPanel;
 	
 	private JTabbedPane displayPane;
@@ -189,7 +191,7 @@ public class NucleicEditor extends JRootPane {
 			private static final long serialVersionUID = 1l;
 			@Override public String getText(int offset,int length) throws BadLocationException { return super.getText(offset,length).replace(TAB,SPACE); }
 			@Override protected String prepareText(String text) { return super.prepareText(text).replace(SPACE,TAB); }
-		}); blankDocument = new NucleicDocument();
+		}); blankDocument = new PlainDocument();
 		
 		tuples = new ConcurrentSkipListMap<Position, Tuple>(new Comparator<Position>() {
 			@Override public int compare(Position positionA, Position positionB) {
@@ -480,9 +482,13 @@ public class NucleicEditor extends JRootPane {
 	public void setText(String text) {
 		invokeAppropriate(new Runnable() {
 			@Override public void run() {
-				edit.startTransaction();
-				textPane.setText(text);
-				edit.commitTransaction();
+				textPane.setDocument(blankDocument);
+		        try {
+		        	edit.startTransaction();
+		        	document.replace(0,document.getLength(),text,null);
+		            edit.commitTransaction();		            
+		        } catch (BadLocationException e) { /* nothing to do here */ }
+		        textPane.setDocument(document);
 			}
 		});
 	}

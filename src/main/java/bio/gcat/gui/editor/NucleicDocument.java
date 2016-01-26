@@ -25,14 +25,14 @@ import java.util.regex.Pattern;
 
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
-import javax.swing.text.DefaultStyledDocument;
+import javax.swing.text.PlainDocument;
 
 import bio.gcat.nucleic.Acid;
 import bio.gcat.nucleic.Base;
 import bio.gcat.nucleic.Tuple;
 import lc.kra.Characters;
 
-public class NucleicDocument extends DefaultStyledDocument {
+public class NucleicDocument extends PlainDocument {
 	private static final long serialVersionUID = 1l;
 	private static final Characters SPACE_CHARACTERS =
 		new Characters(' ',Pattern.compile("[ \t\\f]"));

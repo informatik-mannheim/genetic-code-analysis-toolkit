@@ -276,7 +276,7 @@ public final class Utilities {
   		if(filter!=null&&!supportedFileFilter.accept(file)&&!file.exists())
 				setSelectedFile(file=new File(file.getAbsolutePath()+'.'+filter.getExtensions()[0]));
   		if(getDialogType()==SAVE_DIALOG&&file!=null&&file.exists())
-  			if(JOptionPane.showOptionDialog(getParent(),String.format("%s already exists.\nDo you want to replace it?",file.getName()),"Confirm Overwrite",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE,null,null,null)==JOptionPane.NO_OPTION)
+  			if(JOptionPane.showOptionDialog(getParent(),String.format("%s already exists.\nDo you want to replace it?",file.getName()),"Confirm Overwrite",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE,null,null,null)!=JOptionPane.YES_OPTION)
   				return;
   		super.approveSelection();
 		}

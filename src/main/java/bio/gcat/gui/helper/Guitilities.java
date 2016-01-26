@@ -433,7 +433,7 @@ public class Guitilities {
 		panel.add(createLabel(text));
 		panel.add(field);
 		if(JOptionPane.showConfirmDialog(component,panel,title,JOptionPane.OK_CANCEL_OPTION)==JOptionPane.OK_OPTION)
-			return new String(field.getPassword());
+		     return new String(field.getPassword());
 		else return null;
 	}
 

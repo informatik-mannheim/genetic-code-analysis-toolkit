@@ -381,7 +381,7 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 		chooser.setDialogTitle("Load Script");
 		if(chooser.showOpenDialog(this)!=JFileChooser.APPROVE_OPTION)
 			return;
-		else if(actionPanel.actions.getSize()!=0&&JOptionPane.showConfirmDialog(this,"Loading a new script file, will overwrite your current action list.\n\nAny unsaved changes are lost. Are you sure to load the script file?","Load Script File",JOptionPane.OK_CANCEL_OPTION)==JOptionPane.CANCEL_OPTION)
+		else if(actionPanel.actions.getSize()!=0&&JOptionPane.showConfirmDialog(this,"Loading a new script file, will overwrite your current action list.\n\nAny unsaved changes are lost. Are you sure to load the script file?","Load Script File",JOptionPane.OK_CANCEL_OPTION)!=JOptionPane.OK_OPTION)
 			return;
 		
 		try {

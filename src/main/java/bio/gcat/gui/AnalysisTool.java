@@ -235,6 +235,8 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 		} finally { VERSION = version; }
 	}
 	
+	protected static final long MAXIMUM_SEQUENCE_LENGTH = 1048576;
+	
 	private static final int
 		MENU_FILE = 0,
 		MENU_EDIT = 1,
@@ -845,6 +847,9 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 			openFile(chooser.getSelectedFile());
 	}
 	public void openFile(File file) {
+		if(!checkLength(file.length()))
+			return;
+		
 		try {
 			newText(new String(readFile(file)));
 			UserDefinedFileAttributeView view = Files.getFileAttributeView(file.toPath(),UserDefinedFileAttributeView.class);
@@ -977,6 +982,9 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 			
 			Entry<String,DNASequence> sequence = future.get();
 			if(sequence!=null) {
+				if(!checkLength(sequence.getValue().getLength()))
+					return;
+				
 				newText(sequence.getValue().getSequenceAsString());
 				optionLabel.setValue(sequence.getKey());
 
@@ -1114,7 +1122,9 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 	public void importGenBank(String accessionID) {
 		try {
 			DNASequence sequence = GenBank.sequence(accessionID);
-			
+			if(!checkLength(sequence.getLength()))
+				return;
+				
 			newText(sequence.getSequenceAsString());
 			optionLabel.setValue(sequence.getAccession().toString());
 			
@@ -1189,6 +1199,12 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 			FastaWriterHelper.writeSequence(file,sequence);
 			return true;
 		}	catch(Error | Exception e) { JOptionPane.showMessageDialog(this,"Could not write FASTA file:\n\n"+e.getMessage(),"Save File",JOptionPane.WARNING_MESSAGE); return false; }
+	}
+	
+	protected boolean checkLength(long length) {
+		if(length>MAXIMUM_SEQUENCE_LENGTH&&JOptionPane.showConfirmDialog(this,"The size of the selected sequence likely exceeds the size Analysis Tool\ncan handle. Consider using Batch Tool for analysis instead.\n\nDo you want to continue loading the sequence anyways?","Are you sure?",JOptionPane.YES_NO_OPTION)!=JOptionPane.YES_OPTION)
+		     return false;
+		else return true;
 	}
 	
 	private boolean confirmIfDirty() {
