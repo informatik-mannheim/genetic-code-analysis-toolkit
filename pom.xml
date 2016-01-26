@@ -4,7 +4,7 @@
 
 	<groupId>bio.gcat</groupId>
 	<artifactId>gcat</artifactId>
-	<version>1.9.6</version>
+	<version>1.9.7</version>
 
 	<name>Genetic Code Analysis Toolkit</name>
 	<url>http://www.gcat.bio/</url>

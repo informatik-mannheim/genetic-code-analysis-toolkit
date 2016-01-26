@@ -15,7 +15,12 @@
  */
 package bio.gcat.batch;
 
-import static bio.gcat.batch.Action.TaskAttribute.*;
+import static bio.gcat.batch.Action.TaskAttribute.ANALYSIS_HANDLER;
+import static bio.gcat.batch.Action.TaskAttribute.DEFAULT_ATTRIBUTES;
+import static bio.gcat.batch.Action.TaskAttribute.SPLIT_PICK;
+import static bio.gcat.batch.Action.TaskAttribute.TEST_CRITERIA;
+import static bio.gcat.batch.Action.TaskAttribute.valueOrDefault;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -25,6 +30,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
+
 import bio.gcat.Parameter;
 import bio.gcat.log.InjectionLogger;
 import bio.gcat.nucleic.Tuple;
@@ -41,8 +47,8 @@ import bio.gcat.operation.transformation.Transformation;
  */
 public class Action {
 	private final Class<? extends Operation> operation;
-	public Map<TaskAttribute,Object> attributes;
-	public Object[] values;
+	private Map<TaskAttribute,Object> attributes;
+	private Object[] values;
 	
 	public Action(Class<? extends Operation> operation) { this(operation, Parameter.getValues(Operation.getParameters(operation))); }
 	public Action(Class<? extends Operation> operation, Object... values) {
@@ -50,11 +56,19 @@ public class Action {
 	}
 	public Action(Class<? extends Operation> operation, Map<TaskAttribute,Object> attributes, Object... values) {
 		this.operation = operation;
-		this.values = values;
 		this.attributes = attributes;
+		this.values = values;
 	}
 	
 	public Class<? extends Operation> getOperation() { return operation; }
+	
+	public Map<TaskAttribute,Object> getAttributes() { return Collections.unmodifiableMap(attributes); }
+	public Object getAttribute(TaskAttribute attribute) { return attributes.get(attribute); }
+	public void putAttribute(TaskAttribute attribute,Object value) { attributes.put(attribute,value); }
+	public void removeAttribute(TaskAttribute attribute) { attributes.remove(attribute); }
+	
+	public Object[] getValues() { return values; }
+	public void setValues(Object[] values) { this.values = values; }
 	
 	public class Task implements Callable<Collection<Tuple>>, InjectionLogger.Injectable {
 		private Collection<Tuple> tuples;

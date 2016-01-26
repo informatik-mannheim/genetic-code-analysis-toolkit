@@ -130,7 +130,7 @@ public class NucleicEditor extends JRootPane {
 	
 	private static final long serialVersionUID = 1l;
 	
-	protected NucleicDocument document;
+	protected NucleicDocument document,blankDocument;
 	protected UndoManager undo = new UndoManager();
 	protected UndoableEditListener edit;
 	
@@ -193,7 +193,7 @@ public class NucleicEditor extends JRootPane {
 			private static final long serialVersionUID = 1l;
 			@Override public String getText(int offset,int length) throws BadLocationException { return super.getText(offset,length).replace(TAB,SPACE); }
 			@Override protected String prepareText(String text) { return super.prepareText(text).replace(SPACE,TAB); }
-		});
+		}); blankDocument = new NucleicDocument();
 		
 		tuples = new ConcurrentSkipListMap<Position, Tuple>(new Comparator<Position>() {
 			@Override public int compare(Position positionA, Position positionB) {
@@ -383,7 +383,8 @@ public class NucleicEditor extends JRootPane {
 		options = new NucleicOptions();
 		optionList = new ArrayList<>();		
 		optionPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-		optionPanel.setBorder(new EmptyBorder(1,0,0,0) { //paint the border to the edge of NumberPanel
+		optionPanel.setMinimumSize(new Dimension(0,0)); // otherwise the optionPanel blocks resizing the operations catalog split pane
+		optionPanel.setBorder(new EmptyBorder(1,0,0,0) { // paint the border to the edge of NumberPanel
 			private static final long serialVersionUID = 1l;
 			@Override public void paintBorder(java.awt.Component component, Graphics graphics, int x, int y, int width, int height) {
 				Color oldColor = graphics.getColor();
@@ -480,7 +481,15 @@ public class NucleicEditor extends JRootPane {
 	public String getText() { return textPane.getText(); }
 	public String getText(int offset) throws BadLocationException { return textPane.getText(offset, document.getLength()-offset); }
 	public String getText(int offset, int length) throws BadLocationException { return textPane.getText(offset, length); }
-	public void setText(String text) { edit.startTransaction(); textPane.setText(text); edit.commitTransaction(); }
+	public void setText(String text) {
+		invokeAppropriate(new Runnable() {
+			@Override public void run() {
+				edit.startTransaction();
+				textPane.setText(text);
+				edit.commitTransaction();
+			}
+		});
+	}
 	
 	public Collection<Tuple> getTuples() { return Collections.unmodifiableCollection(tuples.values()); }
 	public List<Tuple> getTupleList() {
@@ -491,11 +500,8 @@ public class NucleicEditor extends JRootPane {
 		return Collections.unmodifiableList(list);
 	}
 	public NavigableMap<Position,Tuple> getTupleMap() { return tuples; }
-	public void setTuples(Collection<Tuple> tuples) {
-		invokeAppropriate(new Runnable() {
-			@Override public void run() { edit.startTransaction(); textPane.setText(null); appendTuples(tuples); edit.commitTransaction(); }
-		});
-	}
+	
+	public void setTuples(Collection<Tuple> tuples) { setText(Tuple.joinTuples(tuples)); }
 	public void appendTuples(Collection<Tuple> tuples) {
 		invokeAppropriate(new Runnable() { @Override public void run() {
 			edit.startTransaction();
@@ -739,6 +745,15 @@ public class NucleicEditor extends JRootPane {
 				edit.end(); undo.addEdit(edit); edit = null;
 				fireTuplesUndoableChange();
 			}
+		}
+		public void commitTransaction(Transaction transaction) throws Exception {
+			startTransaction();
+			try { transaction.run(); }
+			finally { commitTransaction(); }
+		}
+		
+		public abstract class Transaction {
+			public abstract void run() throws Exception;
 		}
 	}
 	

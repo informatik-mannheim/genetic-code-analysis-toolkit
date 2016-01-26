@@ -87,7 +87,7 @@ import bio.gcat.nucleic.Base;
 public class BDATool extends JFrame implements ActionListener, ListDataListener, ListSelectionListener {
 	private static final long serialVersionUID = 1l;
 
-	public static final String BDA_EXTENSION = "bda";
+	public static final String BDA_EXTENSION = "gcatb";
 	public static final FileNameExtensionFilter
 		BDA_EXTENSION_FILTER = new FileNameExtensionFilter("Binary Dichotomic Algorithm (*."+BDA_EXTENSION+")", BDA_EXTENSION);
 	

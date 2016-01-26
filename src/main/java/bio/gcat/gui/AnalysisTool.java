@@ -35,6 +35,7 @@ import static bio.gcat.gui.helper.Guitilities.createSplitPane;
 import static bio.gcat.gui.helper.Guitilities.createSubmenu;
 import static bio.gcat.gui.helper.Guitilities.createToolbarButton;
 import static bio.gcat.gui.helper.Guitilities.createToolbarMenuButton;
+import static bio.gcat.gui.helper.Guitilities.createToolbarTextButton;
 import static bio.gcat.gui.helper.Guitilities.getImage;
 import static bio.gcat.gui.helper.Guitilities.getImageIcon;
 import static bio.gcat.gui.helper.Guitilities.getMenuItem;
@@ -210,9 +211,9 @@ import lc.kra.Characters;
 public class AnalysisTool extends JFrame implements ActionListener, NucleicListener {
 	private static final long serialVersionUID = 1l;
 	
-	public static final String GENETIC_EXTENSION = "gen";
+	public static final String GENETIC_EXTENSION = "gcat";
 	public static final FileNameExtensionFilter
-		GENETIC_EXTENSION_FILTER = new FileNameExtensionFilter("Genetic Sequences (*."+GENETIC_EXTENSION+")", GENETIC_EXTENSION),
+		GENETIC_EXTENSION_FILTER = new FileNameExtensionFilter("Genetic Code Sequence (*."+GENETIC_EXTENSION+")", GENETIC_EXTENSION),
 		FASTA_EXTENSION_FILTER = new FileNameExtensionFilter("FASTA Files (*.fasta;*.fna,*.fa)","fasta","fna","fa"),
 		TEXT_EXTENSION_FILTER = new FileNameExtensionFilter("Text Documents (*.txt)", "txt");
 	
@@ -527,7 +528,7 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 		toolbar[TOOLBAR_FILE].add(createToolbarButton("Export", "door_out", ACTION_EXPORT, this));
 		
 		toolbar[TOOLBAR_WINDOW] = new JToolBar("Window");
-		toolbar[TOOLBAR_WINDOW].add(createToolbarButton("Open Batch Tool", "calculator", ACTION_SHOW_BATCH, this));
+		toolbar[TOOLBAR_WINDOW].add(createToolbarTextButton("Batch Tool", "calculator", ACTION_SHOW_BATCH, this));
 		toolbar[TOOLBAR_WINDOW].add(createToolbarButton("Add Sequence to Batch Tool", "calculator_add", ACTION_ADD_TO_BATCH, this));
 		toolbar[TOOLBAR_WINDOW].add(createToolbarButton("BDA Tool", "bda", ACTION_SHOW_BDA, this));
 		
@@ -603,7 +604,6 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 				@Override public void actionPerformed(ActionEvent e) { consolePane.clearText(); }
 			});
 			glassPane.add(clearButton);
-			
 		}});
 		split[1] = createSplitPane(JSplitPane.HORIZONTAL_SPLIT,false,true,410,0.195,new JScrollPane(catalogPanel=createCatalog()),split[0]);
 		add(split[1],BorderLayout.CENTER);
@@ -1434,7 +1434,7 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 		} else batch.requestFocus();
 	}
 	public void addToBatch() {
-		showBatch(); batch.addSequence(editor.getTuples());
+		showBatch(); batch.addSequence(editor.getTuples(),(String)optionLabel.getValue());
 	}
 	
 	public static BDATool getBDA() { return bda!=null?bda:(bda=new BDATool()); }

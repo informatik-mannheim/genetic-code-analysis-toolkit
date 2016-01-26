@@ -569,6 +569,12 @@ public class Guitilities {
 		button.addActionListener(listener);		
 		return button;
 	}
+	public static JButton createToolbarTextButton(String text, String icon, String action, ActionListener listener) {
+		JButton button = createToolbarButton(text,icon,action,listener);
+		button.setFont(button.getFont().deriveFont(Font.ITALIC));
+		button.setText(text);
+		return button;
+	}
 	public static JButton createToolbarMenuButton(String text, String icon, JMenuItem[] items) {
 		JButton button = new JButton("\u25BE",getImageIcon(icon));
 		button.setToolTipText(text);
