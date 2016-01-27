@@ -59,9 +59,9 @@ public class Batch {
 	public void removeAction(int index) { actions.remove(index); }
 	public void removeAction(Action action) { actions.remove(action); }
 	
-	// build a queue of all the actions in this batch object
-	public Callable<Result> build(Collection<Tuple> tuples) { return build(new Result(tuples)); }
-	public Callable<Result> build(final Result result) {
+	// build a queue of all the actions in this batch object (iterative)
+	public Callable<Result> buildIterative(Collection<Tuple> tuples) { return buildIterative(new Result(tuples)); }
+	public Callable<Result> buildIterative(final Result result) {
 		Queue<Action> queue = new LinkedList<>(actions);
 		return ()->{
 			Action action;
@@ -69,8 +69,12 @@ public class Batch {
 				result.setTuples(InjectionLogger.injectLogger(result,action.new Task(result.getTuples())).call());
 			} return result;
 		};
-		
-		/*Callable<Result> current = null;
+	}
+	
+	// build a queue of all the actions in this batch object (recursive)
+	public Callable<Result> buildRecursive(Collection<Tuple> tuples) { return buildRecursive(new Result(tuples)); }
+	public Callable<Result> buildRecursive(final Result result) {
+		Callable<Result> current = null;
 		for(Action action:actions) {
 			final Callable<Result> previous = current;
 			current = ()->{
@@ -78,15 +82,11 @@ public class Batch {
 				localResult.setTuples(InjectionLogger.injectLogger(localResult,action.new Task(localResult.getTuples())).call());
 				return localResult;
 			};
-		} return current;*/
+		} return current;
 	}
 	
-	public ListenableFuture<Result> submit(Collection<Tuple> tuples, ListeningExecutorService service) { return submit(build(tuples),service); }
-	public ListenableFuture<Result> submit(Collection<Tuple> tuples, ListeningExecutorService service, BooleanSupplier start) { return submit(build(tuples),service,start); }
-	public ListenableFuture<Result> submit(Result result, ListeningExecutorService service) { return submit(build(result),service); }
-	public ListenableFuture<Result> submit(Result result, ListeningExecutorService service, BooleanSupplier start) { return submit(build(result),service,start); }	
-	private ListenableFuture<Result> submit(Callable<Result> queue, ListeningExecutorService service) { return service.submit(queue); }
-	private ListenableFuture<Result> submit(Callable<Result> queue, ListeningExecutorService service, BooleanSupplier start) {
+	public ListenableFuture<Result> submit(Callable<Result> queue, ListeningExecutorService service) { return service.submit(queue); }
+	public ListenableFuture<Result> submit(Callable<Result> queue, ListeningExecutorService service, BooleanSupplier start) {
 		return service.submit(start!=null?new Callable<Result>() {
 			@Override public Result call() throws Exception {
 				if(start.getAsBoolean()) return queue.call(); else 

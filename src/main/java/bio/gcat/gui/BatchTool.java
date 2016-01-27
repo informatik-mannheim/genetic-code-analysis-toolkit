@@ -522,7 +522,7 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 			item.result = new Result(item.tuples);
 			model.change(item);
 			
-			ListenableFuture<Result> future = batch.submit(item.result,service,new BooleanSupplier() {
+			ListenableFuture<Result> future = batch.submit(batch.buildIterative(item.result),service,new BooleanSupplier() {
 				@Override public boolean getAsBoolean() {
 					item.status = Status.ACTIVE; model.change(item);
 					return true;
