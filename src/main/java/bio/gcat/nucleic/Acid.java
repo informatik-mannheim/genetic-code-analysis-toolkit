@@ -22,5 +22,6 @@ public enum Acid {
 	RNA(URACIL,CYTOSINE,ADENINE,GUANINE);
 	
 	public final Base[] bases;
-	private Acid(Base... bases) { this.bases = bases; }
+	private Acid(Base... bases) {
+		this.bases = bases; }
 }
