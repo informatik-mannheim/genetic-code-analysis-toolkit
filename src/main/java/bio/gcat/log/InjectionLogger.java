@@ -39,7 +39,7 @@ public class InjectionLogger implements Logger {
 	}
 	
 	public interface Injectable {
-		public default Logger getLogger() {
+		default public Logger getLogger() {
 			Logger logger = injections.getOrDefault(this, new InjectionLogger());
 			injections.put(this,logger);
 			return logger;

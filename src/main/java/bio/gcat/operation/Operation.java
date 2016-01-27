@@ -34,9 +34,9 @@ import bio.gcat.log.InjectionLogger;
 import bio.gcat.log.Logger;
 
 public interface Operation extends InjectionLogger.Injectable {
-	public default String getName() { return getName(this.getClass()); }
-	public default String getIcon() { return getIcon(this.getClass()); }
-	public default String getGroup() { return getGroup(this.getClass()); }
+	default public String getName() { return getName(this.getClass()); }
+	default public String getIcon() { return getIcon(this.getClass()); }
+	default public String getGroup() { return getGroup(this.getClass()); }
 	
 	public static String getName(Class<? extends Operation> operation) {
 		if(operation.isAnnotationPresent(Named.class))

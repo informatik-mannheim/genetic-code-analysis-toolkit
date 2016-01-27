@@ -28,7 +28,7 @@ import bio.gcat.operation.Named;
 import bio.gcat.operation.Operation;
 
 public interface Transformation extends Operation {
-	public default Collection<Tuple> transform(Collection<Tuple> tuples) { return transform(tuples, Parameter.getValues(Operation.getParameters(this.getClass())));  }
+	default public Collection<Tuple> transform(Collection<Tuple> tuples) { return transform(tuples, Parameter.getValues(Operation.getParameters(this.getClass())));  }
 	public Collection<Tuple> transform(Collection<Tuple> tuples, Object... values);
 	
 	@Named(name="find & replace", icon="find")

@@ -59,31 +59,40 @@ public class Batch {
 	public void removeAction(int index) { actions.remove(index); }
 	public void removeAction(Action action) { actions.remove(action); }
 	
+	// build a queue of all the actions in this batch object
 	public Callable<Result> build(Collection<Tuple> tuples) { return build(new Result(tuples)); }
 	public Callable<Result> build(final Result result) {
 		Queue<Action> queue = new LinkedList<>(actions);
-		return new Callable<Result>() {
-			@Override public Result call() throws Exception {
-				Action action;
-				while((action=queue.poll())!=null)
-					result.setTuples(InjectionLogger.injectLogger(result,action.new Task(result.getTuples())).call());
-				return result;
-			}
+		return ()->{
+			Action action;
+			while((action=queue.poll())!=null) {
+				result.setTuples(InjectionLogger.injectLogger(result,action.new Task(result.getTuples())).call());
+			} return result;
 		};
+		
+		/*Callable<Result> current = null;
+		for(Action action:actions) {
+			final Callable<Result> previous = current;
+			current = ()->{
+				Result localResult = previous!=null?previous.call():result;
+				localResult.setTuples(InjectionLogger.injectLogger(localResult,action.new Task(localResult.getTuples())).call());
+				return localResult;
+			};
+		} return current;*/
 	}
 	
 	public ListenableFuture<Result> submit(Collection<Tuple> tuples, ListeningExecutorService service) { return submit(build(tuples),service); }
 	public ListenableFuture<Result> submit(Collection<Tuple> tuples, ListeningExecutorService service, BooleanSupplier start) { return submit(build(tuples),service,start); }
 	public ListenableFuture<Result> submit(Result result, ListeningExecutorService service) { return submit(build(result),service); }
 	public ListenableFuture<Result> submit(Result result, ListeningExecutorService service, BooleanSupplier start) { return submit(build(result),service,start); }	
-	private ListenableFuture<Result> submit(Callable<Result> result, ListeningExecutorService service) { return service.submit(result); }
-	private ListenableFuture<Result> submit(Callable<Result> result, ListeningExecutorService service, BooleanSupplier start) {
+	private ListenableFuture<Result> submit(Callable<Result> queue, ListeningExecutorService service) { return service.submit(queue); }
+	private ListenableFuture<Result> submit(Callable<Result> queue, ListeningExecutorService service, BooleanSupplier start) {
 		return service.submit(start!=null?new Callable<Result>() {
 			@Override public Result call() throws Exception {
-				if(start.getAsBoolean()) return result.call(); else 
+				if(start.getAsBoolean()) return queue.call(); else 
 					throw new InterruptedException();
 			}
-		}:result);
+		}:queue);
 	}
 	
 	public ListenableFuture<Result> execute(Collection<Tuple> tuples) {
@@ -133,4 +142,17 @@ public class Batch {
 			}
 		}
 	}
+	
+	/*@FunctionalInterface
+	private static interface RecursiveCallable<V> extends Callable<V> {*/
+		/*protected final RecursiveCallable previous;
+		
+		public RecursiveCallable() { this(null); }
+		public RecursiveCallable(RecursiveCallable<V> previous) {
+			this.previous = previous; }*/
+		
+		/*public V call(RecursiveCallable<V> previous) throws Exception;
+		
+		default public V call() throws Exception { return call(null); }
+	}*/
 }
