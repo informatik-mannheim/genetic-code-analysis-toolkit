@@ -8,7 +8,6 @@ import static bio.gcat.batch.Action.TaskAttribute.TEST_CRITERIA;
 import static bio.gcat.batch.Action.TaskAttribute.TEST_CRITERIA_BREAK_IF_FALSE;
 import static bio.gcat.batch.Action.TaskAttribute.TEST_CRITERIA_BREAK_IF_TRUE;
 import static bio.gcat.batch.Action.TaskAttribute.TEST_CRITERIA_NEVER_BREAK;
-import static java.lang.Character.isAlphabetic;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -53,8 +52,9 @@ public class Script {
 	
 	private static final Pattern
 		SCRIPT_IDENTIFIER_PATTERN = Pattern.compile("-+ ?GENETIC CODE ANALYSIS TOOLKIT SCRIPT ?-+"),
-		ACTION_PATTERN = Pattern.compile("((?:[A-Za-z_$][a-zA-Z0-9_$]*\\.)*[A-Za-z_$][a-zA-Z0-9_$]*)[^\\S\r\n]*(?:\\[([^\\]]*)\\])?[^\\S\r\n]*\\(([^)]*)\\)"); //((?:[A-Za-z_$][a-zA-Z0-9_$]*\.)*[A-Za-z_$][a-zA-Z0-9_$]*)[^\S\r\n]*(?:\[([^\]]*)\])?[^\S\r\n]*\(([^)]*)\) 
-	
+		ACTION_PATTERN = Pattern.compile("((?:[A-Za-z_$][a-zA-Z0-9_$]*\\.)*[A-Za-z_$][a-zA-Z0-9_$]*)[^\\S\r\n]*(?:\\[([^\\]]*)\\])?[^\\S\r\n]*\\(([^)]*)\\)"), //((?:[A-Za-z_$][a-zA-Z0-9_$]*\.)*[A-Za-z_$][a-zA-Z0-9_$]*)[^\S\r\n]*(?:\[([^\]]*)\])?[^\S\r\n]*\(([^)]*)\) 
+		COMMA_PATTERN = Pattern.compile("(?<!(?<![^\\\\]\\\\(?:\\\\{2}){0,10})\\\\),"); //(?<!(?<![^\\]\\(?:\\{2}){0,10})\\),
+		
 	private List<Action> actions = new ArrayList<>();
 	
 	private final BiMap<TaskAttribute,String> attributeMap;
@@ -99,8 +99,8 @@ public class Script {
 			
 			// parse the action string and create a action
 			addAction(new Action(operation=parseOperation(matcher.group(1)),
-				parseAttributes(matcher.group(2).split(",")),
-				parseValues(operation, matcher.group(3).split(","))));
+				parseAttributes(unescapeValues(matcher.group(2))),
+				parseValues(operation,unescapeValues(matcher.group(3)))));
 		}
 	}
 	
@@ -109,41 +109,9 @@ public class Script {
 			writeTo(writer); }
 	}
 	public void writeTo(Writer writer) throws IOException {
-		// create a special 'comma aware' print writer (dismisses the last comma before ), or ])
-		PrintWriter printWriter = new PrintWriter(writer) {
-			private boolean hadComma = false;
-			@Override public void write(char[] buffer,int offset,int length) {
-				if(length>0&&checkComma(buffer[offset+(length-1)])) {
-					if(length>1) super.write(buffer,offset,length-1);
-				} else super.write(buffer, offset, length);
-			}
-			@Override public void write(String string, int offset, int length) {
-				if(string.length()>0&&checkComma(string.charAt(offset+(length-1)))) {
-					if(string.length()>1) super.write(string,offset,length-1);
-				} else super.write(string, offset, length);
-			}
-			@Override public void write(int character) {
-				if(!checkComma(character))
-					super.write(character);
-			}
-			
-			private boolean checkComma(int character) {
-				if(character==',') {
-					hadComma = true;
-					return true;
-				} else writeComma(character);
-				return false;
-			}
-			private void writeComma(int character) {
-				if(hadComma) {
-					if(isAlphabetic(character))
-						super.write(',');
-					hadComma = false;
-				}
-			}
-		};
-		
+		CommaPrintWriter printWriter = new CommaPrintWriter(writer);
 		printWriter.append(SCRIPT_IDENTIFIER).println();
+		
 		for(Action action:actions) {
 			// write one line per action: <NAME>[<TASK_ATTRIBUTE1>=<VALUE>,...](<ACTION_VALUE1>,...)
 			writeOperationTo(printWriter,action);
@@ -151,12 +119,11 @@ public class Script {
 			// write task attributes in square brackets [<TASK_ATTRIBUTE1>=<VALUE>,...]
 			printWriter.write('[');
 			writeAttributesTo(printWriter,action);
-			printWriter.write(']');
-			
+			printWriter.stripComma().write(']');
 			// write values in brackets (<ACTION_PARAMETER1>,...)
 			printWriter.write('(');
 			writeValuesTo(printWriter,action);
-			printWriter.write(')');
+			printWriter.stripComma().write(')');
 			
 			// line separator to separate actions
 			printWriter.println();
@@ -185,7 +152,7 @@ public class Script {
 			|| attribute.getKey()==SPLIT_PICK&&!Split.class.isAssignableFrom(operation))
 				continue;
 			
-			writer.format(ATTRIBUTE_FORMAT,name,values.get(attribute.getValue()));
+			writer.format(ATTRIBUTE_FORMAT,name,escapeValue(values.get(attribute.getValue())));
 		}
 	}
 	/**
@@ -193,7 +160,7 @@ public class Script {
 	 */
 	protected void writeValuesTo(PrintWriter writer, Action action) throws IOException {
 		for(Object value:action.getValues())
-			writer.format(VALUE_FORMAT,value);
+			writer.format(VALUE_FORMAT,escapeValue(value.toString()));
 	}
 	
 	/**
@@ -282,5 +249,67 @@ public class Script {
 		attributeValueMap.put(SPLIT_PICK,splitPickMap);
 		
 		return attributeValueMap;
+	}
+	
+	protected String escapeValue(String value) {
+		if(value.indexOf('\\')==-1&&value.indexOf(',')==-1)
+			return value;
+		StringBuilder stringBuilder = new StringBuilder();
+		for(int index=0;index<value.length();index++) {
+			char character = value.charAt(index);
+			if(character=='\\'||character==',')
+				stringBuilder.append('\\');
+			stringBuilder.append(character);			
+		} return stringBuilder.toString();
+	}
+	
+	private String unescapeValue(String value) {
+		return value.replace("\\\\","\\").replace("\\,",","); }
+	private String[] unescapeValues(String values) {
+		return COMMA_PATTERN.splitAsStream(values).map(value->unescapeValue(value)).toArray(String[]::new); }
+	
+	/**
+	 * a special 'comma aware' print writer, able to dismisses the last comma written
+	 */
+	private static class CommaPrintWriter extends PrintWriter {	
+		private boolean hadComma = false;
+		public CommaPrintWriter(Writer out) { super(out); }
+		@Override public void write(char[] buffer,int offset,int length) {
+			if(length>0&&checkComma(buffer[offset+(length-1)])) {
+				if(length>1) super.write(buffer,offset,length-1);
+			} else super.write(buffer, offset, length);
+		}
+		@Override public void write(String string, int offset, int length) {
+			if(string.length()>0&&checkComma(string.charAt(offset+(length-1)))) {
+				if(string.length()>1) super.write(string,offset,length-1);
+			} else super.write(string, offset, length);
+		}
+		@Override public void write(int character) {
+			if(!checkComma(character))
+				super.write(character);
+		}
+		@Override public void close() {
+			writeComma();
+			super.close();
+		}
+		
+		public CommaPrintWriter stripComma() {
+			hadComma = false;
+			return this;
+		}
+		
+		private boolean checkComma(int character) {
+			writeComma();
+			if(character==',') {
+				hadComma = true;
+				return true;
+			} else return false;
+		}
+		private void writeComma() {
+			if(hadComma) {
+				super.write(',');
+				hadComma = false;
+			}
+		}
 	}
 }

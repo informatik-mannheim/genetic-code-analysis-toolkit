@@ -71,6 +71,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -126,7 +127,9 @@ import org.biojava3.core.sequence.io.FastaReaderHelper;
 import org.biojava3.core.sequence.io.FastaWriterHelper;
 import org.biojava3.core.sequence.template.Sequence;
 
+import com.google.common.collect.BiMap;
 import com.google.common.collect.EnumMultiset;
+import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Multiset;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -385,7 +388,7 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 			return;
 		
 		try {
-			List<Action> actions = new Script(chooser.getSelectedFile()).getActions();
+			List<Action> actions = new BatchScript(chooser.getSelectedFile()).getActions();
 			actionPanel.clearActions(); actions.forEach(action->actionPanel.addAction(action));
 		} catch(IOException e) {
 			JOptionPane.showMessageDialog(BatchTool.this,"Could not read script from file:\n"+e.getMessage(),"Load Script File",JOptionPane.WARNING_MESSAGE);
@@ -398,7 +401,7 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 		if(chooser.showSaveDialog(this)!=JFileChooser.APPROVE_OPTION)
 			return;
 		
-		try { new Script(actionPanel.getActions()).writeTo(chooser.getSelectedFile()); }
+		try { new BatchScript(actionPanel.getActions()).writeTo(chooser.getSelectedFile()); }
 		catch(IOException e) {
 			JOptionPane.showMessageDialog(BatchTool.this,"Could not write script to file:\n"+e.getMessage(),"Save Script File",JOptionPane.WARNING_MESSAGE);
 			e.printStackTrace();
@@ -1158,6 +1161,23 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 			invokeAppropriate(new Runnable() {
 				public void run() { adaptDigits(); repaint(); }
 			});
+		}
+	}
+	
+	class BatchScript extends Script {
+		public BatchScript() { super(); }
+		public BatchScript(Collection<Action> actions) { super(actions); }
+		public BatchScript(File file) throws IOException { super(file); }
+		public BatchScript(Reader reader) throws IOException { super(reader); }
+
+		@Override protected Map<TaskAttribute,BiMap<Object,String>> buildAttributeValueMap() {
+			Map<TaskAttribute,BiMap<Object,String>> attributeValueMap = super.buildAttributeValueMap();
+			
+			BiMap<Object,String> splitPickMap = attributeValueMap.computeIfAbsent(SPLIT_PICK,attribute->HashBiMap.create());
+			splitPickMap.put(splitPickAll,"all");
+			splitPickMap.put(splitPickRandom,"random");
+			
+			return attributeValueMap;
 		}
 	}
 }
