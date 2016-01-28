@@ -30,6 +30,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.BooleanSupplier;
+import java.util.stream.Collectors;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -65,9 +66,10 @@ public class Batch {
 		Queue<Action> queue = new LinkedList<>(actions);
 		return ()->{
 			Action action;
-			while((action=queue.poll())!=null) {
-				result.setTuples(InjectionLogger.injectLogger(result,action.new Task(result.getTuples())).call());
-			} return result;
+			while((action=queue.poll())!=null)			
+				result.setTuples(InjectionLogger.injectLogger(logAction(result,action),
+					action.new Task(result.getTuples())).call());
+			return result;
 		};
 	}
 	
@@ -79,10 +81,17 @@ public class Batch {
 			final Callable<Result> previous = current;
 			current = ()->{
 				Result localResult = previous!=null?previous.call():result;
-				localResult.setTuples(InjectionLogger.injectLogger(localResult,action.new Task(localResult.getTuples())).call());
+				localResult.setTuples(InjectionLogger.injectLogger(logAction(localResult,action),
+					action.new Task(localResult.getTuples())).call());
 				return localResult;
 			};
 		} return current;
+	}
+	protected <T extends Logger> T logAction(T logger, Action action) {
+		Object[] values = action.getValues();
+		logger.log("Performing \"%s\". "+(values!=null&&values.length!=0?"Parameters: \"%s\".":"No parameters."),
+			Operation.getName(action.getOperation()),values!=null?Arrays.stream(values).map(value->String.valueOf(value)).collect(Collectors.joining("\", \"")):null);
+		return logger;
 	}
 	
 	public ListenableFuture<Result> submit(Callable<Result> queue, ListeningExecutorService service) { return service.submit(queue); }
@@ -142,17 +151,4 @@ public class Batch {
 			}
 		}
 	}
-	
-	/*@FunctionalInterface
-	private static interface RecursiveCallable<V> extends Callable<V> {*/
-		/*protected final RecursiveCallable previous;
-		
-		public RecursiveCallable() { this(null); }
-		public RecursiveCallable(RecursiveCallable<V> previous) {
-			this.previous = previous; }*/
-		
-		/*public V call(RecursiveCallable<V> previous) throws Exception;
-		
-		default public V call() throws Exception { return call(null); }
-	}*/
 }

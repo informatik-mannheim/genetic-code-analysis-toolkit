@@ -547,6 +547,8 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 					
 					futures.remove(future);
 					updateStatus(); updateConsole();
+					
+					thrown.printStackTrace();
 				}
 			});
 		}
