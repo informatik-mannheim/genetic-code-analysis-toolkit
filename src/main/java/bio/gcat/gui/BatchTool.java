@@ -584,7 +584,7 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 			public void run() {
 				consolePane.setText(null);
 				SequenceListItem item = sequenceList.getSelectedValue();
-				if(item!=null&&item.result!=null) for(Message message:item.result.getLog()) {
+				if(item!=null&&item.result!=null) for(Message message:new ArrayList<>(item.result.getLog())) {
 					if(message.throwable!=null) {
 						consolePane.appendText(message.message, ConsolePane.FAILURE);
 						consolePane.appendText(Optional.ofNullable(message.throwable.getMessage()).orElse("Unknown cause"), ConsolePane.FAILURE);
