@@ -17,7 +17,6 @@ package bio.gcat.gui;
 
 import static bio.gcat.Utilities.EMPTY;
 import static bio.gcat.Utilities.SPACE;
-import static bio.gcat.Utilities.ellipsisText;
 import static bio.gcat.Utilities.firstToUpper;
 import static bio.gcat.batch.Action.TaskAttribute.ANALYSIS_HANDLER;
 import static bio.gcat.batch.Action.TaskAttribute.SPLIT_PICK;
@@ -192,7 +191,9 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 			new Boolean[]{TEST_CRITERIA_BREAK_IF_FALSE,TEST_CRITERIA_BREAK_IF_TRUE,TEST_CRITERIA_NEVER_BREAK},
 			"Break If False", "Break If True", "Never Break");
 	
-	protected final ListeningExecutorService service = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(Math.max(1,Runtime.getRuntime().availableProcessors()-1)));
+	protected final ListeningExecutorService service = MoreExecutors.listeningDecorator(
+		Executors.newFixedThreadPool(Math.max(1,Runtime.getRuntime().availableProcessors()-2)));
+	
 	protected final Split.Pick
 		splitPickAll = new Split.Pick() {
 			@Override public Collection<Tuple> pick(List<Collection<Tuple>> split) {
@@ -233,7 +234,7 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 	private ConsolePane consolePane;
 	private NumberDisplay numbers;
 	
-	private List<ListenableFuture<Result>> futures = Collections.synchronizedList(new LinkedList<>());;
+	private List<ListenableFuture<?>> futures = Collections.synchronizedList(new LinkedList<>());;
 	
 	public BatchTool() {		
 		super("Batch Tool - "+AnalysisTool.NAME);
@@ -287,8 +288,10 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 		toolbar[0] = new JToolBar("File");
 		toolbar[0].add(createToolbarButton("Load Script", "script_go", ACTION_ACTIONS_LOAD, this));
 		toolbar[0].add(createToolbarButton("Save Script", "script_save", ACTION_ACTIONS_SAVE, this));
-		toolbar[0].addSeparator();
 		toolbar[0].add(createToolbarTextButton("Execute Batch", "script_lightning", ACTION_EXECUTE, this));
+		toolbar[0].addSeparator();
+		toolbar[0].add(createToolbarButton("Import Sequences", "door_in", ACTION_SEQUENCES_IMPORT, this));
+		toolbar[0].add(createToolbarButton("Export Sequences", "door_out", ACTION_SEQUENCES_EXPORT, this));
 		
 		toolbars = new JPanel(new FlowLayout(FlowLayout.LEADING));
 		for(JToolBar toolbar:toolbar)
@@ -320,7 +323,7 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 		cancel.setContentAreaFilled(false); cancel.setBorder(EMPTY_BORDER);
 		cancel.addActionListener(new ActionListener() {
 			@Override public void actionPerformed(ActionEvent event) {
-				for(ListenableFuture<Result> future:new ArrayList<ListenableFuture<Result>>(futures))
+				for(ListenableFuture<?> future:new ArrayList<ListenableFuture<?>>(futures))
 					future.cancel(true);
 			}
 		});
@@ -440,21 +443,25 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 			switch(JOptionPane.showConfirmDialog(this,"Your list already contains some sequences. You have the option to either\noverwrite the current list, or add the new sequences to the end of it.\n\nWould you like to overwrite the current list of sequence?")) {
 			case JOptionPane.CANCEL_OPTION: return; case JOptionPane.YES_OPTION: clearSequences(); }
 		
-		if(chooser.getFileFilter()==FASTA_EXTENSION_FILTER||FASTA_EXTENSION_FILTER.accept(file)) {
-			try {
-				for(Entry<String, DNASequence> entry:FastaReaderHelper.readFastaDNASequence(file).entrySet())
-					addSequence(Tuple.splitTuples(entry.getValue().toString()),entry.getKey());
-			} catch(Error | Exception e) {
-				JOptionPane.showMessageDialog(BatchTool.this,"Could not import FASTA file:\n"+e.getMessage(),"Import File",JOptionPane.WARNING_MESSAGE);
-				e.printStackTrace();
+		submitTask(new Runnable() {
+			@Override public void run() {
+				if(chooser.getFileFilter()==FASTA_EXTENSION_FILTER||FASTA_EXTENSION_FILTER.accept(file)) {
+					try {
+						for(Entry<String, DNASequence> entry:FastaReaderHelper.readFastaDNASequence(file).entrySet())
+							addSequence(Tuple.sliceTuples(entry.getValue().toString()),entry.getKey());
+					} catch(Error | Exception e) {
+						JOptionPane.showMessageDialog(BatchTool.this,"Could not import FASTA file:\n"+e.getMessage(),"Import File",JOptionPane.WARNING_MESSAGE);
+						e.printStackTrace();
+					}
+				} else try(BufferedReader reader = new BufferedReader(new FileReader(file))) {
+					String line; while((line=reader.readLine())!=null)
+						addSequence(Tuple.sliceTuples(Tuple.tupleString(line)));
+				}	catch(IOException e) {
+					JOptionPane.showMessageDialog(BatchTool.this,"Could not import file:\n"+e.getMessage(),"Import File",JOptionPane.WARNING_MESSAGE);
+					e.printStackTrace();
+				}
 			}
-		} else try(BufferedReader reader = new BufferedReader(new FileReader(file))) {
-			String line; while((line=reader.readLine())!=null)
-				addSequence(Tuple.splitTuples(Tuple.tupleString(line)));
-		}	catch(IOException e) {
-			JOptionPane.showMessageDialog(BatchTool.this,"Could not import file:\n"+e.getMessage(),"Import File",JOptionPane.WARNING_MESSAGE);
-			e.printStackTrace();
-		}
+		}, null);
 	}
 	public void exportSequences() {
 		JFileChooser chooser = new FileNameExtensionFileChooser(false,GENETIC_LIST_EXTENSION_FILTER,FASTA_EXTENSION_FILTER,TEXT_EXTENSION_FILTER);
@@ -522,33 +529,26 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 			item.result = new Result(item.tuples);
 			model.change(item);
 			
-			ListenableFuture<Result> future = batch.submit(batch.buildIterative(item.result),service,new BooleanSupplier() {
+			updateConsole();
+			Futures.addCallback(batch.submit(batch.buildIterative(item.result),service,new BooleanSupplier() {
 				@Override public boolean getAsBoolean() {
-					item.status = Status.ACTIVE; model.change(item);
+					item.status = Status.ACTIVE;
+					model.change(item);
+					updateConsole();
 					return true;
 				}
-			});
-			futures.add(future);
-			updateStatus(); updateConsole();
-			
-			Futures.addCallback(future, new FutureCallback<Result>() {
+			}), new FutureCallback<Result>() {
 				@Override public void onSuccess(Result result) {
 					item.tuples = result.getTuples();
 					item.result = result;
 					item.status = Status.SUCCESS;
 					model.change(item);
-					
-					futures.remove(future);
-					updateStatus(); updateConsole();
+					updateConsole();
 				}
 				@Override public void onFailure(Throwable thrown) {
 					item.status = Status.FAILURE;
 					model.change(item);
-					
-					futures.remove(future);
-					updateStatus(); updateConsole();
-					
-					thrown.printStackTrace();
+					updateConsole();
 				}
 			});
 		}
@@ -556,6 +556,23 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 	
 	public void showAbout() { AnalysisTool.showAbout(this); }
 	public void hideDialog() { setVisible(false); }
+	
+	public void submitTask(Runnable task, FutureCallback<Object> callback) {
+		addFuture(service.submit(task), callback); }
+	public <V> void addFuture(ListenableFuture<V> future, FutureCallback<? super V> callback) {
+		futures.add(future); updateStatus();
+		Futures.addCallback(future, new FutureCallback<V>() {
+			@Override public void onSuccess(V result) {
+				if(callback!=null) callback.onSuccess(result);
+				futures.remove(future); updateStatus();
+			}
+			@Override public void onFailure(Throwable thrown) {
+				if(callback!=null) callback.onFailure(thrown);
+				futures.remove(future); updateStatus();
+				thrown.printStackTrace();
+			}
+		});
+	}
 	
 	protected void updateStatus() {
 		invokeAppropriate(new Runnable() {
@@ -570,7 +587,7 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 						.append(status.getCount()).append(SPACE).append(firstToUpper(status.getElement().toString())).append("</span>").append(seperator);
 				}
 				if(futures.size()>0) {
-					status.setText(text.append("Computing...").toString());
+					status.setText(text.append("Loading / Computing...").toString());
 					cancel.setVisible(true);
 				} else {
 					status.setText(text.append("Ready").toString());
@@ -1022,7 +1039,9 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 		}
 		
 		@Override public Component getListCellRendererComponent(JList<? extends SequenceListItem> list,SequenceListItem item,int index,boolean isSelected,boolean cellHasFocus) {
-			label.setText(ellipsisText(Tuple.joinTuples(item.tuples),200));
+			if(item.tuples.size()>100)
+			     label.setText(Tuple.joinTuples(item.tuples.stream().limit(100), SPACE, false)+"...");
+			else label.setText(Tuple.joinTuples(item.tuples));
 			label.setToolTipText(item.label); // could be null
 			
 			if(isSelected) {

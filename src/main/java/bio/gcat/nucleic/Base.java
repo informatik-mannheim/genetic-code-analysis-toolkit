@@ -42,7 +42,13 @@ public enum Base {
 	ANY('N',new Base[]{ADENINE,GUANINE,CYTOSINE,THYMINE,URACIL});
 	
 	private static final Map<Character,Base> letterMap = new HashMap<>();
-	static { for(Base base:values()) letterMap.put(base.letter,base); }
+	static {
+		// it's very slow to call tuple.toUpperCase, therefore putting both lower and upper case char's to the letterMap, so we can spare this from the Tuple implementation
+		Arrays.stream(values()).forEach(base->{
+			letterMap.put(Character.toUpperCase(base.letter),base);
+			letterMap.put(Character.toLowerCase(base.letter),base);
+		});
+	}
 	
 	public final char letter;
 	public final Base[] compound;

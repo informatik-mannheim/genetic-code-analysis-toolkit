@@ -15,12 +15,14 @@
  */
 package bio.gcat.nucleic;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public enum Compound {
 	START('\u25B6', "Start", null, new String[]{"AUG", "ATG"}),
@@ -69,8 +71,8 @@ public enum Compound {
 					tupleCompound.put(tuple,compound);
 	}
 	
-	private Compound(char letter, String abbreviation, Property property, String[] strings) {
-		this(letter, abbreviation, property, Tuple.splitTuples(strings));
+	private Compound(char letter, String abbreviation, Property property, String[] tuples) {
+		this(letter, abbreviation, property, Arrays.stream(tuples).map(tuple->new Tuple(tuple)).collect(Collectors.toList()));
 	}
 	private Compound(char letter, String abbreviation, Property property, Collection<Tuple> tuples) {
 		this.letter = letter; this.abbreviation = abbreviation; this.property = property;
