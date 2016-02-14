@@ -43,11 +43,11 @@ public interface Test extends Operation {
 	@Parameter.Annotation(key="regex",label="Regex",type=Type.BOOLEAN,value=Utilities.TRUE)
 	@Documented(title="Find", category={OPERATIONS,GENERAL}, resource="help/operation/test/find.html")
 	public class Expression implements Test {
-   	@Override public boolean test(Collection<Tuple> tuples,Object... values) { return test(tuples, (String)values[0], (Boolean)values[1]); }
-  	public boolean test(Collection<Tuple> tuples,String pattern,boolean regex) {
-  		try {
-  			return Pattern.compile(regex?pattern:Pattern.quote(pattern),Pattern.CASE_INSENSITIVE).matcher(Tuple.joinTuples(tuples)).matches();
-			}	catch(PatternSyntaxException e) { return false; }
+		@Override public boolean test(Collection<Tuple> tuples,Object... values) {
+			try {
+				return Pattern.compile((Boolean)values[1]?(String)values[0]:Pattern.quote((String)values[0]),
+					Pattern.CASE_INSENSITIVE).matcher(Tuple.joinTuples(tuples)).matches();
+			} catch(PatternSyntaxException e) { return false; }
 		}
 	}
 }

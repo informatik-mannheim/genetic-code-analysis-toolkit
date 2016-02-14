@@ -717,7 +717,7 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 		container.add(panel);
 	}
 	public void addBatchOperation(Class<? extends Operation> operation,Object... values) {
-		showBatch(); batch.addOperation(operation,values);		
+		showBatchTool(); batch.addOperation(operation,values);		
 	}
 	
 	@Override public void actionPerformed(ActionEvent event) {
@@ -747,9 +747,9 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 		case ACTION_NEW_WINDOW: newTool(); break;
 		case ACTION_COPY_WINDOW: copyTool(); break;
 		case ACTION_TOGGLE_TOOLBAR: toggleToolbar(); break;
-		case ACTION_SHOW_BDA: showBDA(); break;
-		case ACTION_SHOW_BATCH: showBatch(); break;
-		case ACTION_ADD_TO_BATCH: addToBatch(); break;
+		case ACTION_SHOW_BDA: showBDATool(); break;
+		case ACTION_SHOW_BATCH: showBatchTool(); break;
+		case ACTION_ADD_TO_BATCH: addToBatchTool(); break;
 		case ACTION_HELP: showHelp(); break;
 		case ACTION_ABOUT: showAbout(); break;
 		default: System.err.println(String.format("Action %s not implemented.", action)); }
@@ -1441,21 +1441,21 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 		getMenuItem(menubar,ACTION_TOGGLE_TOOLBAR).setText(visible?"Show Toolbar":"Hide Toolbar");
 	}
 	
-	public static BatchTool getBatch() { return batch!=null?batch:(batch=new BatchTool()); }
-	public void showBatch() {
-		BatchTool batch = getBatch();
+	public static BatchTool getBatchTool() { return batch!=null?batch:(batch=new BatchTool()); }
+	public void showBatchTool() {
+		BatchTool batch = getBatchTool();
 		if(!batch.isVisible()) {
 			batch.setLocationRelativeTo(AnalysisTool.this);
 			batch.setVisible(true);
 		} else batch.requestFocus();
 	}
-	public void addToBatch() {
-		showBatch(); batch.addSequence(editor.getTuples(),(String)optionLabel.getValue());
+	public void addToBatchTool() {
+		showBatchTool(); batch.addSequence(editor.getTuples(),(String)optionLabel.getValue());
 	}
 	
-	public static BDATool getBDA() { return bda!=null?bda:(bda=new BDATool()); }
-	public void showBDA() {
-		BDATool bda = getBDA();
+	public static BDATool getBDATool() { return bda!=null?bda:(bda=new BDATool()); }
+	public void showBDATool() {
+		BDATool bda = getBDATool();
 		if(!bda.isVisible()) {
 			bda.setLocationRelativeTo(AnalysisTool.this);
 			bda.setVisible(true);

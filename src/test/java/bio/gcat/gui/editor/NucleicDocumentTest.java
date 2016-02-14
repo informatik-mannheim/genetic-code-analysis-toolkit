@@ -26,7 +26,7 @@ public class NucleicDocumentTest {
 	private static final String EMPTY = "",CURSOR = "|";
 	
 	@Test public void test() {
-		assertDocumentText("AGCTUHX ","AGCTUHX ");
+		assertDocumentText("AGCTUH ","AGCTUH ");
 		assertDocumentText("A A","A,;-A");
 		assertDocumentText("","!?Z1");
 		
@@ -110,10 +110,10 @@ public class NucleicDocumentTest {
 		
 		try {			
 			document.insertString(0,"AGCTUHX ",null);
-			assertEquals("AGCUUHX ",document.getText(0,document.getLength()));
+			assertEquals("AGCUUH ",document.getText(0,document.getLength()));
 			
 			document.setDefaultAcid(Acid.DNA); document.adaptText();
-			assertEquals("AGCTTHX",document.getText(0,document.getLength()));
+			assertEquals("AGCTTH",document.getText(0,document.getLength()));
 			
 			document.setDefaultAcid(null); document.adaptText();
 			document.insertString(0,"UT",null);

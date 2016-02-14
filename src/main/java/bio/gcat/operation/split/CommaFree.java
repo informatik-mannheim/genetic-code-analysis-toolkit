@@ -1,17 +1,23 @@
 package bio.gcat.operation.split;
 
-import static bio.gcat.Help.*;
+import static bio.gcat.Help.OPERATIONS;
+import static bio.gcat.Help.SPLITS;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
 import org.paukov.combinatorics.Factory;
 import org.paukov.combinatorics.ICombinatoricsVector;
+
 import bio.gcat.Documented;
 import bio.gcat.Parameter;
 import bio.gcat.Parameter.Type;
+import bio.gcat.log.Logger;
 import bio.gcat.nucleic.Tuple;
 import bio.gcat.operation.Cataloged;
 import bio.gcat.operation.Named;
+import bio.gcat.operation.test.DuplicateFree;
 import bio.gcat.operation.test.Test;
 
 @Named(name="comma-free", icon="comma_free") @Cataloged(group="Split Sequence")
@@ -20,15 +26,25 @@ import bio.gcat.operation.test.Test;
 @Documented(title="Comma-Free", category={OPERATIONS,SPLITS}, resource="help/operation/split/comma_free.html")
 public class CommaFree implements Split {
 	private static final Test
+		DUPLICATE_FREE = new DuplicateFree(),
 		COMMA_FREE = new bio.gcat.operation.test.CommaFree();
 	
-	@Override public List<Collection<Tuple>> split(Collection<Tuple> tuples,Object... values) { return split(tuples,(int)values[0], (boolean)values[1]); }
+	@Override public List<Collection<Tuple>> split(Collection<Tuple> tuples,Object... values) { return split(tuples, (int)values[0], (boolean)values[1]); }
 	public List<Collection<Tuple>> split(Collection<Tuple> tuples,int parts,boolean equalSized) {
+		Logger logger = getLogger();
+
 		if(parts==1) return COMMA_FREE.test(tuples)?new ArrayList<Collection<Tuple>>() {
 			private static final long serialVersionUID = 1l; { add(tuples); }}:null;
-
-		if(equalSized&&tuples.size()%parts!=0)
+		
+		if(!DUPLICATE_FREE.test(tuples)) {
+			logger.log("List of tuples not duplicate free, can't split in comma free parts");
 			return null;
+		}
+			
+		if(equalSized&&tuples.size()%parts!=0) {
+			logger.log("To split to equal sizes, the total size must be divisible by the parts without a remaimder");
+			return null;
+		}
 		
 		for(ICombinatoricsVector<Tuple> subset:Factory.createSubSetGenerator(Factory.createVector(tuples))) {
 			if(subset.getSize()==0||(equalSized&&tuples.size()/parts!=subset.getSize())) continue;
