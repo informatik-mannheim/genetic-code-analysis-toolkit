@@ -4,7 +4,7 @@
 
 	<groupId>bio.gcat</groupId>
 	<artifactId>gcat</artifactId>
-	<version>1.9.7</version>
+	<version>1.9.8</version>
 
 	<name>Genetic Code Analysis Toolkit</name>
 	<url>http://www.gcat.bio/</url>
@@ -99,7 +99,7 @@
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
-			<artifactId>junit-dep</artifactId>
+			<artifactId>junit</artifactId>
 			<version>4.11</version>
 			<!-- <scope>test</scope> -->
 			<!-- Needed for BDA demos -->
