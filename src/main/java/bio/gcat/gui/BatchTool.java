@@ -135,6 +135,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import bio.gcat.Option;
 import bio.gcat.Parameter;
@@ -192,7 +193,8 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 			"Break If False", "Break If True", "Never Break");
 	
 	protected final ListeningExecutorService service = MoreExecutors.listeningDecorator(
-		Executors.newFixedThreadPool(Math.max(1,Runtime.getRuntime().availableProcessors()-2)));
+		Executors.newFixedThreadPool(Math.max(1,Runtime.getRuntime().availableProcessors()-2),
+			new ThreadFactoryBuilder().setPriority(Thread.MIN_PRIORITY).setDaemon(true).build()));
 	
 	protected final Split.Pick
 		splitPickAll = new Split.Pick() {
