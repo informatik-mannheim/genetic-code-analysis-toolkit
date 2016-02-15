@@ -1,7 +1,7 @@
 package bio.gcat.operation.split;
 
 import static bio.gcat.nucleic.Tuple.splitTuples;
-import static bio.gcat.operation.split.SplitAssert.assertSplitContains;
+import static bio.gcat.operation.split.helper.SplitAssert.assertSplitContains;
 import static org.junit.Assert.assertNull;
 
 import java.util.Arrays;

@@ -14,10 +14,9 @@ import bio.gcat.operation.Named;
 @Named(name="add tuples", icon="add")
 @Parameter.Annotation(key="tuples",label="Tuples",type=Type.TEXT)
 public class AddTuples implements Transformation {
-	@Override public Collection<Tuple> transform(Collection<Tuple> tuples,Object... values) { return transform(tuples,(String)values[0]); }
-	public Collection<Tuple> transform(Collection<Tuple> tuples,String add) {
+	@Override public Collection<Tuple> transform(Collection<Tuple> tuples,Object... values) {
 		return new ArrayList<Tuple>(tuples) { private static final long serialVersionUID = 1l; {
-			addAll(splitTuples(tupleString(add)));
+			addAll(splitTuples(tupleString((String)values[0])));
 		}};
 	}
 }

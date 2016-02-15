@@ -29,7 +29,7 @@ import bio.gcat.operation.Named;
 public class RemoveUnknownCompounds implements Transformation {
 	@Override public Collection<Tuple> transform(Collection<Tuple> tuples,Object... values) {
 		List<Tuple> remove = new ArrayList<>(tuples);
-		remove.removeIf(tuple->tuple.getCompound()==null);
+		remove.removeIf(tuple->tuple==null||tuple.getCompound()==null);
 		return remove;
 	}
 }

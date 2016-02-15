@@ -34,7 +34,7 @@ public class BDA implements Split {
 	@Override public List<Collection<Tuple>> split(Collection<Tuple> tuples,Object... values) {
 		Logger logger = getLogger();
 
-		bio.gcat.geneticcode.dich.ct.ClassTable classTable = AnalysisTool.getBDA().getClassTable();
+		bio.gcat.geneticcode.dich.ct.ClassTable classTable = AnalysisTool.getBDATool().getClassTable();
 		if(classTable==null) {
 			logger.log("No Binary Dichotomic Algorithm. Use BDA Tool to open / create BDAs.");
 			return null; //no BDA

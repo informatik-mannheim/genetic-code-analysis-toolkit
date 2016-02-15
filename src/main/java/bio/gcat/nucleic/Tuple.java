@@ -232,6 +232,7 @@ public class Tuple implements Comparable<Tuple> {
 	public static List<Tuple> allTuples(int length) { return allTuples(RNA, length); }
 	public static List<Tuple> allTuples(Acid acid) { return allTuples(acid, 3); }
 	public static List<Tuple> allTuples(Acid acid, int length) {
+		if(length==0) return Collections.emptyList();
 		List<Tuple> tuples = new ArrayList<>(pow(length,acid.bases.length));
 		allTuples(tuples, new Tuple(), acid.bases, length);
 		return tuples;

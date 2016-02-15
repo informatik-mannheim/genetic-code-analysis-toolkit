@@ -40,7 +40,7 @@ public class BDAUsage implements Analysis {
 		else if(Tuple.tuplesLength(tuples)!=3)
 			return new SimpleResult(this, "Only sequences with codons (tuples of length 3) are allowed.");
 
-		bio.gcat.geneticcode.dich.ct.ClassTable classTable = AnalysisTool.getBDA().getClassTable();
+		bio.gcat.geneticcode.dich.ct.ClassTable classTable = AnalysisTool.getBDATool().getClassTable();
 		if(classTable==null)
 			return new SimpleResult(this, "No Binary Dichotomic Algorithm. Use BDA Tool to open / create BDAs.");
 		HashMap<Codon, List<Object>> codonToClass = classTable.codon2class();

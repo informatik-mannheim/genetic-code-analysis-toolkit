@@ -1,4 +1,4 @@
-package bio.gcat.operation.split;
+package bio.gcat.operation.split.helper;
 
 import static org.junit.Assert.*;
 
