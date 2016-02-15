@@ -47,11 +47,10 @@ public class TupleUsage implements Analysis {
 	private static final String DELIMITER = ", ", TIMES = "x ";
 	private static final Tuple EMPTY_TUPLE = new Tuple();
 	
-	@Override public Result analyse(Collection<Tuple> tuples,Object... values) { return analyse(tuples,(InputStream)values[0]); }
-	public Result analyse(Collection<Tuple> tuples,InputStream input) {
+	@Override public Result analyse(Collection<Tuple> tuples,Object... values) {
 		Logger logger = getLogger();
 		
-		if(input==null) {
+		if(values[0]==null) {
 			logger.log("Choose an existing file to count tuple usage in.");
 			return null;
 		}
@@ -63,7 +62,7 @@ public class TupleUsage implements Analysis {
 		}
 		
 		Multiset<Tuple> tupleCount = HashMultiset.create();
-		try(BufferedReader reader = new BufferedReader(new InputStreamReader(input))) {
+		try(BufferedReader reader = new BufferedReader(new InputStreamReader((InputStream)values[0]))) {
 			String line; while((line=reader.readLine())!=null)
 				tupleCount.addAll(normalizeTuples(splitTuples(tupleString(line).trim()),acid));
 		} catch(IOException e) { logger.log("Error while reading file.",e); return null; }
