@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.IdentityHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -181,6 +182,12 @@ public class Tuple implements Comparable<Tuple> {
 		return length;
 	}
 	
+	public static List<Tuple> trimTuples(Collection<Tuple> tuples) {
+		LinkedList<Tuple> trimmedTuples = new LinkedList<>(tuples);
+		if(tuples.size()>0&&trimmedTuples.getFirst().length()==0) trimmedTuples.removeFirst();
+		if(tuples.size()>1&&trimmedTuples.getLast().length()==0) trimmedTuples.removeLast();
+		return trimmedTuples;
+	}
 	public static List<Tuple> condenseTuples(Collection<Tuple> tuples) {
 		List<Tuple> condensedTuples = new ArrayList<>(tuples);
 		condensedTuples.removeIf(tuple->tuple.length()==0);

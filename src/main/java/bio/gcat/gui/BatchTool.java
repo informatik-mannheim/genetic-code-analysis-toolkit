@@ -150,6 +150,7 @@ import bio.gcat.gui.helper.AttachedScrollPane;
 import bio.gcat.gui.helper.CollectionListModel;
 import bio.gcat.gui.helper.ConsolePane;
 import bio.gcat.gui.helper.Guitilities;
+import bio.gcat.gui.helper.TuplesHelper;
 import bio.gcat.nucleic.Tuple;
 import bio.gcat.operation.Operation;
 import bio.gcat.operation.analysis.Analysis;
@@ -1041,9 +1042,7 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 		}
 		
 		@Override public Component getListCellRendererComponent(JList<? extends SequenceListItem> list,SequenceListItem item,int index,boolean isSelected,boolean cellHasFocus) {
-			if(item.tuples.size()>100)
-			     label.setText(Tuple.joinTuples(item.tuples.stream().limit(100), SPACE, false)+"...");
-			else label.setText(Tuple.joinTuples(item.tuples));
+			label.setText(TuplesHelper.alignTuples(TuplesHelper.joinTuples(item.tuples), defaultTupleLength));
 			label.setToolTipText(item.label); // could be null
 			
 			if(isSelected) {

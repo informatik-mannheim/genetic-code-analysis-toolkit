@@ -192,6 +192,7 @@ import bio.gcat.gui.editor.NucleicOptions.EditorMode;
 import bio.gcat.gui.helper.ConsolePane;
 import bio.gcat.gui.helper.FoldingPanel;
 import bio.gcat.gui.helper.Guitilities;
+import bio.gcat.gui.helper.TuplesHelper;
 import bio.gcat.gui.helper.Guitilities.IconButton;
 import bio.gcat.gui.input.CodonCircle;
 import bio.gcat.gui.input.Input;
@@ -393,20 +394,20 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 					list.setCellRenderer(new ListCellRenderer<Collection<Tuple>>() {
 						private JLabel label = new JLabel();
 						@Override public Component getListCellRendererComponent(JList<? extends Collection<Tuple>> list,Collection<Tuple> tuples,int index,boolean isSelected,boolean cellHasFocus) {						
-					    label.setText(Tuple.joinTuples(tuples));
-					    
-					    if(isSelected) {
-					    	label.setBackground(list.getSelectionBackground());
-					    	label.setForeground(list.getSelectionForeground());
-					    } else {
-					    	label.setBackground(list.getBackground());
-					    	label.setForeground(list.getForeground());
-					    }
-					    label.setEnabled(list.isEnabled());
-					    label.setFont(list.getFont());
-					    label.setOpaque(true);
-	
-					    return label;
+						    label.setText(TuplesHelper.alignTuples(TuplesHelper.joinTuples(tuples), editor.getTupleLength()));
+						    
+						    if(isSelected) {
+						    	label.setBackground(list.getSelectionBackground());
+						    	label.setForeground(list.getSelectionForeground());
+						    } else {
+						    	label.setBackground(list.getBackground());
+						    	label.setForeground(list.getForeground());
+						    }
+						    label.setEnabled(list.isEnabled());
+						    label.setFont(list.getFont());
+						    label.setOpaque(true);
+		
+						    return label;
 						}
 					});
 					list.addMouseListener(new MouseAdapter() {
@@ -639,9 +640,8 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 	}
 	
 	public void setTuples(Collection<Tuple> tuples) { editor.setTuples(tuples); }
-	public Collection<Tuple> getTuples() {
-		return editor.getTuples();
-	}
+	public Collection<Tuple> getTuples() { return editor.getTuples(); }
+	public List<Tuple> getTupleList() { return editor.getTupleList(); }
 	
 	protected CatalogPanel createCatalog() {
 		catalogPanel = new CatalogPanel();
@@ -760,7 +760,7 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 	public ListenableFuture<Collection<Tuple>> submitOperation(Class<? extends Operation> operation,Map<TaskAttribute,Object> attributes,Object... values) { return submitAction(new Action(operation,attributes,values)); }
 	protected ListenableFuture<Collection<Tuple>> submitAction(Action action) {
 		Class<? extends Operation> operation = action.getOperation(); String name = Operation.getName(operation); 
-		ListenableFuture<Collection<Tuple>> future = submitTask(action.new Task(editor.getTuples()));
+		ListenableFuture<Collection<Tuple>> future = submitTask(action.new Task(editor.getTupleList()));
 		Futures.addCallback(future, new FutureCallback<Collection<Tuple>>() {
 			@Override public void onSuccess(Collection<Tuple> tuples) {
 				if(Transformation.class.isAssignableFrom(operation)||Split.class.isAssignableFrom(operation))
@@ -1450,7 +1450,7 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 		} else batch.requestFocus();
 	}
 	public void addToBatchTool() {
-		showBatchTool(); batch.addSequence(editor.getTuples(),(String)optionLabel.getValue());
+		showBatchTool(); batch.addSequence(editor.getTupleList(),(String)optionLabel.getValue());
 	}
 	
 	public static BDATool getBDATool() { return bda!=null?bda:(bda=new BDATool()); }
@@ -1659,8 +1659,14 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 			
 			termDefaultDocument = (term = new JTextField()).getDocument();
 			term.setDocument(termNucleicDocument=new NucleicDocument());
-			term.requestFocus();
-			term.getDocument().addDocumentListener(new DocumentListener() {
+			term.addKeyListener(new KeyAdapter() {
+				@Override public void keyPressed(KeyEvent event) {
+					if(event.getKeyCode()==KeyEvent.VK_ENTER)
+						findNext();
+				}
+			});
+			termNucleicDocument.setDefaultAcid(null);
+			termNucleicDocument.addDocumentListener(new DocumentListener() {
 				@Override public void removeUpdate(DocumentEvent event) { changedUpdate(event); }				
 				@Override public void insertUpdate(DocumentEvent event) { changedUpdate(event); }
 				@Override public void changedUpdate(DocumentEvent event) {
@@ -1669,12 +1675,14 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 						component.setEnabled(text);
 				}
 			});
+			term.requestFocus();
 			
 			with = new JLabel("Replace with:");
 			with.setVisible(false);
 			
 			replaceDefaultDocument = (replace = new JTextField()).getDocument();
 			replace.setDocument(replaceNucleicDocument=new NucleicDocument());
+			replaceNucleicDocument.setDefaultAcid(null);
 			replace.setVisible(false);
 			
 			find = new JButton("Find Next");
@@ -1849,7 +1857,7 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 			setLocationRelativeTo(AnalysisTool.this);
 			setResizable(false);
 		}
-		
+
 		public String getTerm() { return term.getText(); }
 		public String getReplace() { return replace.getText(); }
 		public boolean wrapSearch() { return wrap.isSelected(); }
@@ -1879,7 +1887,7 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 			
 			pack(); setVisible(true);
 		}
-		
+				
 		@Override public void setVisible(boolean visible) {
 			super.setVisible(visible);
 			term.requestFocus();

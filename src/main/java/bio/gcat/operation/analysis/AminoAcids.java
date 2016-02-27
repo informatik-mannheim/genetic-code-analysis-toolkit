@@ -34,7 +34,9 @@ public class AminoAcids implements Analysis {
 	
 	@Override public Result analyse(Collection<Tuple> tuples,Object... values) {
 		Multiset<Compound> compounds = EnumMultiset.create(Compound.class);
-		for(Tuple tuple:tuples) compounds.add(Optional.ofNullable(tuple.getCompound()).orElse(Compound.UNKNOWN));
+		for(Tuple tuple:tuples)
+			compounds.add(Compound.isStop(tuple)?Compound.STOP:
+				Optional.ofNullable(tuple.getCompound()).orElse(Compound.UNKNOWN));
 		
 		StringBuilder builder = new StringBuilder();
 		for(Entry<Compound> compound:compounds.entrySet())
