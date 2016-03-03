@@ -7,7 +7,7 @@ import scala.collection.JavaConversions._
 /**
  * Creates a HTML table from the class table.
  * @author Markus Gumbel (m.gumbel@hs-mannheim.de)
- *         (c) 2014 Markus Gumbel
+ *         (c) 2016 Markus Gumbel
  */
 trait HtmlFormatter extends ClassTableFormatter with AAImplicitDefs {
 

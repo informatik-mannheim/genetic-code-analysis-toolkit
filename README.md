@@ -5,4 +5,4 @@ This project contains the internal source code for the Genetic Code Analysis Too
 Please refer to the [public homepage](http://www.gcat.bio/) and the [project homepage](http://www.mbi.hs-mannheim.de/research/mathematics-of-the-genetic-information.html) for more information.
 
 ## Copyright and license
-Code and documentation copyright 2014-2015 Mannheim University of Applied Sciences. Code released under the Apache License, Version 2.0.
+Code and documentation copyright 2014-2016 Mannheim University of Applied Sciences. Code released under the Apache License, Version 2.0.

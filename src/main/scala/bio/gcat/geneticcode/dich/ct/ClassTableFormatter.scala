@@ -8,7 +8,7 @@ import scala.collection.JavaConversions._
 /**
  * TODO: Move to abstract class as these are properties of a class table.
  * @author Markus Gumbel (m.gumbel@hs-mannheim.de)
- *         (c) 2014 Markus Gumbel
+ *         (c) 2016 Markus Gumbel
  */
 trait ClassTableFormatter extends GeneticCodeTableFormatter {
   val codons: List[Codon]

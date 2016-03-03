@@ -5,7 +5,7 @@ import scala.collection.mutable
 
 /**
  * @author Markus Gumbel (m.gumbel@hs-mannheim.de)
- *         (c) 2014 Markus Gumbel
+ *         (c) 2016 Markus Gumbel
  */
 abstract class DichProperty(val label: String)
   extends CodonProperty with DichPartition {

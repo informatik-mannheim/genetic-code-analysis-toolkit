@@ -6,7 +6,7 @@ import scala.collection.mutable.ArrayBuffer
 
 /**
  * @author Markus Gumbel (m.gumbel@hs-mannheim.de)
- *         (c) 2014 Markus Gumbel
+ *         (c) 2016 Markus Gumbel
  */
 trait DichPartition {
 

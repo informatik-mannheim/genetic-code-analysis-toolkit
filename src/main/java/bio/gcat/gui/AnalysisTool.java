@@ -1,5 +1,5 @@
 /*
- * Copyright [2014] [Mannheim University of Applied Sciences]
+ * Copyright [2016] [Mannheim University of Applied Sciences]
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1473,7 +1473,7 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 		Border gap = new EmptyBorder(5,0,5,0); JLabel label;
 		about.add(label=new JLabel(getImageIcon("logo"), SwingConstants.CENTER));
 		label.setBorder(gap); label.setAlignmentX(CENTER_ALIGNMENT);
-		about.add(label=new JLabel("\u00A9 2014-2016 Mannheim University of Applied Sciences - Version "+VERSION));
+		about.add(label=new JLabel("\u00A9 2016-2016 Mannheim University of Applied Sciences - Version "+VERSION));
 		label.setBorder(gap); label.setAlignmentX(CENTER_ALIGNMENT);
 		label.setFont(label.getFont().deriveFont(Font.BOLD));
 		about.add(label=new JLabel("(Elena Fimmel, Lutz Str\u00FCngmann, Markus Gumbel, Kristian Kralji\u0107)"));

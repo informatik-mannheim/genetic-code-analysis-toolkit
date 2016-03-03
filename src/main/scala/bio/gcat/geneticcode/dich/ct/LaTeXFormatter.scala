@@ -8,7 +8,7 @@ import scala.collection.JavaConversions.mapAsScalaMap
 /**
  * Methods that outputs a class table in LaTeX format.
  * @author Markus Gumbel (m.gumbel@hs-mannheim.de)
- *         (c) 2014 Markus Gumbel
+ *         (c) 2016 Markus Gumbel
  */
 trait LaTeXFormatter extends ClassTableFormatter with AAImplicitDefs {
 

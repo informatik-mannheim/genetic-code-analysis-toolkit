@@ -16,7 +16,7 @@ import scala.Some
  * The errors are written to a file in the current directory. The
  * filename has the form Error-<suffix>.dat. <suffix> can be customized.
  * Note: This class is used to produce figure 3 in M. Gumbel et al: "On Models...".
- * BioSystems. 10.1016/j.biosystems.2014.12.001.
+ * BioSystems. 10.1016/j.biosystems.2016.12.001.
  * @param repeats Number of repeatitions (n).
  * @param bdas List of classifiers (e.g. BDAs) that are always included.
  * @param depthFrom The minimum number of BDAs.
@@ -24,7 +24,7 @@ import scala.Some
  * @param classSize The intended class size |M| when a model is selected.
  * @param fileSuffix An optional file suffix.
  * @author Markus Gumbel (m.gumbel@hs-mannheim.de)
- *         (c) 2014 Markus Gumbel
+ *         (c) 2016 Markus Gumbel
  */
 class RandomScan(repeats: Int, bdas: List[Classifier[Int]], depthFrom: Int, depthTo: Int, classSize: Int,
                  fileSuffix: Option[String] = None,

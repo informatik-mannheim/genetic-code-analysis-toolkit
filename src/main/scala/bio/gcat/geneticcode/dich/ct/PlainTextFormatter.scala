@@ -6,7 +6,7 @@ import scala.collection.JavaConversions._
 /**
  * Outputs a class table in several plain text formats.
  * @author Markus Gumbel (m.gumbel@hs-mannheim.de)
- *         (c) 2014 Markus Gumbel
+ *         (c) 2016 Markus Gumbel
  */
 trait PlainTextFormatter extends ClassTableFormatter with AAImplicitDefs {
 
