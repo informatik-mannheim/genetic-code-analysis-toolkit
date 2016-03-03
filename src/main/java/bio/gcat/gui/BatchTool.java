@@ -1075,7 +1075,7 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 		}
 		public Multiset<Status> countSequenceStatus() {
 			Multiset<Status> status = EnumMultiset.create(Status.class);
-			for(SequenceListItem item:items)
+			for(SequenceListItem item:new ArrayList<>(items))
 				if(item.status!=null) status.add(item.status);
 			return status;
 		}
