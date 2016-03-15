@@ -42,7 +42,6 @@ import static bio.gcat.gui.helper.Guitilities.getMenuItem;
 import static bio.gcat.gui.helper.Guitilities.getToolbarButton;
 import static bio.gcat.gui.helper.Guitilities.invokeAppropriate;
 import static bio.gcat.gui.helper.Guitilities.setBoxLayout;
-import static bio.gcat.nucleic.helper.GenBank.DATABASE_NUCLEOTIDE;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -110,7 +109,6 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListCellRenderer;
-import javax.swing.DefaultListModel;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.JButton;
@@ -191,9 +189,10 @@ import bio.gcat.gui.editor.NucleicOptions;
 import bio.gcat.gui.editor.NucleicOptions.EditorMode;
 import bio.gcat.gui.helper.ConsolePane;
 import bio.gcat.gui.helper.FoldingPanel;
+import bio.gcat.gui.helper.GenBankPicker;
 import bio.gcat.gui.helper.Guitilities;
-import bio.gcat.gui.helper.TuplesHelper;
 import bio.gcat.gui.helper.Guitilities.IconButton;
+import bio.gcat.gui.helper.TuplesHelper;
 import bio.gcat.gui.input.CodonCircle;
 import bio.gcat.gui.input.Input;
 import bio.gcat.gui.input.TesseraTable;
@@ -243,6 +242,11 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 		MENU_EDIT = 1,
 		MENU_WINDOW = 2,
 		MENU_HELP = 3;
+	@SuppressWarnings("unused") private static final int
+		TOOLBAR_FILE = 0,
+		TOOLBAR_EDIT = 1,
+		TOOLBAR_WINDOW = 2,
+		TOOLBAR_HELP = 3;
 	private static final int
 		SUBMENU_IMPORT = 0,
 		SUBMENU_RECENT = 1;
@@ -277,12 +281,6 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 		ACTION_PREFERENCES = "preferences",
 		ACTION_HELP = "help",
 		ACTION_ABOUT = "about";
-	
-	@SuppressWarnings("unused") private static final int
-		TOOLBAR_FILE = 0,
-		TOOLBAR_EDIT = 1,
-		TOOLBAR_WINDOW = 2,
-		TOOLBAR_HELP = 3;
 	
 	private static final String
 		CONFIGURATION_RECENT = "recent";
@@ -998,130 +996,14 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 		if(!confirmIfDirty())
 			return;
 		
-		JDialog dialog = new JDialog(AnalysisTool.this,"Search GenBank",true);
-		dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-		
-		GroupLayout layout = new GroupLayout(dialog.getContentPane());
-		dialog.getContentPane().setLayout(layout);
-		layout.setAutoCreateGaps(true);
-		layout.setAutoCreateContainerGaps(true);
-		
-		JLabel label = new JLabel("Search Term:");
-		JButton search = new JButton(), pick = new JButton(), cancel = new JButton("Cancel");
-		
-		JTextField term = new JTextField();
-		term.addKeyListener(new KeyAdapter() {
-			@Override public void keyPressed(KeyEvent event) {
-				if(event.getKeyCode()==KeyEvent.VK_ENTER)
-					search.getAction().actionPerformed(null);
-			}
-		});
-		
-		DefaultListModel<Map<String,Object>> model = new DefaultListModel<>();
-		JList<Map<String,Object>> list = new JList<>(model);
-		list.setCellRenderer(new ListCellRenderer<Map<String,Object>>() {
-			private JLabel label = new JLabel();
-			@Override public Component getListCellRendererComponent(JList<? extends Map<String,Object>> list,Map<String,Object> entry,int index,boolean isSelected,boolean cellHasFocus) {						
-		    label.setText("<html><b>"+entry.get("caption")+"</b>: "+entry.get("title"));
-		    
-		    if(isSelected) {
-		    	label.setBackground(list.getSelectionBackground());
-		    	label.setForeground(list.getSelectionForeground());
-		    } else {
-		    	label.setBackground(list.getBackground());
-		    	label.setForeground(list.getForeground());
-		    }
-		    label.setEnabled(list.isEnabled());
-		    label.setFont(list.getFont());
-		    label.setOpaque(true);
-
-		    return label;
-			}
-		});
-		list.addMouseListener(new MouseAdapter() {
-			public void mouseClicked(MouseEvent event) {
-				if(event.getClickCount()==2&&list.locationToIndex(event.getPoint())!=-1)
-					pick.getAction().actionPerformed(null);
-			}
-		});
-		list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		list.setFont(new Font(Font.MONOSPACED,Font.PLAIN,12));
-		list.setSelectedIndex(0);
-		JScrollPane scroll = new JScrollPane(list);
-		
-		search.setAction(new AbstractAction("Search", getImageIcon("magnifier")) {
-			private static final long serialVersionUID = 1l;
-			@Override public void actionPerformed(ActionEvent event) {
-				search.setEnabled(false); search.setText("Searching...");
-				new Thread(new Runnable() {
-					@Override public void run() {
-						try {
-							List<Map<String,Object>> summary = GenBank.summary(DATABASE_NUCLEOTIDE, GenBank.search(DATABASE_NUCLEOTIDE, term.getText()));
-							SwingUtilities.invokeLater(new Runnable() { @Override public void run() {
-								model.removeAllElements(); summary.forEach(element->model.addElement(element));
-							}});
-						} catch(Exception e) {
-							SwingUtilities.invokeLater(new Runnable() { @Override public void run() {
-								model.removeAllElements();
-								JOptionPane.showMessageDialog(dialog,"Could not search GenBank:\n\n"+e.getMessage(),"Search GenBank",JOptionPane.WARNING_MESSAGE);
-							}});
-						} finally { search.setEnabled(true); search.setText("Search"); }
-					}
-				}).start();
-			}
-		});
-		
-		pick.setAction(new AbstractAction("Pick") {
-			private static final long serialVersionUID = 1l;
-			@Override public void actionPerformed(ActionEvent event) {
-				if(!list.isSelectionEmpty())
-					importGenBank(list.getSelectedValue().get("uid").toString());
-				dialog.dispose();
-			}
-		});
-		cancel.addActionListener(new ActionListener() {
-			@Override public void actionPerformed(ActionEvent e) { dialog.dispose(); }
-		});
-		
-		layout.setHorizontalGroup(
-			layout.createParallelGroup(Alignment.TRAILING)
-				.addGroup(layout.createSequentialGroup()
-					.addComponent(label)
-					.addComponent(term)
-					.addComponent(search)
-				)
-				.addComponent(scroll, 325, 325, GroupLayout.DEFAULT_SIZE)
-				.addGroup(layout.createSequentialGroup()
-					.addComponent(pick)
-					.addComponent(cancel)	
-				)
-		);
-		layout.linkSize(SwingConstants.HORIZONTAL, pick, cancel);
-		
-		layout.setVerticalGroup(
-			layout.createSequentialGroup()
-				.addGroup(layout.createParallelGroup()
-					.addComponent(label)
-					.addComponent(term)
-					.addComponent(search)
-				)
-				.addComponent(scroll, 0, 125, GroupLayout.DEFAULT_SIZE)
-				.addGroup(layout.createParallelGroup()
-					.addComponent(pick)
-					.addComponent(cancel)
-				)
-		);
-		layout.linkSize(SwingConstants.VERTICAL, label, term, search);
-		
-		dialog.pack();
-		dialog.setMinimumSize(dialog.getSize());
-		dialog.setSize(500, 300);
-		dialog.setLocationRelativeTo(AnalysisTool.this);
-		dialog.setVisible(true);
+		GenBankPicker picker = new GenBankPicker(this);
+		picker.setLocationRelativeTo(this);
+		if(picker.pick()) importGenBank(
+			picker.getSelectedAccessionId());		
 	}
-	public void importGenBank(String accessionID) {
+	public void importGenBank(String accessionId) {
 		try {
-			DNASequence sequence = GenBank.sequence(accessionID);
+			DNASequence sequence = GenBank.sequence(accessionId);
 			if(!checkLength(sequence.getLength()))
 				return;
 				
@@ -1131,7 +1013,7 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 			editor.setDirty(); //clean on open, dirty on import
 			currentFile(null);
 		} catch(Error | Exception e) {
-			JOptionPane.showMessageDialog(this,"Could not import "+accessionID+" from GenBank:\n\n"+e.getMessage(),
+			JOptionPane.showMessageDialog(this,"Could not import "+accessionId+" from GenBank:\n\n"+e.getMessage(),
 				"Import FASTA",JOptionPane.WARNING_MESSAGE);
 		}
 	}

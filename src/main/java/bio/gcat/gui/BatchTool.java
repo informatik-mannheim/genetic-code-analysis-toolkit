@@ -35,7 +35,9 @@ import static bio.gcat.gui.helper.Guitilities.createMenuItem;
 import static bio.gcat.gui.helper.Guitilities.createMenuText;
 import static bio.gcat.gui.helper.Guitilities.createSeparator;
 import static bio.gcat.gui.helper.Guitilities.createSplitPane;
+import static bio.gcat.gui.helper.Guitilities.createSubmenu;
 import static bio.gcat.gui.helper.Guitilities.createToolbarButton;
+import static bio.gcat.gui.helper.Guitilities.createToolbarMenuButton;
 import static bio.gcat.gui.helper.Guitilities.createToolbarTextButton;
 import static bio.gcat.gui.helper.Guitilities.getImage;
 import static bio.gcat.gui.helper.Guitilities.getImageIcon;
@@ -99,6 +101,7 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -149,9 +152,11 @@ import bio.gcat.batch.Script;
 import bio.gcat.gui.helper.AttachedScrollPane;
 import bio.gcat.gui.helper.CollectionListModel;
 import bio.gcat.gui.helper.ConsolePane;
+import bio.gcat.gui.helper.GenBankPicker;
 import bio.gcat.gui.helper.Guitilities;
 import bio.gcat.gui.helper.TuplesHelper;
 import bio.gcat.nucleic.Tuple;
+import bio.gcat.nucleic.helper.GenBank;
 import bio.gcat.operation.Operation;
 import bio.gcat.operation.analysis.Analysis;
 import bio.gcat.operation.split.Split;
@@ -169,6 +174,18 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 	public static final FileNameExtensionFilter
 		GENETIC_LIST_EXTENSION_FILTER = new FileNameExtensionFilter("Genetic Code Sequences (*."+GENETIC_LIST_EXTENSION+")", GENETIC_LIST_EXTENSION);
 	
+	private static final int
+		MENU_FILE = 0,
+		MENU_EDIT = 1,
+		MENU_WINDOW = 2,
+		MENU_HELP = 3;
+	@SuppressWarnings("unused") private static final int
+		TOOLBAR_FILE = 0,
+		TOOLBAR_EDIT = 1,
+		TOOLBAR_WINDOW = 2,
+		TOOLBAR_HELP = 3;
+	private static final int
+		SUBMENU_IMPORT = 0;
 	private static final String
 		ACTION_CLOSE = "exit",
 		ACTION_ACTIONS_LOAD = "actions_load",
@@ -180,6 +197,7 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 		ACTION_ACTION_MOVE_UP = "action_move_up",
 		ACTION_ACTION_MOVE_DOWN = "action_move_down",
 		ACTION_SEQUENCES_IMPORT = "sequences_import",
+		ACTION_SEQUENCES_GENBANK = "sequences_genbank",
 		ACTION_SEQUENCES_EXPORT = "sequences_export",
 		ACTION_SEQUENCES_EDIT = "sequences_edit",
 		ACTION_SEQUENCES_REMOVE = "sequences_remove",
@@ -226,7 +244,7 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 			"First","Last","Any","All","Random");
 	
 	private JMenuBar menubar;
-	private JMenu[] menu;
+	private JMenu[] menu, submenu;
 	private JPanel toolbars, bottom;
 	private JToolBar[] toolbar;
 	private JLabel status;
@@ -249,34 +267,38 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 		setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
 
 		menubar = new JMenuBar(); menu = new JMenu[4];
-		menubar.add(menu[0] = new JMenu("File"));
-		menubar.add(menu[1] = new JMenu("Edit"));
-		menubar.add(menu[2] = new JMenu("Window"));
-		menubar.add(menu[3] = new JMenu("Help"));
+		menubar.add(menu[MENU_FILE] = new JMenu("File"));
+		menubar.add(menu[MENU_EDIT] = new JMenu("Edit"));
+		menubar.add(menu[MENU_WINDOW] = new JMenu("Window"));
+		menubar.add(menu[MENU_HELP] = new JMenu("Help"));
 		setJMenuBar(menubar);
 		
-		menu[0].add(createMenuItem("Load Script...", "script_go", KeyStroke.getKeyStroke(KeyEvent.VK_L, InputEvent.CTRL_DOWN_MASK), ACTION_ACTIONS_LOAD, this));
-		menu[0].add(createMenuItem("Save Script...", "script_save", KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK), ACTION_ACTIONS_SAVE, this));
-		menu[0].add(createMenuItem("Execute", "script_lightning", KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, InputEvent.CTRL_DOWN_MASK), ACTION_EXECUTE, this));
-		menu[0].add(createSeparator());
-		menu[0].add(createMenuItem("Import...", "door_in", KeyStroke.getKeyStroke(KeyEvent.VK_I, InputEvent.CTRL_DOWN_MASK), ACTION_SEQUENCES_IMPORT, this));
-		menu[0].add(createMenuItem("Export...", "door_out", ACTION_SEQUENCES_EXPORT, this));
-		menu[0].add(createSeparator());
-		menu[0].add(createMenuItem("Close Window", "cross", ACTION_CLOSE, this));
-		menu[1].add(createMenuText("Actions:"));
-		menu[1].add(createMenuItem("Add", KeyStroke.getKeyStroke(KeyEvent.VK_A, InputEvent.CTRL_DOWN_MASK), ACTION_ACTION_ADD, this));
-		menu[1].add(createMenuItem("Edit...", KeyStroke.getKeyStroke(KeyEvent.VK_E, InputEvent.CTRL_DOWN_MASK), ACTION_ACTION_EDIT, this));
-		menu[1].add(createMenuItem("Remove", KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), ACTION_ACTION_REMOVE, this));
-		menu[1].add(createMenuItem("Clear", ACTION_ACTIONS_CLEAR, this));
-		menu[1].add(seperateMenuItem(createMenuItem("Move Up", KeyStroke.getKeyStroke(KeyEvent.VK_UP, InputEvent.CTRL_DOWN_MASK), ACTION_ACTION_MOVE_UP, this)));
-		menu[1].add(createMenuItem("Move Down", KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, InputEvent.CTRL_DOWN_MASK), ACTION_ACTION_MOVE_DOWN, this));
-		menu[1].add(createSeparator());
-		menu[1].add(createMenuText("Sequences:"));
-		menu[1].add(createMenuItem("Edit", "table_edit", ACTION_SEQUENCES_EDIT, this));
-		menu[1].add(createMenuItem("Remove", "table_row_delete", KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), ACTION_SEQUENCES_REMOVE, this));
-		menu[1].add(createMenuItem("Clear", ACTION_SEQUENCES_CLEAR, this));
-		menu[2].add(createMenuItem("Preferences", ACTION_PREFERENCES, this));
-		menu[3].add(createMenuItem("About Batch Tool", "calculator", ACTION_ABOUT, this));
+		submenu = new JMenu[1];
+		menu[MENU_FILE].add(createMenuItem("Load Script...", "script_go", KeyStroke.getKeyStroke(KeyEvent.VK_L, InputEvent.CTRL_DOWN_MASK), ACTION_ACTIONS_LOAD, this));
+		menu[MENU_FILE].add(createMenuItem("Save Script...", "script_save", KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK), ACTION_ACTIONS_SAVE, this));
+		menu[MENU_FILE].add(createMenuItem("Execute", "script_lightning", KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, InputEvent.CTRL_DOWN_MASK), ACTION_EXECUTE, this));
+		menu[MENU_FILE].add(createSeparator());
+		menu[MENU_FILE].add(submenu[SUBMENU_IMPORT]=createSubmenu("Import", "door_in"));
+		submenu[SUBMENU_IMPORT].add(createMenuItem("Any File", ACTION_SEQUENCES_IMPORT, this));
+		submenu[SUBMENU_IMPORT].add(createMenuItem("GenBank...", ACTION_SEQUENCES_GENBANK, this));
+		menu[MENU_FILE].add(createMenuItem("Import...", "door_in", KeyStroke.getKeyStroke(KeyEvent.VK_I, InputEvent.CTRL_DOWN_MASK), ACTION_SEQUENCES_IMPORT, this));
+		menu[MENU_FILE].add(createMenuItem("Export...", "door_out", ACTION_SEQUENCES_EXPORT, this));
+		menu[MENU_FILE].add(createSeparator());
+		menu[MENU_FILE].add(createMenuItem("Close Window", "cross", ACTION_CLOSE, this));
+		menu[MENU_EDIT].add(createMenuText("Actions:"));
+		menu[MENU_EDIT].add(createMenuItem("Add", KeyStroke.getKeyStroke(KeyEvent.VK_A, InputEvent.CTRL_DOWN_MASK), ACTION_ACTION_ADD, this));
+		menu[MENU_EDIT].add(createMenuItem("Edit...", KeyStroke.getKeyStroke(KeyEvent.VK_E, InputEvent.CTRL_DOWN_MASK), ACTION_ACTION_EDIT, this));
+		menu[MENU_EDIT].add(createMenuItem("Remove", KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), ACTION_ACTION_REMOVE, this));
+		menu[MENU_EDIT].add(createMenuItem("Clear", ACTION_ACTIONS_CLEAR, this));
+		menu[MENU_EDIT].add(seperateMenuItem(createMenuItem("Move Up", KeyStroke.getKeyStroke(KeyEvent.VK_UP, InputEvent.CTRL_DOWN_MASK), ACTION_ACTION_MOVE_UP, this)));
+		menu[MENU_EDIT].add(createMenuItem("Move Down", KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, InputEvent.CTRL_DOWN_MASK), ACTION_ACTION_MOVE_DOWN, this));
+		menu[MENU_EDIT].add(createSeparator());
+		menu[MENU_EDIT].add(createMenuText("Sequences:"));
+		menu[MENU_EDIT].add(createMenuItem("Edit", "table_edit", ACTION_SEQUENCES_EDIT, this));
+		menu[MENU_EDIT].add(createMenuItem("Remove", "table_row_delete", KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), ACTION_SEQUENCES_REMOVE, this));
+		menu[MENU_EDIT].add(createMenuItem("Clear", ACTION_SEQUENCES_CLEAR, this));
+		menu[MENU_WINDOW].add(createMenuItem("Preferences", ACTION_PREFERENCES, this));
+		menu[MENU_HELP].add(createMenuItem("About Batch Tool", "calculator", ACTION_ABOUT, this));
 		for(String action:new String[]{ACTION_ACTION_EDIT,ACTION_ACTION_REMOVE,ACTION_ACTIONS_CLEAR,ACTION_ACTION_MOVE_UP,ACTION_ACTION_MOVE_DOWN,ACTION_SEQUENCES_EDIT,ACTION_SEQUENCES_REMOVE,ACTION_SEQUENCES_CLEAR})
 			getMenuItem(menubar,action).setEnabled(false);
 		getMenuItem(menubar,ACTION_PREFERENCES).setEnabled(false);
@@ -288,13 +310,16 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 		});
 		
 		toolbar = new JToolBar[1];
-		toolbar[0] = new JToolBar("File");
-		toolbar[0].add(createToolbarButton("Load Script", "script_go", ACTION_ACTIONS_LOAD, this));
-		toolbar[0].add(createToolbarButton("Save Script", "script_save", ACTION_ACTIONS_SAVE, this));
-		toolbar[0].add(createToolbarTextButton("Execute Batch", "script_lightning", ACTION_EXECUTE, this));
-		toolbar[0].addSeparator();
-		toolbar[0].add(createToolbarButton("Import Sequences", "door_in", ACTION_SEQUENCES_IMPORT, this));
-		toolbar[0].add(createToolbarButton("Export Sequences", "door_out", ACTION_SEQUENCES_EXPORT, this));
+		toolbar[TOOLBAR_FILE] = new JToolBar("File");
+		toolbar[TOOLBAR_FILE].add(createToolbarButton("Load Script", "script_go", ACTION_ACTIONS_LOAD, this));
+		toolbar[TOOLBAR_FILE].add(createToolbarButton("Save Script", "script_save", ACTION_ACTIONS_SAVE, this));
+		toolbar[TOOLBAR_FILE].add(createToolbarTextButton("Execute Batch", "script_lightning", ACTION_EXECUTE, this));
+		toolbar[TOOLBAR_FILE].addSeparator();
+		toolbar[TOOLBAR_FILE].add(createToolbarMenuButton("Import", "door_in", new JMenuItem[]{
+			createMenuItem("Any File", ACTION_SEQUENCES_IMPORT, this),
+			createMenuItem("GenBank...", ACTION_SEQUENCES_GENBANK, this)
+		}));
+		toolbar[TOOLBAR_FILE].add(createToolbarButton("Export Sequences", "door_out", ACTION_SEQUENCES_EXPORT, this));
 		
 		toolbars = new JPanel(new FlowLayout(FlowLayout.LEADING));
 		for(JToolBar toolbar:toolbar)
@@ -365,6 +390,7 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 		case ACTION_ACTION_MOVE_UP: moveAction(true); break;
 		case ACTION_ACTION_MOVE_DOWN: moveAction(false); break;
 		case ACTION_SEQUENCES_IMPORT: importSequences(); break;
+		case ACTION_SEQUENCES_GENBANK: genbankSequences(); break;
 		case ACTION_SEQUENCES_EXPORT: exportSequences(); break;
 		case ACTION_SEQUENCES_EDIT: editSequences(); break;
 		case ACTION_SEQUENCES_REMOVE: removeSequences(); break;
@@ -493,6 +519,28 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 		}
 	}
 	
+	public void genbankSequences() {
+		GenBankPicker picker = new GenBankPicker(this);
+		picker.setLocationRelativeTo(this);
+		picker.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+		if(picker.pick()) genbankSequences(
+			picker.getSelectedAccessionIds());
+	}
+	private void genbankSequences(String[] accessionIds) {
+		submitTask(new Runnable() {
+			@Override public void run() {
+				Exception firstException = null;
+				for(String accessionId:accessionIds) try {
+					DNASequence sequence = GenBank.sequence(accessionId);
+					addSequence(Tuple.sliceTuples(sequence.getSequenceAsString()),
+							sequence.getAccession().toString());
+				} catch(Exception e) { firstException = e; }
+				if(firstException!=null) JOptionPane.showMessageDialog(BatchTool.this,
+					"Loading some sequences failed because:\n\n"+firstException.getMessage(),"Import GenBank",JOptionPane.WARNING_MESSAGE);
+			}
+		}, null);
+	}
+
 	public void editSequences() {
 		for(SequenceListItem item:sequenceList.getSelectedValuesList()) {
 			AnalysisTool tool = new AnalysisTool();
