@@ -185,7 +185,8 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 		TOOLBAR_WINDOW = 2,
 		TOOLBAR_HELP = 3;
 	private static final int
-		SUBMENU_IMPORT = 0;
+		SUBMENU_IMPORT = 0,
+		SUBMENU_EXPORT = 1;
 	private static final String
 		ACTION_CLOSE = "exit",
 		ACTION_ACTIONS_LOAD = "actions_load",
@@ -202,6 +203,7 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 		ACTION_SEQUENCES_EDIT = "sequences_edit",
 		ACTION_SEQUENCES_REMOVE = "sequences_remove",
 		ACTION_SEQUENCES_CLEAR = "sequences_clear",
+		ACTION_RESULTS_EXPORT = "results_export",
 		ACTION_EXECUTE = "execute",
 		ACTION_PREFERENCES = "preferences",
 		ACTION_ABOUT = "about";
@@ -273,7 +275,7 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 		menubar.add(menu[MENU_HELP] = new JMenu("Help"));
 		setJMenuBar(menubar);
 		
-		submenu = new JMenu[1];
+		submenu = new JMenu[2];
 		menu[MENU_FILE].add(createMenuItem("Load Script...", "script_go", KeyStroke.getKeyStroke(KeyEvent.VK_L, InputEvent.CTRL_DOWN_MASK), ACTION_ACTIONS_LOAD, this));
 		menu[MENU_FILE].add(createMenuItem("Save Script...", "script_save", KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK), ACTION_ACTIONS_SAVE, this));
 		menu[MENU_FILE].add(createMenuItem("Execute", "script_lightning", KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, InputEvent.CTRL_DOWN_MASK), ACTION_EXECUTE, this));
@@ -281,8 +283,9 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 		menu[MENU_FILE].add(submenu[SUBMENU_IMPORT]=createSubmenu("Import", "door_in"));
 		submenu[SUBMENU_IMPORT].add(createMenuItem("Any File", ACTION_SEQUENCES_IMPORT, this));
 		submenu[SUBMENU_IMPORT].add(createMenuItem("GenBank...", ACTION_SEQUENCES_GENBANK, this));
-		menu[MENU_FILE].add(createMenuItem("Import...", "door_in", KeyStroke.getKeyStroke(KeyEvent.VK_I, InputEvent.CTRL_DOWN_MASK), ACTION_SEQUENCES_IMPORT, this));
-		menu[MENU_FILE].add(createMenuItem("Export...", "door_out", ACTION_SEQUENCES_EXPORT, this));
+		menu[MENU_FILE].add(submenu[SUBMENU_EXPORT]=createSubmenu("Export", "door_out"));
+		submenu[SUBMENU_EXPORT].add(createMenuItem("Sequences", ACTION_SEQUENCES_EXPORT, this));
+		submenu[SUBMENU_EXPORT].add(createMenuItem("Results", ACTION_RESULTS_EXPORT, this));
 		menu[MENU_FILE].add(createSeparator());
 		menu[MENU_FILE].add(createMenuItem("Close Window", "cross", ACTION_CLOSE, this));
 		menu[MENU_EDIT].add(createMenuText("Actions:"));
@@ -319,7 +322,10 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 			createMenuItem("Any File", ACTION_SEQUENCES_IMPORT, this),
 			createMenuItem("GenBank...", ACTION_SEQUENCES_GENBANK, this)
 		}));
-		toolbar[TOOLBAR_FILE].add(createToolbarButton("Export Sequences", "door_out", ACTION_SEQUENCES_EXPORT, this));
+		toolbar[TOOLBAR_FILE].add(createToolbarMenuButton("Export", "door_out", new JMenuItem[]{
+			createMenuItem("Sequences", ACTION_SEQUENCES_EXPORT, this),
+			createMenuItem("Results", ACTION_RESULTS_EXPORT, this)
+		}));
 		
 		toolbars = new JPanel(new FlowLayout(FlowLayout.LEADING));
 		for(JToolBar toolbar:toolbar)
@@ -395,6 +401,7 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 		case ACTION_SEQUENCES_EDIT: editSequences(); break;
 		case ACTION_SEQUENCES_REMOVE: removeSequences(); break;
 		case ACTION_SEQUENCES_CLEAR: clearSequences(); break;
+		case ACTION_RESULTS_EXPORT: exportResults(); break;
 		case ACTION_EXECUTE: executeBatch(); break;
 		case ACTION_ABOUT: showAbout(); break; 
 		default: System.err.println(String.format("Action %s not implemented.", action)); }
@@ -510,7 +517,7 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 				JOptionPane.showMessageDialog(BatchTool.this,"Could not export to FASTA file:\n"+e.getMessage(),"Export File",JOptionPane.WARNING_MESSAGE);
 				e.printStackTrace();
 			}
-		} else try(PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(chooser.getSelectedFile())))) {
+		} else try(PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(file)))) {
 			for(Collection<Tuple> sequence:this.sequenceList.getSequences())
 				writer.println(Tuple.joinTuples(sequence));
 		}	catch(IOException e) {
@@ -560,6 +567,27 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 		getMenuItem(menubar,ACTION_SEQUENCES_EDIT).setEnabled(selected);
 		getMenuItem(menubar,ACTION_SEQUENCES_REMOVE).setEnabled(selected);
 		getMenuItem(menubar,ACTION_SEQUENCES_CLEAR).setEnabled(filled);
+	}
+
+	public void exportResults() {
+		JFileChooser chooser = new FileNameExtensionFileChooser(false,TEXT_EXTENSION_FILTER);
+		chooser.setDialogTitle("Export Results");
+		if(chooser.showSaveDialog(this)!=JFileChooser.APPROVE_OPTION)
+			return;
+		
+		try(PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(chooser.getSelectedFile())))) {
+			int number = 0;
+			for(SequenceListItem item:this.sequenceList.getItems()) { number++;
+				writer.println((item.label!=null?item.label:"Sequence "+number)+": "+
+					item.status.toString().toLowerCase());
+				for(Message message:item.result.getLog())
+					writer.println(message.toString());
+				writer.println();
+			}
+		} catch(IOException e) {
+			JOptionPane.showMessageDialog(BatchTool.this,"Could not export to file:\n"+e.getMessage(),"Export File",JOptionPane.WARNING_MESSAGE);
+			e.printStackTrace();
+		}
 	}
 
 	public void executeBatch() {
@@ -1127,12 +1155,16 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 				if(item.status!=null) status.add(item.status);
 			return status;
 		}
+		
+		List<SequenceListItem> getItems() {
+			return Collections.unmodifiableList(new ArrayList<>(items)); }
+		
 		public List<Collection<Tuple>> getSequences() {
-      List<Collection<Tuple>> sequences = new ArrayList<>();
-      for(SequenceListItem item:items)
-      	sequences.add(item.tuples);
-      return sequences;
-    }
+			List<Collection<Tuple>> sequences = new ArrayList<>();
+			for(SequenceListItem item:items)
+				sequences.add(item.tuples);
+			return sequences;
+		}
 		public Collection<Tuple> getSequenceAt(int index) {
 			return items.getElementAt(index).tuples;
 		}

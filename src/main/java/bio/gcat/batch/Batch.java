@@ -36,6 +36,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
+import static bio.gcat.Utilities.EMPTY;
 import bio.gcat.Utilities.DefiniteFuture;
 import bio.gcat.Utilities.DefiniteListenableFuture;
 import bio.gcat.log.InjectionLogger;
@@ -148,6 +149,10 @@ public class Batch {
 			public Message(String message,Throwable throwable) {
 				this.message = message;
 				this.throwable = throwable;
+			}
+			
+			@Override public String toString() {
+				return message+(throwable!=null?" ("+throwable.getMessage()+")":EMPTY);
 			}
 		}
 	}
