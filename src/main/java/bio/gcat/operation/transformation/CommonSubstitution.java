@@ -25,6 +25,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import bio.gcat.Documented;
 import bio.gcat.Parameter;
+import bio.gcat.log.Logger;
+import bio.gcat.nucleic.Acid;
 import bio.gcat.nucleic.Base;
 import bio.gcat.nucleic.Tuple;
 import bio.gcat.operation.Cataloged;
@@ -175,9 +177,17 @@ public class CommonSubstitution implements Transformation {
 
 	@Override public Collection<Tuple> transform(Collection<Tuple> tuples,Object... values) { return transform(tuples,(String)values[0]); }
 	public Collection<Tuple> transform(Collection<Tuple> tuples,String name) {
+		Logger logger = getLogger();
+		
+		Acid acid;
+		if((acid=Tuple.tuplesAcid(tuples))==null) {
+			logger.log("Tuples with variable acids, can't transform.");
+			return tuples; //tuples not all in same acid
+		}
+		
 		Map<Base,Base> substitution = SUBSTITUTIONS.get(name);
 		return substitution!=null?tuples.stream().map(tuple->
-			new Tuple(substitute(tuple.getBases(),substitution)))
+			new Tuple(substitute(tuple.toAcid(Acid.RNA).getBases(),substitution)).toAcid(acid))
 				.collect(Collectors.toList()):tuples;
 	}
 }
