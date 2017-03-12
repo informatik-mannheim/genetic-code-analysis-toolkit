@@ -39,7 +39,7 @@
 		<dependency>
 			<groupId>org.biojava</groupId>
 			<artifactId>biojava3-core</artifactId>
-			<version>3.1.0</version>
+    		<version>3.1.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
@@ -361,9 +361,9 @@
 			</snapshots>
 		</repository>
 		<repository>
-			<id>biojava-maven-repo</id>
-			<name>BioJava repository</name>
-			<url>http://www.biojava.org/download/maven/</url>
+		    <id>biojava-legacy-repo</id>
+		    <name>BioJava's Git based legacy maven repo</name>
+		    <url>https://github.com/biojava/maven-repo/raw/master/</url>
 		</repository>
 		<repository>
 			<id>characters-mvn-repo</id>

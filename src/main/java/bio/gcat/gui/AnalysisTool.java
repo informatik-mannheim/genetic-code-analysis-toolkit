@@ -193,7 +193,7 @@ import bio.gcat.gui.helper.GenBankPicker;
 import bio.gcat.gui.helper.Guitilities;
 import bio.gcat.gui.helper.Guitilities.IconButton;
 import bio.gcat.gui.helper.TuplesHelper;
-import bio.gcat.gui.input.CodonCircle;
+import bio.gcat.gui.input.CodonWheel;
 import bio.gcat.gui.input.Input;
 import bio.gcat.gui.input.TesseraTable;
 import bio.gcat.log.InjectionLogger;
@@ -1405,7 +1405,7 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 			catalogPanel.showInput(TesseraTable.class);
 		} else if(oldOptions.tupleLength==4&&options.tupleLength==3) {
 			// switch to codon wheel input
-			catalogPanel.showInput(CodonCircle.class);
+			catalogPanel.showInput(CodonWheel.class);
 		}
 	}
 	
@@ -1442,7 +1442,7 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 			for(Class<? extends Input> inputClass:inputReflections.getSubTypesOf(Input.class))
 				try {
 					inputs.add(input=inputClass.newInstance());
-					if(CodonCircle.class.equals(inputClass))
+					if(CodonWheel.class.equals(inputClass))
 						defaultInput = input;
 				} catch(InstantiationException|IllegalAccessException e) { /* nothing to do here */ }
 			inputPanel = addPage(new JPanel(new BorderLayout()),"Input",true);

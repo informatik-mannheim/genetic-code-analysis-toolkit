@@ -47,7 +47,7 @@ public class C3 implements Test {
 		
 		Collection<Tuple> shifted = tuples;
 		for(int shift=0;shift<length;shift++)
-			if(!CIRCULAR.test(shifted=SHIFT.transform(shifted,shift),length+1))
+			if(!CIRCULAR.test(shifted=SHIFT.transform(shifted,1),length+1))
 				return false;
 		
 		return true;
