@@ -13,7 +13,7 @@ public class AminoAcidsTest {
 		String result = AMINO_ACIDS.analyse(splitTuples("CCU CUG CUA CUC UGA")).toString();
 		assertThat(result, containsString("3x Leu"));
 		assertThat(result, containsString("1x Pro"));
-		assertThat(result, containsString("1x Unknown"));
+		assertThat(result, containsString("1x Stop"));
 		
 		result = AMINO_ACIDS.analyse(splitTuples("GCGC UCAG UCGA AGAC ")).toString();
 		assertThat(result, containsString("3x Tsr"));
