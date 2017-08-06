@@ -18,6 +18,8 @@ package bio.gcat.gui.editor.display;
 import static bio.gcat.Utilities.fixPosition;
 import static bio.gcat.gui.helper.Guitilities.getImageIcon;
 import static bio.gcat.gui.helper.Guitilities.invokeAppropriate;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -34,6 +36,8 @@ import javax.swing.border.Border;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.MatteBorder;
+import javax.swing.event.CaretEvent;
+import javax.swing.event.CaretListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.JTextComponent;
 
@@ -43,7 +47,7 @@ import bio.gcat.gui.editor.NucleicListener;
 import bio.gcat.nucleic.Compound;
 import bio.gcat.nucleic.Tuple;
 
-public class CompoundDisplay extends JPanel implements NucleicDisplay, NucleicListener {
+public class CompoundDisplay extends JPanel implements NucleicDisplay, NucleicListener, CaretListener {
 	private static final long serialVersionUID = 1l;
 
 	public static final String LABEL = "Compound";
@@ -59,11 +63,12 @@ public class CompoundDisplay extends JPanel implements NucleicDisplay, NucleicLi
 	
 	private NucleicEditor editor;
 	private JTextComponent textPane;
+	private int caretStart, caretEnd;
 	
 	private int border;
 	
 	public CompoundDisplay(NucleicEditor editor) {
-		textPane = (this.editor=editor).getTextPane();
+		(textPane=(this.editor=editor).getTextPane()).addCaretListener(this);
 		setBackground(Color.WHITE);
 		setFont(textPane.getFont());
 		FontMetrics metrics = getFontMetrics(getFont());
@@ -109,7 +114,7 @@ public class CompoundDisplay extends JPanel implements NucleicDisplay, NucleicLi
 	}
 	
 	protected void drawCompounds(Graphics graphics, Tuple[] tuples, int y) {
-		int x = getInsets().left;
+		int chars = 0, x = getInsets().left, defaultTupleLength = editor.getTupleLength();
 		for(Tuple tuple:tuples) {
 			String text; Color color = COLOR_SPECIAL;
 			if(tuple!=null) {
@@ -128,21 +133,21 @@ public class CompoundDisplay extends JPanel implements NucleicDisplay, NucleicLi
 			} else text = "ERR";
 			
 			// adapt text length to tuple length
-			int defaultTupleLength = editor.getTupleLength();
 			if(defaultTupleLength>0&&defaultTupleLength<text.length())
 				text = text.substring(0,defaultTupleLength);
 			
-			drawString(graphics, text, x, y, color);
-			x += (text.length()+1)*defaultCharWidth;
+			drawString(graphics, text, x, y, color, caretStart!=caretEnd&&caretStart-defaultTupleLength<chars&&caretEnd>chars);
+			int length = text.length()+1;
+			chars += length; x += length*defaultCharWidth;
 		}
 	}
-	protected void drawString(Graphics graphics, String string, int x, int y, Color color) {
+	protected void drawString(Graphics graphics, String string, int x, int y, Color color, boolean marked) {
 		FontMetrics metrics = graphics.getFontMetrics();
-    Rectangle2D rectangle = metrics.getStringBounds(string, graphics);
-    graphics.setColor(color);
-    graphics.fillRect(x, y - metrics.getAscent(), (int)rectangle.getWidth(), (int)rectangle.getHeight());
-    graphics.setColor(getForeground());
-		graphics.drawString(string, x, y);
+	    Rectangle2D rectangle = metrics.getStringBounds(string, graphics);
+	    graphics.setColor(!marked?color:color.darker());
+	    graphics.fillRect(x, y - metrics.getAscent(), (int)rectangle.getWidth(), (int)rectangle.getHeight());
+	    graphics.setColor(getForeground());
+			graphics.drawString(string, x, y);
 	}
 
 	protected Tuple[] tuplesInRow(int offset) {
@@ -166,4 +171,12 @@ public class CompoundDisplay extends JPanel implements NucleicDisplay, NucleicLi
 	}
 	@Override public void tuplesUndoableChange(NucleicEvent event) { /* undoable change, nothing to do here */ }
 	@Override public void optionsChange(NucleicEvent event) { /* nothing to do here */ }
+
+	@Override public void caretUpdate(CaretEvent event) {
+		int dot = event.getDot(), mark = event.getMark();
+		caretStart = min(dot, mark); caretEnd = max(dot, mark);
+		invokeAppropriate(new Runnable() {
+			public void run() { repaint(); }
+		});
+	}
 }
