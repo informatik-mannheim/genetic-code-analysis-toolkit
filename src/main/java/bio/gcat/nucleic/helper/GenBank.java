@@ -66,7 +66,7 @@ public class GenBank {
 		DATABASE_UNIGENE = "unigene";*/
 		
 	private static final String
-		EUTIL_BASE_URI = "http://eutils.ncbi.nlm.nih.gov",
+		EUTIL_BASE_URI = "https://eutils.ncbi.nlm.nih.gov",
 		EUTIL_ENTREZ = "/entrez/eutils",
 		EUTIL_SEARCH = "/esearch.fcgi",
 		EUTIL_SUMMARY = "/esummary.fcgi";

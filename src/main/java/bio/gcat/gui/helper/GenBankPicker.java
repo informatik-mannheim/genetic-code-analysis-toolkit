@@ -118,6 +118,7 @@ public class GenBankPicker extends JDialog {
 								model.removeAllElements(); summary.forEach(element->model.addElement(element));
 							}});
 						} catch(Exception e) {
+							e.printStackTrace();
 							SwingUtilities.invokeLater(new Runnable() { @Override public void run() {
 								model.removeAllElements();
 								JOptionPane.showMessageDialog(GenBankPicker.this, "Could not search GenBank:\n\n"+e.getMessage(), "Search GenBank", JOptionPane.WARNING_MESSAGE);
