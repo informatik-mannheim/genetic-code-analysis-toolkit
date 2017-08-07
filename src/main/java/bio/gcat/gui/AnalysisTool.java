@@ -42,6 +42,9 @@ import static bio.gcat.gui.helper.Guitilities.getMenuItem;
 import static bio.gcat.gui.helper.Guitilities.getToolbarButton;
 import static bio.gcat.gui.helper.Guitilities.invokeAppropriate;
 import static bio.gcat.gui.helper.Guitilities.setBoxLayout;
+import static java.lang.Boolean.FALSE;
+import static java.lang.Boolean.TRUE;
+import static java.lang.Boolean.parseBoolean;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -283,7 +286,11 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 		ACTION_ABOUT = "about";
 	
 	private static final String
+		CONFIGURATION_FIRST_START = "firstStart",
 		CONFIGURATION_RECENT = "recent";
+	
+	private static final String[]
+		HELP_PAGE_FIRST_START = new String[] { "2. Getting started", "2.1. Analysis Tool" };
 	
 	private static final String
 		ATTRIBUTE_LABEL = "gene_sequence.label";
@@ -578,6 +585,10 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 			private static final long serialVersionUID = 1;
 			@Override public void actionPerformed(ActionEvent e) { editor.setText(null); }
 		}));
+		if(parseBoolean(getConfiguration(CONFIGURATION_FIRST_START, TRUE.toString()))) {
+			editor.toggleHelpPage(HELP_PAGE_FIRST_START); editor.setDisplaySize(420); //size of illustrative images
+			setConfiguration(CONFIGURATION_FIRST_START, FALSE.toString());
+		}
 		
 		findDialog = new FindDialog();
 		
@@ -1436,7 +1447,7 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 			
 			Input input,defaultInput=null; inputs = new ArrayList<>();
 			Reflections inputReflections = new Reflections(new ConfigurationBuilder()
-				.addClassLoaders(ClasspathHelper.staticClassLoader(),ClasspathHelper.contextClassLoader()/*,ClassLoader.getSystemClassLoader()*/)
+				.addClassLoaders(ClasspathHelper.staticClassLoader(), ClasspathHelper.contextClassLoader()/*,ClassLoader.getSystemClassLoader()*/)
 				.setUrls(ClasspathHelper.forPackage(Input.class.getPackage().getName()))
 				.setScanners(new SubTypesScanner()));
 			for(Class<? extends Input> inputClass:inputReflections.getSubTypesOf(Input.class))

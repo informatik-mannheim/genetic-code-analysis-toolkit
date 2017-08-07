@@ -347,10 +347,7 @@ public class NucleicEditor extends JRootPane {
 				dragX = event.getX()<=2?event.getX():-1;
 			}
 			@Override public void mouseReleased(MouseEvent event) {
-				if(dragX!=-1) {
-					displaySize = Math.max(100,displaySize+(dragX-event.getX()));
-					displayPane.revalidate();
-				}
+				if(dragX!=-1) setDisplaySize(Math.max(100, displaySize+(dragX-event.getX())));
 			}
 		};
 		
@@ -467,6 +464,11 @@ public class NucleicEditor extends JRootPane {
 			if(display.isInstance(displays.get(index))) {
 				displayPane.setSelectedIndex(index); return; }
 	}
+	public void setDisplaySize(int size) {
+		displaySize = size;
+		displayPane.revalidate();
+	}
+	
 	public void toggleHelp() { toggleDisplay(HelpDisplay.class); }
 	public void toggleHelpIndex() { displayHelp.showIndex(); toggleHelp(); }
 	public void toggleHelpPage(String... page) { displayHelp.showPage(page); toggleHelp();		 }
