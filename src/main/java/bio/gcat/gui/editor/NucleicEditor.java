@@ -114,7 +114,7 @@ import bio.gcat.Utilities;
 import bio.gcat.Utilities.ArrayComparator;
 import bio.gcat.gui.editor.NucleicListener.NucleicEvent;
 import bio.gcat.gui.editor.NucleicOptions.EditorMode;
-import bio.gcat.gui.editor.display.GraphDisplay;
+import bio.gcat.gui.editor.display.CompoundDisplay;
 import bio.gcat.gui.helper.AttachedScrollPane;
 import bio.gcat.gui.helper.BetterGlassPane;
 import bio.gcat.gui.helper.VerticalLabelUI;
@@ -376,7 +376,7 @@ public class NucleicEditor extends JRootPane {
 				}
 			}
 		});
-		displayPane.setSelectedIndex(displayPane.indexOfTab(GraphDisplay.LABEL));
+		displayPane.setSelectedIndex(displayPane.indexOfTab(CompoundDisplay.LABEL));
 		
 		options = new NucleicOptions();
 		optionList = new ArrayList<>();		

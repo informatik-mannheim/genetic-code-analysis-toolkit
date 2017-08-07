@@ -136,7 +136,7 @@ public class CompoundDisplay extends JPanel implements NucleicDisplay, NucleicLi
 			if(defaultTupleLength>0&&defaultTupleLength<text.length())
 				text = text.substring(0,defaultTupleLength);
 			
-			drawString(graphics, text, x, y, color, caretStart!=caretEnd&&caretStart-defaultTupleLength<chars&&caretEnd>chars);
+			drawString(graphics, text, x, y, color, caretStart-defaultTupleLength<=chars&&caretEnd>=chars);
 			int length = text.length()+1;
 			chars += length; x += length*defaultCharWidth;
 		}
