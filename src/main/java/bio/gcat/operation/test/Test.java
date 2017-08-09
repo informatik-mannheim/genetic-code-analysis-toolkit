@@ -15,27 +15,56 @@
  */
 package bio.gcat.operation.test;
 
-import static bio.gcat.Help.*;
+import static bio.gcat.Help.GENERAL;
+import static bio.gcat.Help.OPERATIONS;
+
 import java.util.Collection;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+
 import bio.gcat.Documented;
 import bio.gcat.Parameter;
-import bio.gcat.Utilities;
 import bio.gcat.Parameter.Type;
+import bio.gcat.Utilities;
 import bio.gcat.nucleic.Tuple;
 import bio.gcat.operation.Named;
 import bio.gcat.operation.Operation;
 
 public interface Test extends Operation {
 	public boolean test(Collection<Tuple> tuples, Object... values);
-	
+
+	public interface Handler {
+		public default void handle(Test test, boolean result) throws Exception { handleDefault(test, result); };
+		
+		public default void handleDefault(Test test, boolean result) throws Default { throw new Default(test, result); }
+	}
+	public static class Exception extends Operation.Exception {
+		private static final long serialVersionUID = 1l;
+
+		public Exception(Test test) { super(test); }
+		public Exception(Test test, String message) { super(test, message); }
+		public Exception(Test test, String message, Throwable cause) { super(test, message, cause); }
+		public Exception(Test test, Throwable cause) { super(test, cause); }
+		
+		public Test getTest() { return (Test)getOperation(); }
+	}
 	public static class Failed extends Exception {
 		private static final long serialVersionUID = 1l;
+	
+		public Failed(Test test) { super(test, "Test Failed"); }	  
+
+	}
+	public static class Default extends Exception {
+		private static final long serialVersionUID = 1l;
 		
-	  public Failed(Test test) { super(test,"Test Failed"); }
-	  
-	  public Test getTest() { return (Test)getOperation(); }
+		private final boolean result;
+		
+		public Default(Test test, boolean result) {
+			super(test, "Default Test Handling");
+			this.result = result;
+		}
+		
+		public boolean getResult() { return result; }
 	}
 	
 	@Named(name="match", icon="magnifier_zoom_in")

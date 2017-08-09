@@ -18,4 +18,11 @@ package bio.gcat.log;
 public interface Logger {
 	public void log(String format, Object... arguments);
 	public void log(String message, Throwable throwable);
+	
+	public static class ConsoleLogger implements Logger {
+		@Override public void log(String format, Object... arguments) {
+			System.out.format(format,arguments); }
+		@Override public void log(String message, Throwable throwable) {
+			System.err.println(message); throwable.printStackTrace(System.err); }
+	}
 }

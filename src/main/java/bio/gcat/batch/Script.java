@@ -1,5 +1,6 @@
 package bio.gcat.batch;
 
+import static bio.gcat.Utilities.CHARSET;
 import static bio.gcat.batch.Action.TaskAttribute.SPLIT_PICK;
 import static bio.gcat.batch.Action.TaskAttribute.SPLIT_PICK_ANY;
 import static bio.gcat.batch.Action.TaskAttribute.SPLIT_PICK_FIRST;
@@ -11,9 +12,11 @@ import static bio.gcat.batch.Action.TaskAttribute.TEST_CRITERIA_NEVER_BREAK;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.Writer;
@@ -27,6 +30,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
@@ -52,7 +56,7 @@ public class Script {
 	
 	private static final Pattern
 		SCRIPT_IDENTIFIER_PATTERN = Pattern.compile("-+ ?GENETIC CODE ANALYSIS TOOLKIT SCRIPT ?-+"),
-		ACTION_PATTERN = Pattern.compile("((?:[A-Za-z_$][a-zA-Z0-9_$]*\\.)*[A-Za-z_$][a-zA-Z0-9_$]*)[^\\S\r\n]*(?:\\[([^\\]]*)\\])?[^\\S\r\n]*\\(([^)]*)\\)"), //((?:[A-Za-z_$][a-zA-Z0-9_$]*\.)*[A-Za-z_$][a-zA-Z0-9_$]*)[^\S\r\n]*(?:\[([^\]]*)\])?[^\S\r\n]*\(([^)]*)\) 
+		ACTION_PATTERN = Pattern.compile("((?:[A-Za-z_$][a-zA-Z0-9_$]*\\.)*[A-Za-z_$][a-zA-Z0-9_$]*)[^\\S\r\n]*(?:\\[([^\\]]*)\\])?[^\\S\r\n]*\\(((?:\\\\\\)|[^)])*)\\)"), //((?:[A-Za-z_$][a-zA-Z0-9_$]*\.)*[A-Za-z_$][a-zA-Z0-9_$]*)[^\S\r\n]*(?:\[([^\]]*)\])?[^\S\r\n]*\(((?:\\\)|[^)])*)\) 
 		COMMA_PATTERN = Pattern.compile("(?<!(?<![^\\\\]\\\\(?:\\\\{2}){0,10})\\\\),"); //(?<!(?<![^\\]\\(?:\\{2}){0,10})\\),
 		
 	private List<Action> actions = new ArrayList<>();
@@ -73,13 +77,15 @@ public class Script {
 		this(); readFrom(reader); }
 	
 	public List<Action> getActions() { return Collections.unmodifiableList(actions); }
+	public Stream<Action> streamActions(Class<? extends Operation> operation) {
+		return actions.stream().filter(action->Operation.class.isAssignableFrom(action.getOperation())); }
 	public void addAction(Action action) { actions.add(action); }
 	public void removeAction(Action action) { actions.remove(action); }
 	
 	public Batch createBatch() { return new Batch(actions); }
 	
 	public void readFrom(File file) throws IOException {
-		try(FileReader reader=new FileReader(file)) {
+		try(Reader reader=new InputStreamReader(new FileInputStream(file), CHARSET)) {
 			readFrom(reader); }
 	}
 	public void readFrom(Reader reader) throws IOException {
@@ -105,7 +111,7 @@ public class Script {
 	}
 	
 	public void writeTo(File file) throws IOException {
-		try(FileWriter writer=new FileWriter(file)) {
+		try(Writer writer=new OutputStreamWriter(new FileOutputStream(file), CHARSET)) {
 			writeTo(writer); }
 	}
 	public void writeTo(Writer writer) throws IOException {
@@ -252,19 +258,19 @@ public class Script {
 	}
 	
 	protected String escapeValue(String value) {
-		if(value.indexOf('\\')==-1&&value.indexOf(',')==-1)
+		if(value.indexOf('\\')==-1&&value.indexOf(',')==-1&&value.indexOf(')')==-1)
 			return value;
 		StringBuilder stringBuilder = new StringBuilder();
 		for(int index=0;index<value.length();index++) {
 			char character = value.charAt(index);
-			if(character=='\\'||character==',')
+			if(character=='\\'||character==','||character==')')
 				stringBuilder.append('\\');
 			stringBuilder.append(character);			
 		} return stringBuilder.toString();
 	}
 	
 	private String unescapeValue(String value) {
-		return value.replace("\\\\","\\").replace("\\,",","); }
+		return value.replace("\\\\","\\").replace("\\)",")").replace("\\,",","); }
 	private String[] unescapeValues(String values) {
 		return COMMA_PATTERN.splitAsStream(values).map(value->unescapeValue(value)).toArray(String[]::new); }
 	

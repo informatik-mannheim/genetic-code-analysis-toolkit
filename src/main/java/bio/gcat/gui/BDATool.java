@@ -15,10 +15,26 @@
  */
 package bio.gcat.gui;
 
-import static bio.gcat.Utilities.*;
-import static bio.gcat.gui.BDATool.Helper.*;
-import static bio.gcat.gui.helper.Guitilities.*;
-import static bio.gcat.nucleic.Acid.*;
+import static bio.gcat.Utilities.CHARSET;
+import static bio.gcat.Utilities.EMPTY;
+import static bio.gcat.gui.BDATool.Helper.isPredefined;
+import static bio.gcat.gui.BDATool.Helper.readFrom;
+import static bio.gcat.gui.BDATool.Helper.toPair;
+import static bio.gcat.gui.BDATool.Helper.toSet;
+import static bio.gcat.gui.BDATool.Helper.toTuple;
+import static bio.gcat.gui.BDATool.Helper.writeTo;
+import static bio.gcat.gui.helper.Guitilities.createMenuItem;
+import static bio.gcat.gui.helper.Guitilities.createMenuText;
+import static bio.gcat.gui.helper.Guitilities.createSeparator;
+import static bio.gcat.gui.helper.Guitilities.createSplitPane;
+import static bio.gcat.gui.helper.Guitilities.createToolbarButton;
+import static bio.gcat.gui.helper.Guitilities.getImage;
+import static bio.gcat.gui.helper.Guitilities.getMenuItem;
+import static bio.gcat.gui.helper.Guitilities.registerKeyStroke;
+import static bio.gcat.gui.helper.Guitilities.seperateMenuItem;
+import static bio.gcat.gui.helper.Guitilities.setGroupLayout;
+import static bio.gcat.nucleic.Acid.RNA;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -34,9 +50,11 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -46,6 +64,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
@@ -77,8 +96,19 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableCellRenderer;
 
-import bio.gcat.geneticcode.dich.*;
 import org.apache.commons.math3.util.Pair;
+
+import bio.gcat.Utilities.FileNameExtensionFileChooser;
+import bio.gcat.geneticcode.dich.Adenine$;
+import bio.gcat.geneticcode.dich.AntiCodonBDA$;
+import bio.gcat.geneticcode.dich.BinaryDichotomicAlgorithm;
+import bio.gcat.geneticcode.dich.Classifier;
+import bio.gcat.geneticcode.dich.Compound;
+import bio.gcat.geneticcode.dich.Cytosine$;
+import bio.gcat.geneticcode.dich.Guanine$;
+import bio.gcat.geneticcode.dich.ParityBDA$;
+import bio.gcat.geneticcode.dich.RumerBDA$;
+import bio.gcat.geneticcode.dich.Uracil$;
 import bio.gcat.gui.helper.Guitilities;
 import bio.gcat.gui.helper.ListTableModel;
 import bio.gcat.nucleic.Acid;
@@ -215,7 +245,7 @@ public class BDATool extends JFrame implements ActionListener, ListDataListener,
 		return openFile(chooser.getSelectedFile());
 	}
 	public boolean openFile(File file) {
-		try(FileReader reader=new FileReader(file)) {
+		try(Reader reader=new InputStreamReader(new FileInputStream(file), CHARSET)) {
 			bdaPanel.setBinaryDichotomicAlgorithms(readFrom(reader));
 			return true;
 		}	catch(IOException e) {
@@ -231,7 +261,7 @@ public class BDATool extends JFrame implements ActionListener, ListDataListener,
 		else return false;
 	}
 	public boolean saveFile(File file) {
-		try(FileWriter writer = new FileWriter(file)) {
+		try(Writer writer = new OutputStreamWriter(new FileOutputStream(file), CHARSET)) {
 			writeTo(writer,bdaPanel.getBinaryDichotomicAlgorithms());
 			return true;
 		}	catch(IOException e) {
@@ -705,7 +735,7 @@ public class BDATool extends JFrame implements ActionListener, ListDataListener,
 		}
 		
 		public static void writeFile(File file,Collection<BinaryDichotomicAlgorithm> bdas) throws IOException {
-			try(FileWriter writer=new FileWriter(file)) { writeTo(writer,bdas); }
+			try(Writer writer=new OutputStreamWriter(new FileOutputStream(file), CHARSET)) { writeTo(writer,bdas); }
 		}
 		public static void writeTo(Writer writer,Collection<BinaryDichotomicAlgorithm> bdas) throws IOException {
 			for(BinaryDichotomicAlgorithm bda:bdas) {
@@ -716,7 +746,7 @@ public class BDATool extends JFrame implements ActionListener, ListDataListener,
 		}
 		
 		public static List<BinaryDichotomicAlgorithm> readFile(File file) throws IOException {
-			try(FileReader reader=new FileReader(file)) { return readFrom(reader); }
+			try(Reader reader=new InputStreamReader(new FileInputStream(file), CHARSET)) { return readFrom(reader); }
 		}
 		public static List<BinaryDichotomicAlgorithm> readFrom(Reader reader) throws IOException {
 			List<BinaryDichotomicAlgorithm> bdas = new ArrayList<>();

@@ -23,10 +23,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
@@ -62,8 +61,6 @@ import com.eclipsesource.json.JsonValue;
 import com.google.common.base.CaseFormat;
 import com.google.common.util.concurrent.ListenableFuture;
 
-import bio.gcat.gui.AnalysisTool;
-
 public final class Utilities {	
 	public static final String EMPTY = "", SPACE = " ", TAB = "\t", NEW_LINE = "\n", WHITESPACE = " \t\n\r\f", TRUE = "true", FALSE = "false", CHARSET = "UTF-8";
 	public static final double TWO_PI = PI*2, HALF_PI = PI/2, QUARTER_PI = PI/4, EIGHTH_PI = PI/8, SIXTEENTH_PI = PI/16;
@@ -71,7 +68,7 @@ public final class Utilities {
 	private static final int BUFFER_SIZE = 8192;
 	private static final int TEMP_DIRECTORY_ATTEMPTS = 10000;
 	
-	private static final String CONFIGURATION_NAME = AnalysisTool.class.getSimpleName()+".properties";
+	private static final String CONFIGURATION_NAME = "gcat.properties";
 	
 	private static Properties configuration;
 	private static ClassLoader localClassLoader;
@@ -99,7 +96,7 @@ public final class Utilities {
 	private static boolean loadConfiguration() {
 		if(configuration!=null) return true;
 		try {
-			(configuration=new Properties()).load(new FileReader(configurationFile()));
+			(configuration=new Properties()).load(new InputStreamReader(new FileInputStream(configurationFile()), CHARSET));
 			return true;
 		} catch(FileNotFoundException e) {
 			configuration = new Properties();
@@ -109,7 +106,7 @@ public final class Utilities {
 	private static boolean writeConfiguration() {
 		if(configuration==null) return true;
 		try {
-			configuration.store(new FileOutputStream(configurationFile()),EMPTY);
+			configuration.store(new OutputStreamWriter(new FileOutputStream(configurationFile()), CHARSET), EMPTY);
 			return true;
 		} catch (IOException e) { return false; }
 	}	
@@ -365,7 +362,7 @@ public final class Utilities {
 	}
 
 	public static void writeFile(String text, File file) throws IOException {
-		Writer writer = new BufferedWriter(new FileWriter(file));
+		Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), CHARSET));
 		try { writer.write(text); }
 		finally { writer.close(); }
 	}

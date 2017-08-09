@@ -104,11 +104,11 @@ public interface Operation extends InjectionLogger.Injectable {
 		
 		private Operation operation;
 		
-	  public Exception(Operation operation) { super(); this.operation = operation; }
-	  public Exception(Operation operation, String message) { super(message); this.operation = operation; }
-	  public Exception(Operation operation, String message, Throwable cause) { super(message, cause); this.operation = operation; }
-	  public Exception(Operation operation, Throwable cause) { super(cause); this.operation = operation; }
-	  
-	  public Operation getOperation() { return operation; }
+		public Exception(Operation operation) { super(); this.operation = operation; }
+		public Exception(Operation operation, String message) { super(message); this.operation = operation; }
+		public Exception(Operation operation, String message, Throwable cause) { super(message, cause); this.operation = operation; }
+		public Exception(Operation operation, Throwable cause) { super(cause); this.operation = operation; }
+		  
+		public Operation getOperation() { return operation; }
 	}
 }

@@ -15,10 +15,10 @@
  */
 package bio.gcat.gui;
 
+import static bio.gcat.Utilities.CHARSET;
 import static bio.gcat.Utilities.EMPTY;
 import static bio.gcat.Utilities.SPACE;
 import static bio.gcat.Utilities.firstToUpper;
-import static bio.gcat.batch.Action.TaskAttribute.ANALYSIS_HANDLER;
 import static bio.gcat.batch.Action.TaskAttribute.SPLIT_PICK;
 import static bio.gcat.batch.Action.TaskAttribute.SPLIT_PICK_ANY;
 import static bio.gcat.batch.Action.TaskAttribute.SPLIT_PICK_FIRST;
@@ -67,10 +67,11 @@ import java.awt.event.MouseEvent;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.util.ArrayList;
@@ -489,7 +490,7 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 						JOptionPane.showMessageDialog(BatchTool.this,"Could not import FASTA file:\n"+e.getMessage(),"Import File",JOptionPane.WARNING_MESSAGE);
 						e.printStackTrace();
 					}
-				} else try(BufferedReader reader = new BufferedReader(new FileReader(file))) {
+				} else try(BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), CHARSET))) {
 					String line; while((line=reader.readLine())!=null)
 						addSequence(Tuple.sliceTuples(Tuple.tupleString(line)));
 				}	catch(IOException e) {
@@ -517,7 +518,7 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 				JOptionPane.showMessageDialog(BatchTool.this,"Could not export to FASTA file:\n"+e.getMessage(),"Export File",JOptionPane.WARNING_MESSAGE);
 				e.printStackTrace();
 			}
-		} else try(PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(file)))) {
+		} else try(PrintWriter writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), CHARSET)))) {
 			for(Collection<Tuple> sequence:this.sequenceList.getSequences())
 				writer.println(Tuple.joinTuples(sequence));
 		}	catch(IOException e) {
@@ -575,7 +576,7 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 		if(chooser.showSaveDialog(this)!=JFileChooser.APPROVE_OPTION)
 			return;
 		
-		try(PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(chooser.getSelectedFile())))) {
+		try(PrintWriter writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(chooser.getSelectedFile()), CHARSET)))) {
 			int number = 0;
 			for(SequenceListItem item:this.sequenceList.getItems()) { number++;
 				writer.println((item.label!=null?item.label:"Sequence "+number)+": "+
@@ -595,12 +596,12 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 		
 		// Prepare actions (other action attributes are set by action parameters in dialog)
 		Collection<Action> actions = actionPanel.getActions();
-		actions.forEach(action->action.putAttribute(ANALYSIS_HANDLER, new Analysis.Handler() {
+		/*actions.forEach(action->action.putAttribute(ANALYSIS_HANDLER, new Analysis.Handler() { //moved to "default" analysis handler
 			@Override public void handle(bio.gcat.operation.analysis.Analysis.Result result) {
 				result.getAnalysis().getLogger()
 					.log(result.toString());
 			}
-		}));
+		}));*/
 		
 		final Batch batch = new Batch(actions);
 		for(final SequenceListItem item:new ArrayList<>(model)) {
@@ -609,7 +610,7 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 			model.change(item);
 			
 			updateConsole();
-			Futures.addCallback(batch.submit(batch.buildIterative(item.result),service,new BooleanSupplier() {
+			Futures.addCallback(batch.submit(batch.buildIterative(item.result), service, new BooleanSupplier() {
 				@Override public boolean getAsBoolean() {
 					item.status = Status.ACTIVE;
 					model.change(item);
@@ -685,7 +686,7 @@ public class BatchTool extends JFrame implements ActionListener, ListDataListene
 						consolePane.appendText(message.message, ConsolePane.FAILURE);
 						consolePane.appendText(Optional.ofNullable(message.throwable.getMessage()).orElse("Unknown cause"), ConsolePane.FAILURE);
 					} else consolePane.appendText(message.message);
-				}				
+				}
 			}
 		});
 	}

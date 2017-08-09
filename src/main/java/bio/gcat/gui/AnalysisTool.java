@@ -1526,11 +1526,11 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 		
 		private static final int MODE_FIND = 0, MODE_REPLACE = 1, MODE_SPLIT = 2;
 		
-    protected EventListenerList listenerList = new EventListenerList();
-    
-    private int mode;
-    
-    private JLabel what, with;
+		protected EventListenerList listenerList = new EventListenerList();
+		
+		private int mode;
+		
+		private JLabel what, with;
 		private JTextField term, replace;
 		private JButton find, findBatch, replaceNext, replaceAll, replaceBatch, split, splitBatch;
 		private JCheckBox wrap, regex, delimiter;
@@ -1559,15 +1559,15 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 				}
 			});
 			termNucleicDocument.setDefaultAcid(null);
-			termNucleicDocument.addDocumentListener(new DocumentListener() {
-				@Override public void removeUpdate(DocumentEvent event) { changedUpdate(event); }				
-				@Override public void insertUpdate(DocumentEvent event) { changedUpdate(event); }
-				@Override public void changedUpdate(DocumentEvent event) {
-					boolean text = !term.getText().isEmpty();
-					for(Component component:new Component[]{find,findBatch,replaceNext,replaceAll,replaceBatch,split,splitBatch})
-						component.setEnabled(text);
-				}
-			});
+			for(Document document:new Document[] { termDefaultDocument, termNucleicDocument }) document.addDocumentListener(new DocumentListener() {
+					@Override public void removeUpdate(DocumentEvent event) { changedUpdate(event); }				
+					@Override public void insertUpdate(DocumentEvent event) { changedUpdate(event); }
+					@Override public void changedUpdate(DocumentEvent event) {
+						boolean text = !term.getText().isEmpty();
+						for(Component component:new Component[]{find,findBatch,replaceNext,replaceAll,replaceBatch,split,splitBatch})
+							component.setEnabled(text);
+					}
+				});
 			term.requestFocus();
 			
 			with = new JLabel("Replace with:");
@@ -1657,7 +1657,7 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 			
 			options = setBoxLayout(new JPanel(new FlowLayout()), BoxLayout.Y_AXIS);
 			options.setBorder(BorderFactory.createTitledBorder(BorderFactory
-	        .createEtchedBorder(EtchedBorder.LOWERED), "Options"));
+					.createEtchedBorder(EtchedBorder.LOWERED), "Options"));
 			
 			options.add(wrap = new JCheckBox("Wrap search", true));
 			options.add(regex = new JCheckBox("Regular expressions"));
@@ -1679,7 +1679,7 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 			
 			direction = new JPanel(new FlowLayout(FlowLayout.LEADING));
 			direction.setBorder(BorderFactory.createTitledBorder(BorderFactory
-	        .createEtchedBorder(EtchedBorder.LOWERED), "Direction"));
+					.createEtchedBorder(EtchedBorder.LOWERED), "Direction"));
 			direction.add(up = new JRadioButton("Up"));
 			direction.add(down = new JRadioButton("Down", true));
 			createButtonGroup(up, down);
