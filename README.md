@@ -13,7 +13,7 @@ In addition to the graphical user interface, the toolkit offers a command line b
 Use the following command to execute the command line processor:
 
 ```bash
-java -cp gcat.jar bio.gcat.batch.Batch \[-h] \[-v] \[-vv] \[-vvv] scriptfile sequencefile
+java -cp gcat.jar bio.gcat.batch.Batch [-h] [-v] [-vv] [-vvv] scriptfile sequencefile
 ```
 
 ### MacOS security prompt
