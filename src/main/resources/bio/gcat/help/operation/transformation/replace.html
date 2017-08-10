@@ -1,1 +1,8 @@
-<p>TODO<a href="help/operation/test/find.html">Find</a>
+<p>The &quot;<b>Find &amp; Replace</b>&quot; functionality can be used to search for certain patterns in a sequence and replacing them.
+<p>The corresponding manual is givenin <a href="help:///3. Operations/3.1. General/Find"><b>Find</b></a>.
+<p>Choosing &quot;<b>Replace</b>&quot; will replace the currently selected match, by the chosen text (&quot;<b>Replace with</b>&quot;) and search the sequence for the next match. &quot;<b>Replace All</b>&quot; replaces all matches in the sequence by the text provided.
+<p>If capturing groups (see <a href="help:///3. Operations/3.1. General/Find"><b>Find</b></a>) are used, you can reference them in the replace text, by using <b>$CAPTURING_GROUP_NUMBER</b>, e.g. $1 for the first capturing group. This functionality allows, for instance, to change the order of bases in a string. Searching for &quot;(.)A(.)&quot; and replacing it with &quot;$2A$1&quot; will reverse the order of all codons in a sequence, which have an A in their middle position.
+<p><b>Find &quot;(.)G(U|G)&quot; and Replace &quot;$2G$1&quot;:</b><table class="example">
+	<tr><td>Input sequence:</td><td>AGU AGA AGG UAC GCA CAG</td></tr>
+	<tr><td>Output sequence:</td><td>UGA AGA GGA UAC GCA CAG</td></tr>
+</table>

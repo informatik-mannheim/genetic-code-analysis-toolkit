@@ -1,5 +1,5 @@
 /*
- * Copyright [2014] [Mannheim University of Applied Sciences]
+ * Copyright [2016] [Mannheim University of Applied Sciences]
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,4 +18,11 @@ package bio.gcat.log;
 public interface Logger {
 	public void log(String format, Object... arguments);
 	public void log(String message, Throwable throwable);
+	
+	public static class ConsoleLogger implements Logger {
+		@Override public void log(String format, Object... arguments) {
+			System.out.format(format,arguments); }
+		@Override public void log(String message, Throwable throwable) {
+			System.err.println(message); throwable.printStackTrace(System.err); }
+	}
 }

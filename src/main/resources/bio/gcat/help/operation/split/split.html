@@ -1,1 +1,10 @@
-<p>TODO
+<p>The &quot;<b>Split</b>&quot; functionality allows to split a given sequence at a delimiter defined.
+<p>The delimiter specifies where the sequence should be split. To locate the delimiter the <a href="help:///3. Operations/3.1. General/Find"><b>Find</b></a> functionality is used. Afterwards the sequence is split at the delimiter position and the result is displayed.
+<p>For example, splitting a sequence &quot;AGU ACA AGG&quot; with the delimiter &quot;ACA&quot; will has the result two sequences: &quot;AGU ACA&quot; and &quot;AGG&quot;. Choosing the functionality &quot;<b>Remove delimiter</b>&quot; will remove the delimiter from the split, so that the result of the previous example would be &quot;AGU&quot; and &quot;AGG&quot;. 
+<p><b>Example: Split at &quot;UGC&quot;</b><table class="example">
+	<tr><td>Input sequence:</td><td>CAC UGC CAG UGC AUA UGC</td></tr>
+	<tr><td rowspan="7">Output sequences:</td><td>UGC</td></tr>
+	<tr><td>CAC UGC</td></tr>
+	<tr><td>CAG UGC</td></tr>
+	<tr><td>AUA UGC</td></tr>
+</table>

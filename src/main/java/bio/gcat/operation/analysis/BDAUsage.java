@@ -1,5 +1,5 @@
 /*
- * Copyright [2014] [Mannheim University of Applied Sciences]
+ * Copyright [2016] [Mannheim University of Applied Sciences]
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,7 +40,7 @@ public class BDAUsage implements Analysis {
 		else if(Tuple.tuplesLength(tuples)!=3)
 			return new SimpleResult(this, "Only sequences with codons (tuples of length 3) are allowed.");
 
-		bio.gcat.geneticcode.dich.ct.ClassTable classTable = AnalysisTool.getBDA().getClassTable();
+		bio.gcat.geneticcode.dich.ct.ClassTable classTable = AnalysisTool.getBDATool().getClassTable();
 		if(classTable==null)
 			return new SimpleResult(this, "No Binary Dichotomic Algorithm. Use BDA Tool to open / create BDAs.");
 		HashMap<Codon, List<Object>> codonToClass = classTable.codon2class();

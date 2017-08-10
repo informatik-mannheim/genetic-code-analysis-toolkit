@@ -1,5 +1,5 @@
 /*
- * Copyright [2014] [Mannheim University of Applied Sciences]
+ * Copyright [2016] [Mannheim University of Applied Sciences]
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,15 +30,14 @@ import bio.gcat.operation.Named;
 @Documented(title="Shift Sequence", category={OPERATIONS,TRANSFORMATIONS}, resource="help/operation/transformation/shift_sequence.html")
 public class ShiftSequence implements Transformation {
 	private static final Pattern
-		PATTERN_SHIFT_A = Pattern.compile("(\\S)\\s+(\\S)"),
-		PATTERN_SHIFT_B = Pattern.compile("^\\s*(\\S)(.*?)\\s*$");
+		PATTERN_SHIFT_A = Pattern.compile("(\\s)(\\S)"),
+		PATTERN_SHIFT_B = Pattern.compile("^(\\S)(.*)$");
 	private static final String
-		REPLACE_SHIFT_A = "$1$2 ",
+		REPLACE_SHIFT_A = "$2$1",
 		REPLACE_SHIFT_B = "$2$1";
  	
-	@Override public Collection<Tuple> transform(Collection<Tuple> tuples,Object... values) { return transform(tuples,(Integer)values[0]); }
-	public Collection<Tuple> transform(Collection<Tuple> tuples,int shift) {
-		String string = Tuple.joinTuples(tuples);
+	@Override public Collection<Tuple> transform(Collection<Tuple> tuples,Object... values) {
+		int shift = (Integer)values[0]; String string = Tuple.joinTuples(tuples);
 		while(shift-->0) string = PATTERN_SHIFT_B.matcher(PATTERN_SHIFT_A.matcher(string).replaceAll(REPLACE_SHIFT_A)).replaceAll(REPLACE_SHIFT_B);
 		return Tuple.splitTuples(string);
 	}

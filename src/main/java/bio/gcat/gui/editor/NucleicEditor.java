@@ -1,5 +1,5 @@
 /*
- * Copyright [2014] [Mannheim University of Applied Sciences]
+ * Copyright [2016] [Mannheim University of Applied Sciences]
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -74,7 +74,7 @@ import javax.swing.JRootPane;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTabbedPane;
-import javax.swing.JTextPane;
+import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.Border;
@@ -91,12 +91,9 @@ import javax.swing.event.UndoableEditEvent;
 import javax.swing.plaf.basic.BasicTabbedPaneUI;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
+import javax.swing.text.JTextComponent;
+import javax.swing.text.PlainDocument;
 import javax.swing.text.Position;
-import javax.swing.text.SimpleAttributeSet;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyleContext;
-import javax.swing.text.TabSet;
-import javax.swing.text.TabStop;
 import javax.swing.text.html.HTMLEditorKit;
 import javax.swing.undo.CannotRedoException;
 import javax.swing.undo.CannotUndoException;
@@ -117,11 +114,10 @@ import bio.gcat.Utilities;
 import bio.gcat.Utilities.ArrayComparator;
 import bio.gcat.gui.editor.NucleicListener.NucleicEvent;
 import bio.gcat.gui.editor.NucleicOptions.EditorMode;
-import bio.gcat.gui.editor.display.GraphDisplay;
+import bio.gcat.gui.editor.display.CompoundDisplay;
 import bio.gcat.gui.helper.AttachedScrollPane;
 import bio.gcat.gui.helper.BetterGlassPane;
 import bio.gcat.gui.helper.VerticalLabelUI;
-import bio.gcat.gui.helper.WrapEditorKit;
 import bio.gcat.nucleic.Acid;
 import bio.gcat.nucleic.Tuple;
 
@@ -136,7 +132,8 @@ public class NucleicEditor extends JRootPane {
 	
 	private NavigableMap<Position,Tuple> tuples;
 	
-	private JTextPane textPane;
+	private JTextArea textPane;
+	private Document blankDocument;
 	private NumberPanel numberPanel;
 	
 	private JTabbedPane displayPane;
@@ -157,7 +154,7 @@ public class NucleicEditor extends JRootPane {
 	public NucleicEditor() {
 		setLayout(new BorderLayout());
 		
-		textPane = new JTextPane() {
+		textPane = new JTextArea() {
 			private static final long serialVersionUID = 1l;
 			private final Color lineColor = new Color(0,0,0,64);
 			@Override public void paint(Graphics defaultGraphics) {
@@ -172,7 +169,8 @@ public class NucleicEditor extends JRootPane {
 				}
 			}
 		};
-		textPane.setEditorKit(new WrapEditorKit());
+		textPane.setLineWrap(true);
+		textPane.setWrapStyleWord(true);
 		textPane.setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));
 		textPane.setForeground(Color.BLACK);
 		textPane.addKeyListener(new KeyAdapter() {
@@ -193,7 +191,7 @@ public class NucleicEditor extends JRootPane {
 			private static final long serialVersionUID = 1l;
 			@Override public String getText(int offset,int length) throws BadLocationException { return super.getText(offset,length).replace(TAB,SPACE); }
 			@Override protected String prepareText(String text) { return super.prepareText(text).replace(SPACE,TAB); }
-		});
+		}); blankDocument = new PlainDocument();
 		
 		tuples = new ConcurrentSkipListMap<Position, Tuple>(new Comparator<Position>() {
 			@Override public int compare(Position positionA, Position positionB) {
@@ -349,10 +347,7 @@ public class NucleicEditor extends JRootPane {
 				dragX = event.getX()<=2?event.getX():-1;
 			}
 			@Override public void mouseReleased(MouseEvent event) {
-				if(dragX!=-1) {
-					displaySize = Math.max(100,displaySize+(dragX-event.getX()));
-					displayPane.revalidate();
-				}
+				if(dragX!=-1) setDisplaySize(Math.max(100, displaySize+(dragX-event.getX())));
 			}
 		};
 		
@@ -378,12 +373,13 @@ public class NucleicEditor extends JRootPane {
 				}
 			}
 		});
-		displayPane.setSelectedIndex(displayPane.indexOfTab(GraphDisplay.LABEL));
+		displayPane.setSelectedIndex(displayPane.indexOfTab(CompoundDisplay.LABEL));
 		
 		options = new NucleicOptions();
 		optionList = new ArrayList<>();		
 		optionPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-		optionPanel.setBorder(new EmptyBorder(1,0,0,0) { //paint the border to the edge of NumberPanel
+		optionPanel.setMinimumSize(new Dimension(0,0)); // otherwise the optionPanel blocks resizing the operations catalog split pane
+		optionPanel.setBorder(new EmptyBorder(1,0,0,0) { // paint the border to the edge of NumberPanel
 			private static final long serialVersionUID = 1l;
 			@Override public void paintBorder(java.awt.Component component, Graphics graphics, int x, int y, int width, int height) {
 				Color oldColor = graphics.getColor();
@@ -468,34 +464,42 @@ public class NucleicEditor extends JRootPane {
 			if(display.isInstance(displays.get(index))) {
 				displayPane.setSelectedIndex(index); return; }
 	}
+	public void setDisplaySize(int size) {
+		displaySize = size;
+		displayPane.revalidate();
+	}
+	
 	public void toggleHelp() { toggleDisplay(HelpDisplay.class); }
 	public void toggleHelpIndex() { displayHelp.showIndex(); toggleHelp(); }
 	public void toggleHelpPage(String... page) { displayHelp.showPage(page); toggleHelp();		 }
 	public void toggleHelpPage(Documented documented) { toggleHelpPage(Utilities.add(documented.category(), documented.title())); }
 	
-	public JTextPane getTextPane() { return textPane; }
+	public JTextComponent getTextPane() { return textPane; }
 	public JPanel getNumberPanel() { return numberPanel; }
 	public NucleicDocument getDocument() { return document; }
 	
 	public String getText() { return textPane.getText(); }
 	public String getText(int offset) throws BadLocationException { return textPane.getText(offset, document.getLength()-offset); }
 	public String getText(int offset, int length) throws BadLocationException { return textPane.getText(offset, length); }
-	public void setText(String text) { edit.startTransaction(); textPane.setText(text); edit.commitTransaction(); }
-	
-	public Collection<Tuple> getTuples() { return Collections.unmodifiableCollection(tuples.values()); }
-	public List<Tuple> getTupleList() {
-		List<Tuple> list = new ArrayList<>(tuples.values());
-		int last = list.size()-1;
-		if(last>=0&&list.get(last).length()==0)
-			list.remove(last);
-		return Collections.unmodifiableList(list);
-	}
-	public NavigableMap<Position,Tuple> getTupleMap() { return tuples; }
-	public void setTuples(Collection<Tuple> tuples) {
+	public void setText(String text) {
 		invokeAppropriate(new Runnable() {
-			@Override public void run() { edit.startTransaction(); textPane.setText(null); appendTuples(tuples); edit.commitTransaction(); }
+			@Override public void run() {
+				textPane.setDocument(blankDocument);
+		        try {
+		        	edit.startTransaction();
+		        	document.replace(0,document.getLength(),text,null);
+		            edit.commitTransaction();		            
+		        } catch (BadLocationException e) { /* nothing to do here */ }
+		        textPane.setDocument(document);
+			}
 		});
 	}
+	
+	public Collection<Tuple> getTuples() { return Collections.unmodifiableCollection(tuples.values()); }
+	public List<Tuple> getTupleList() { return Collections.unmodifiableList(Tuple.trimTuples(tuples.values())); }
+	public NavigableMap<Position,Tuple> getTupleMap() { return tuples; }
+	
+	public void setTuples(Collection<Tuple> tuples) { setText(Tuple.joinTuples(tuples)); }
 	public void appendTuples(Collection<Tuple> tuples) {
 		invokeAppropriate(new Runnable() { @Override public void run() {
 			edit.startTransaction();
@@ -509,11 +513,7 @@ public class NucleicEditor extends JRootPane {
 		}});
 	}
 	
-	protected void adaptTabSet() {
-		int width = getWidth(),charWidth = textPane.getFontMetrics(textPane.getFont()).charWidth('0'),tupleWidth = charWidth*(getTupleLength()+1);
-		TabStop[] tabs = new TabStop[width/tupleWidth]; Arrays.setAll(tabs,tab->new TabStop((tab+1)*tupleWidth));
-		textPane.setParagraphAttributes(StyleContext.getDefaultStyleContext().addAttribute(SimpleAttributeSet.EMPTY, StyleConstants.TabSet, new TabSet(tabs)), false);
-	}
+	protected void adaptTabSet() { textPane.setTabSize(getTupleLength()+1); }
 	
 	public JPanel getOptionPanel() { return optionPanel; }
 	public Option.Component addOption(Option option) {
@@ -739,6 +739,15 @@ public class NucleicEditor extends JRootPane {
 				edit.end(); undo.addEdit(edit); edit = null;
 				fireTuplesUndoableChange();
 			}
+		}
+		public void commitTransaction(Transaction transaction) throws Exception {
+			startTransaction();
+			try { transaction.run(); }
+			finally { commitTransaction(); }
+		}
+		
+		public abstract class Transaction {
+			public abstract void run() throws Exception;
 		}
 	}
 	

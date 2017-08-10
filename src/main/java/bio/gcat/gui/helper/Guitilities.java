@@ -1,5 +1,5 @@
 /*
- * Copyright [2014] [Mannheim University of Applied Sciences]
+ * Copyright [2016] [Mannheim University of Applied Sciences]
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -433,7 +433,7 @@ public class Guitilities {
 		panel.add(createLabel(text));
 		panel.add(field);
 		if(JOptionPane.showConfirmDialog(component,panel,title,JOptionPane.OK_CANCEL_OPTION)==JOptionPane.OK_OPTION)
-			return new String(field.getPassword());
+		     return new String(field.getPassword());
 		else return null;
 	}
 
@@ -567,6 +567,12 @@ public class Guitilities {
 		});
 		button.setActionCommand(action);
 		button.addActionListener(listener);		
+		return button;
+	}
+	public static JButton createToolbarTextButton(String text, String icon, String action, ActionListener listener) {
+		JButton button = createToolbarButton(text,icon,action,listener);
+		button.setFont(button.getFont().deriveFont(Font.ITALIC));
+		button.setText(text);
 		return button;
 	}
 	public static JButton createToolbarMenuButton(String text, String icon, JMenuItem[] items) {

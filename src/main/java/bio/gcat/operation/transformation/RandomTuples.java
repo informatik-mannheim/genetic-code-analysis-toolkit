@@ -21,14 +21,12 @@ import bio.gcat.operation.Named;
 @Parameter.Annotation(key="number",label="Number of Tuples",type=Type.NUMBER,value="1,32767")
 @Documented(title="Random Tuples", category={OPERATIONS,TRANSFORMATIONS}, resource="help/operation/transformation/random_tuples.html")
 public class RandomTuples implements Transformation {
-	
-	@Override public Collection<Tuple> transform(Collection<Tuple> tuples,Object... values) { return transform(tuples,(Integer)values[0]); }
-	public Collection<Tuple> transform(Collection<Tuple> tuples, int number) {
+	@Override public Collection<Tuple> transform(Collection<Tuple> tuples, Object... values) {
 		Acid acid = Optional.ofNullable(Tuple.tuplesAcid(tuples)).orElse(Acid.RNA);
 		int length = (length=Tuple.tuplesLength(tuples))>0?length:3;
 		
 		List<Tuple> random = new ArrayList<>(tuples);
-		for(int index=0;index<number;index++)
+		for(int index=0;index<(Integer)values[0];index++)
 			random.add(RandomHolder.randomTuple(acid,length));
 		return random;
 	}

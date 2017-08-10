@@ -1,5 +1,5 @@
 /*
- * Copyright [2014] [Mannheim University of Applied Sciences]
+ * Copyright [2016] [Mannheim University of Applied Sciences]
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,9 @@ public class AminoAcids implements Analysis {
 	
 	@Override public Result analyse(Collection<Tuple> tuples,Object... values) {
 		Multiset<Compound> compounds = EnumMultiset.create(Compound.class);
-		for(Tuple tuple:tuples) compounds.add(Optional.ofNullable(tuple.getCompound()).orElse(Compound.UNKNOWN));
+		for(Tuple tuple:tuples)
+			compounds.add(Compound.isStop(tuple)?Compound.STOP:
+				Optional.ofNullable(tuple.getCompound()).orElse(Compound.UNKNOWN));
 		
 		StringBuilder builder = new StringBuilder();
 		for(Entry<Compound> compound:compounds.entrySet())

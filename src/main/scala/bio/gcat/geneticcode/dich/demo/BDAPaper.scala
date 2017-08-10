@@ -1,17 +1,17 @@
 /*
- * Copyright [2014] [Mannheim University of Applied Sciences]
- *
+ * Copyright [2017] [Mannheim University of Applied Sciences]
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ *  
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
- * limitations under the License.
+ * limitations under the License. 
  */
 package bio.gcat.geneticcode.dich.demo
 
@@ -25,9 +25,9 @@ import scala.Predef._
 /**
  * Note: This class contains the instructions to produce the figures and tables
  * as well as some other statements in M. Gumbel et al: "On Models...".
- * BioSystems. 10.1016/j.biosystems.2014.12.001.
+ * BioSystems. 10.1016/j.biosystems.2016.12.001.
  * @author Markus Gumbel (m.gumbel@hs-mannheim.de)
- *         (c) 2014 Markus Gumbel
+ *         (c) 2016 Markus Gumbel
  */
 class BDAPaper {
 

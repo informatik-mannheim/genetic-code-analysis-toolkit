@@ -231,7 +231,7 @@ public class C3Code {
 		codes.add(Tuple.splitTuples("ATC GAT CAA TTG CAC GTG CAG CTG CTC GAG GAA TTC GAC GTC GCC GGC GTA TAC TAA TTA"));
 		CODES = Collections.unmodifiableList(codes);
 	}
-	
+
 	public static final Map<Integer,Integer> CODE2CLASS;
 	static {
 		Map<Integer,Integer> code2class = new HashMap<>();
@@ -244,16 +244,16 @@ public class C3Code {
 		code2class.put( 99,1); code2class.put(103,2); code2class.put(104,3); code2class.put( 95,4); code2class.put( 96,5);
 		code2class.put( 79,1); code2class.put( 43,2); code2class.put( 42,3); code2class.put( 58,4); code2class.put( 55,5);
 		code2class.put( 22,1); code2class.put( 62,2); code2class.put( 61,3); code2class.put( 46,4); code2class.put( 45,5);
-		
+
 		code2class.put( 11,6); code2class.put( 12,7); code2class.put( 13,8); code2class.put( 14,9); code2class.put( 17,10);
-    code2class.put( 91,6); code2class.put( 88,7); code2class.put( 87,8); code2class.put( 92,9); code2class.put( 89,10);
-    code2class.put( 21,6); code2class.put( 30,7); code2class.put( 23,8); code2class.put( 28,9); code2class.put( 20,10);
-    code2class.put( 78,6); code2class.put( 72,7); code2class.put( 81,8); code2class.put( 70,9); code2class.put( 80,10);
-    code2class.put( 39,6); code2class.put( 38,7); code2class.put( 37,8); code2class.put( 36,9); code2class.put( 40,10);
-    code2class.put( 68,6); code2class.put( 64,7); code2class.put( 65,8); code2class.put( 66,9); code2class.put( 69,10);
-    code2class.put( 74,6); code2class.put( 84,7); code2class.put( 77,8); code2class.put( 82,9); code2class.put( 75,10);
-    code2class.put( 31,6); code2class.put( 27,7); code2class.put( 33,8); code2class.put( 26,9); code2class.put( 34,10);
-                                                                                        
+		code2class.put( 91,6); code2class.put( 88,7); code2class.put( 87,8); code2class.put( 92,9); code2class.put( 89,10);
+		code2class.put( 21,6); code2class.put( 30,7); code2class.put( 23,8); code2class.put( 28,9); code2class.put( 20,10);
+		code2class.put( 78,6); code2class.put( 72,7); code2class.put( 81,8); code2class.put( 70,9); code2class.put( 80,10);
+		code2class.put( 39,6); code2class.put( 38,7); code2class.put( 37,8); code2class.put( 36,9); code2class.put( 40,10);
+		code2class.put( 68,6); code2class.put( 64,7); code2class.put( 65,8); code2class.put( 66,9); code2class.put( 69,10);
+		code2class.put( 74,6); code2class.put( 84,7); code2class.put( 77,8); code2class.put( 82,9); code2class.put( 75,10);
+		code2class.put( 31,6); code2class.put( 27,7); code2class.put( 33,8); code2class.put( 26,9); code2class.put( 34,10);
+
 		code2class.put( 18,11); code2class.put( 24,12); code2class.put( 25,13); code2class.put(105,14); code2class.put(107,15); 
 		code2class.put( 94,11); code2class.put( 83,12); code2class.put( 85,13); code2class.put(147,14); code2class.put(148,15); 
 		code2class.put( 63,11); code2class.put( 49,12); code2class.put( 50,13); code2class.put(123,14); code2class.put(120,15); 
@@ -262,15 +262,15 @@ public class C3Code {
 		code2class.put( 67,11); code2class.put( 32,12); code2class.put( 35,13); code2class.put(150,14); code2class.put(156,15); 
 		code2class.put( 93,11); code2class.put( 48,12); code2class.put( 47,13); code2class.put(141,14); code2class.put(127,15); 
 		code2class.put( 19,11); code2class.put( 60,12); code2class.put( 59,13); code2class.put(124,14); code2class.put(139,15); 
-		                                                                                     
+
 		code2class.put(108,16); code2class.put(109,17); code2class.put(111,18); code2class.put(113,19); code2class.put(117,20);
-    code2class.put(152,16); code2class.put(153,17); code2class.put(151,18); code2class.put(158,19); code2class.put(157,20);
-    code2class.put(125,16); code2class.put(121,17); code2class.put(119,18); code2class.put(134,19); code2class.put(130,20);
-    code2class.put(140,16); code2class.put(144,17); code2class.put(145,18); code2class.put(132,19); code2class.put(135,20);
-    code2class.put(110,16); code2class.put(114,17); code2class.put(116,18); code2class.put(115,19); code2class.put(118,20);
-    code2class.put(149,16); code2class.put(154,17); code2class.put(159,18); code2class.put(155,19); code2class.put(160,20);
-    code2class.put(142,16); code2class.put(128,17); code2class.put(126,18); code2class.put(136,19); code2class.put(131,20);
-    code2class.put(122,16); code2class.put(137,17); code2class.put(138,18); code2class.put(129,19); code2class.put(133,20);
+		code2class.put(152,16); code2class.put(153,17); code2class.put(151,18); code2class.put(158,19); code2class.put(157,20);
+		code2class.put(125,16); code2class.put(121,17); code2class.put(119,18); code2class.put(134,19); code2class.put(130,20);
+		code2class.put(140,16); code2class.put(144,17); code2class.put(145,18); code2class.put(132,19); code2class.put(135,20);
+		code2class.put(110,16); code2class.put(114,17); code2class.put(116,18); code2class.put(115,19); code2class.put(118,20);
+		code2class.put(149,16); code2class.put(154,17); code2class.put(159,18); code2class.put(155,19); code2class.put(160,20);
+		code2class.put(142,16); code2class.put(128,17); code2class.put(126,18); code2class.put(136,19); code2class.put(131,20);
+		code2class.put(122,16); code2class.put(137,17); code2class.put(138,18); code2class.put(129,19); code2class.put(133,20);
 
 		code2class.put(161,21); code2class.put(163,22); code2class.put(164,23); code2class.put(167,24); code2class.put(169,25); 
 		code2class.put(211,21); code2class.put(215,22); code2class.put(216,23); code2class.put(208,24); code2class.put(210,25); 
@@ -280,26 +280,26 @@ public class C3Code {
 		code2class.put(214,21); code2class.put(212,22); code2class.put(213,23); code2class.put(200,24); code2class.put(199,25); 
 		code2class.put(179,21); code2class.put(194,22); code2class.put(191,23); code2class.put(201,24); code2class.put(209,25); 
 		code2class.put(197,21); code2class.put(185,22); code2class.put(186,23); code2class.put(174,24); code2class.put(170,25); 
-   
+
 		code2class.put(172,26); code2class.put(173,27);
-    code2class.put(205,26); code2class.put(206,27);
-    code2class.put(181,26); code2class.put(183,27);
-    code2class.put(195,26); code2class.put(192,27);
-    code2class.put(202,26); code2class.put(203,27);
-    code2class.put(175,26); code2class.put(176,27);
-    code2class.put(184,26); code2class.put(182,27);
-    code2class.put(196,26); code2class.put(193,27);
+		code2class.put(205,26); code2class.put(206,27);
+		code2class.put(181,26); code2class.put(183,27);
+		code2class.put(195,26); code2class.put(192,27);
+		code2class.put(202,26); code2class.put(203,27);
+		code2class.put(175,26); code2class.put(176,27);
+		code2class.put(184,26); code2class.put(182,27);
+		code2class.put(196,26); code2class.put(193,27);
 
 		CODE2CLASS = code2class;
 	}
-	
+
 	public static final Map<Integer,Set<Integer>> CLASS2CODES;
 	static {
 		Map<Integer,Set<Integer>> class2codes = new HashMap<Integer,Set<Integer>>();
-		
+
 		for(Entry<Integer,Integer> codeAndClass:CODE2CLASS.entrySet())
 			class2codes.computeIfAbsent(codeAndClass.getValue(),code->new TreeSet<>()).add(codeAndClass.getKey());
-		
+
 		CLASS2CODES = class2codes;
 	}
 }

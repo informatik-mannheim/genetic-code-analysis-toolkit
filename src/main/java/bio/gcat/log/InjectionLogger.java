@@ -1,5 +1,5 @@
 /*
- * Copyright [2014] [Mannheim University of Applied Sciences]
+ * Copyright [2016] [Mannheim University of Applied Sciences]
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ public class InjectionLogger implements Logger {
 	}
 	
 	public interface Injectable {
-		public default Logger getLogger() {
+		default public Logger getLogger() {
 			Logger logger = injections.getOrDefault(this, new InjectionLogger());
 			injections.put(this,logger);
 			return logger;

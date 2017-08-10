@@ -1,5 +1,5 @@
 /*
- * Copyright [2014] [Mannheim University of Applied Sciences]
+ * Copyright [2016] [Mannheim University of Applied Sciences]
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,14 +25,14 @@ import java.util.regex.Pattern;
 
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
-import javax.swing.text.DefaultStyledDocument;
+import javax.swing.text.PlainDocument;
 
 import bio.gcat.nucleic.Acid;
 import bio.gcat.nucleic.Base;
 import bio.gcat.nucleic.Tuple;
 import lc.kra.Characters;
 
-public class NucleicDocument extends DefaultStyledDocument {
+public class NucleicDocument extends PlainDocument {
 	private static final long serialVersionUID = 1l;
 	private static final Characters SPACE_CHARACTERS =
 		new Characters(' ',Pattern.compile("[ \t\\f]"));

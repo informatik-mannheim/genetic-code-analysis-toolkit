@@ -1,5 +1,5 @@
 /*
- * Copyright [2014] [Mannheim University of Applied Sciences]
+ * Copyright [2016] [Mannheim University of Applied Sciences]
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,7 +54,6 @@ import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileFilter;
-import javax.swing.text.NumberFormatter;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
@@ -168,7 +167,7 @@ public class Parameter {
 				break;
 			case NUMBER: case DECIMAL:			
 				((JSpinner)(component = new JSpinner(Type.NUMBER.equals(type)?new SpinnerNumberModel(((Number)value).intValue(),minimum.intValue(),maximum.intValue(),step.intValue()):new SpinnerNumberModel(((Double)value).doubleValue(),minimum.doubleValue(),maximum.doubleValue(),step.doubleValue())))).setValue(value);
-				((NumberFormatter)((JSpinner.NumberEditor)((JSpinner)component).getEditor()).getTextField().getFormatter()).setAllowsInvalid(false);
+				//((NumberFormatter)((JSpinner.NumberEditor)((JSpinner)component).getEditor()).getTextField().getFormatter()).setAllowsInvalid(false);
 				break;
 			case BOOLEAN:
 				((JCheckBox)(component = new JCheckBox(label))).setSelected(value!=null?(Boolean)value:false);  						

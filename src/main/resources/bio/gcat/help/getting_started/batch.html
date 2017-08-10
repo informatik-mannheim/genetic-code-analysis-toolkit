@@ -1,3 +1,10 @@
-<p>Batch Tool is the batch processing tool of the Genetic Code Analysis Toolkit.
-<p>Any number of operations can be added to the batch processing.
-<p>Afterwards a list of genetic code sequences can be opened and the operations are performed for all sequences of that list. Use the Batch Tool button <img src="batch.png"> in Analysis Tool to add operations to the Batch Tool window.
+<p>Batch Tool is the visual batch processing tool of the Genetic Code Analysis Toolkit. In addition to the visual tool, the toolkit also provides a command line batch processor for computationally intensive / mass data tasks. 
+<p>Any number of operations can be added to the batch processing. Afterwards a list of genetic code sequences can be load and the operations will be performed for all sequences from the list. Please use the Batch Tool button <img src="batch.png"> to add operations to the Batch Tool window.
+<h2>Command line batch processor
+<p>In addition to the graphical user interface, the toolkit offers a command line batch processing component. With the command line processor any arbitrary long list of sequences can be processed, following the rules of a script, which can be easily created using the Batch Tool.
+<p>Use the following command to execute the command line processor:
+<p><code>java -cp gcat.jar bio.gcat.batch.Batch [-h] [-v] [-vv] [-vvv] scriptfile sequencefile</code>
+<h2>Memory limitations
+<p>When using the graphical user interface of the Batch Tool, each sequence is loaded into memory. This results in a very high memory consumption, especially for a lot of sequences being processed.
+<p>For a better performance and in case a lot of sequences should be processed, it is recommended of using the command line processing unit instead. The command line processor will attempt to load and process each sequence sequentially, which results in a much lower memory footprint.
+<p>Nevertheless as the tool needs to load a full sequence into memory to process it, the length of one sequence to process is limited to the amount of memory provided by the system.  

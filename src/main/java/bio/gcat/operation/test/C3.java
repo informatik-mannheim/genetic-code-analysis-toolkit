@@ -1,5 +1,5 @@
 /*
- * Copyright [2014] [Mannheim University of Applied Sciences]
+ * Copyright [2016] [Mannheim University of Applied Sciences]
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ public class C3 implements Test {
 		
 		Collection<Tuple> shifted = tuples;
 		for(int shift=0;shift<length;shift++)
-			if(!CIRCULAR.test(shifted=SHIFT.transform(shifted,shift),length+1))
+			if(!CIRCULAR.test(shifted=SHIFT.transform(shifted,1),length+1))
 				return false;
 		
 		return true;

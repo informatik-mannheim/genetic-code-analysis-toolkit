@@ -1,5 +1,5 @@
 /*
- * Copyright [2014] [Mannheim University of Applied Sciences]
+ * Copyright [2016] [Mannheim University of Applied Sciences]
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,9 +34,9 @@ import bio.gcat.log.InjectionLogger;
 import bio.gcat.log.Logger;
 
 public interface Operation extends InjectionLogger.Injectable {
-	public default String getName() { return getName(this.getClass()); }
-	public default String getIcon() { return getIcon(this.getClass()); }
-	public default String getGroup() { return getGroup(this.getClass()); }
+	default public String getName() { return getName(this.getClass()); }
+	default public String getIcon() { return getIcon(this.getClass()); }
+	default public String getGroup() { return getGroup(this.getClass()); }
 	
 	public static String getName(Class<? extends Operation> operation) {
 		if(operation.isAnnotationPresent(Named.class))
@@ -104,11 +104,11 @@ public interface Operation extends InjectionLogger.Injectable {
 		
 		private Operation operation;
 		
-	  public Exception(Operation operation) { super(); this.operation = operation; }
-	  public Exception(Operation operation, String message) { super(message); this.operation = operation; }
-	  public Exception(Operation operation, String message, Throwable cause) { super(message, cause); this.operation = operation; }
-	  public Exception(Operation operation, Throwable cause) { super(cause); this.operation = operation; }
-	  
-	  public Operation getOperation() { return operation; }
+		public Exception(Operation operation) { super(); this.operation = operation; }
+		public Exception(Operation operation, String message) { super(message); this.operation = operation; }
+		public Exception(Operation operation, String message, Throwable cause) { super(message, cause); this.operation = operation; }
+		public Exception(Operation operation, Throwable cause) { super(cause); this.operation = operation; }
+		  
+		public Operation getOperation() { return operation; }
 	}
 }

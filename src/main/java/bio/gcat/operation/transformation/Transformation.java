@@ -1,5 +1,5 @@
 /*
- * Copyright [2014] [Mannheim University of Applied Sciences]
+ * Copyright [2016] [Mannheim University of Applied Sciences]
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import bio.gcat.operation.Named;
 import bio.gcat.operation.Operation;
 
 public interface Transformation extends Operation {
-	public default Collection<Tuple> transform(Collection<Tuple> tuples) { return transform(tuples, Parameter.getValues(Operation.getParameters(this.getClass())));  }
+	default public Collection<Tuple> transform(Collection<Tuple> tuples) { return transform(tuples, Parameter.getValues(Operation.getParameters(this.getClass())));  }
 	public Collection<Tuple> transform(Collection<Tuple> tuples, Object... values);
 	
 	@Named(name="find & replace", icon="find")
@@ -37,11 +37,11 @@ public interface Transformation extends Operation {
 	@Parameter.Annotation(key="regex",label="Regex",type=Type.BOOLEAN,value=Utilities.TRUE)
 	@Documented(title="Replace", category={OPERATIONS,GENERAL}, resource="help/operation/transformation/replace.html")
 	public class Expression implements Transformation {  	
-  	@Override public Collection<Tuple> transform(Collection<Tuple> tuples,Object... values) { return transform(tuples, (String)values[0], (String)values[1], (Boolean)values[2]); }
-  	public Collection<Tuple> transform(Collection<Tuple> tuples,String pattern,String replace,boolean regex) {
+		@Override public Collection<Tuple> transform(Collection<Tuple> tuples,Object... values) {
 			try {
-				return Tuple.splitTuples(Pattern.compile(regex?pattern:Pattern.quote(pattern),Pattern.CASE_INSENSITIVE).matcher(Tuple.joinTuples(tuples)).replaceAll(replace));
-			}	catch(PatternSyntaxException e) { return tuples; }
+				return Tuple.splitTuples(Pattern.compile((Boolean)values[2]?(String)values[0]:Pattern.quote((String)values[0]),
+					Pattern.CASE_INSENSITIVE).matcher(Tuple.joinTuples(tuples)).replaceAll((String)values[1]));
+			} catch(PatternSyntaxException e) { return tuples; }
 		}
 	}
 }

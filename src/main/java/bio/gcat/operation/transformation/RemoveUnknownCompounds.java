@@ -1,5 +1,5 @@
 /*
- * Copyright [2014] [Mannheim University of Applied Sciences]
+ * Copyright [2016] [Mannheim University of Applied Sciences]
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ import bio.gcat.operation.Named;
 public class RemoveUnknownCompounds implements Transformation {
 	@Override public Collection<Tuple> transform(Collection<Tuple> tuples,Object... values) {
 		List<Tuple> remove = new ArrayList<>(tuples);
-		remove.removeIf(tuple->tuple.getCompound()==null);
+		remove.removeIf(tuple->tuple==null||tuple.getCompound()==null);
 		return remove;
 	}
 }

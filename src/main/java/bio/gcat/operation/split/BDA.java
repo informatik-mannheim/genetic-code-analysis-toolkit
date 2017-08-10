@@ -1,5 +1,5 @@
 /*
- * Copyright [2014] [Mannheim University of Applied Sciences]
+ * Copyright [2016] [Mannheim University of Applied Sciences]
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,19 +34,19 @@ public class BDA implements Split {
 	@Override public List<Collection<Tuple>> split(Collection<Tuple> tuples,Object... values) {
 		Logger logger = getLogger();
 
-		bio.gcat.geneticcode.dich.ct.ClassTable classTable = AnalysisTool.getBDA().getClassTable();
-    if(classTable==null) {
+		bio.gcat.geneticcode.dich.ct.ClassTable classTable = AnalysisTool.getBDATool().getClassTable();
+		if(classTable==null) {
 			logger.log("No Binary Dichotomic Algorithm. Use BDA Tool to open / create BDAs.");
 			return null; //no BDA
-    }
-    
-    List<Collection<Tuple>> split = new ArrayList<>();
-    for(scala.collection.immutable.List<Codon> codons:classTable.class2codonList().values())
-    	split.add(new ArrayList<Tuple>(tuples) { private static final long serialVersionUID = 1l; {
-    		retainAll(scala.collection.JavaConversions.asJavaCollection(codons.toList()).stream().map(codon->new Tuple(codon.toString())).collect(Collectors.toList()));
-    	}});
-    
-    split.removeIf(splitCandidate->splitCandidate.isEmpty());
+		}
+
+		List<Collection<Tuple>> split = new ArrayList<>();
+		for(scala.collection.immutable.List<Codon> codons:classTable.class2codonList().values())
+			split.add(new ArrayList<Tuple>(tuples) { private static final long serialVersionUID = 1l; {
+				retainAll(scala.collection.JavaConversions.asJavaCollection(codons.toList()).stream().map(codon->new Tuple(codon.toString())).collect(Collectors.toList()));
+			}});
+
+		split.removeIf(splitCandidate->splitCandidate.isEmpty());
 		return split;
 	}
 }

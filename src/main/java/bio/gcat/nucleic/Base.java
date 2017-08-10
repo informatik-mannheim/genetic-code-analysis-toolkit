@@ -1,5 +1,5 @@
 /*
- * Copyright [2014] [Mannheim University of Applied Sciences]
+ * Copyright [2016] [Mannheim University of Applied Sciences]
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,31 +15,56 @@
  */
 package bio.gcat.nucleic;
 
-import static bio.gcat.nucleic.Acid.*;
+import static bio.gcat.nucleic.Acid.DNA;
+import static bio.gcat.nucleic.Acid.RNA;
+
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 public enum Base {
-	ADENINE('A'), GUANINE('G'), CYTOSINE('C'), THYMINE('T'), URACIL('U'), HYPOXANTHINE('H'), XANTHINE('X');
+	// IUPAC nucleotide code (http://www.bioinformatics.org/sms/iupac.html)
+	ADENINE('A'), GUANINE('G'), CYTOSINE('C'), THYMINE('T'), URACIL('U'),
+	
+	ADENINE_OR_GUANINE('R',new Base[]{ADENINE,GUANINE}),
+	CYTOSINE_OR_THYMINE('Y',new Base[]{CYTOSINE,THYMINE,URACIL}),
+	GUANINE_OR_CYTOSINE('S',new Base[]{GUANINE,CYTOSINE}),
+	ADENINE_OR_THYMINE('W',new Base[]{ADENINE,THYMINE,URACIL}),
+	GUANINE_OR_THYMINE('K',new Base[]{GUANINE,THYMINE,URACIL}),
+	ADENINE_OR_CYTOSINE('M',new Base[]{ADENINE,CYTOSINE}),
+	
+	CYTOSINE_GUANINE_OR_THYMINE('B',new Base[]{CYTOSINE,GUANINE,THYMINE,URACIL}),
+	ADENINE_GUANINE_OR_THYMINE('D',new Base[]{ADENINE,GUANINE,THYMINE,URACIL}),
+	ADENINE_CYTOSINE_OR_THYMINE('H',new Base[]{ADENINE,CYTOSINE,THYMINE,URACIL}),
+	ADENINE_CYTOSINE_OR_GUANINE('V',new Base[]{ADENINE,CYTOSINE,GUANINE}),
+	
+	ANY('N',new Base[]{ADENINE,GUANINE,CYTOSINE,THYMINE,URACIL});
+	
+	private static final Map<Character,Base> letterMap = new HashMap<>();
+	static {
+		// it's very slow to call tuple.toUpperCase, therefore putting both lower and upper case char's to the letterMap, so we can spare this from the Tuple implementation
+		Arrays.stream(values()).forEach(base->{
+			letterMap.put(Character.toUpperCase(base.letter),base);
+			letterMap.put(Character.toLowerCase(base.letter),base);
+		});
+	}
 	
 	public final char letter;
+	public final Base[] compound;
 	
-	private Base(char letter) {
-		this.letter = letter;
-	}
+	private Base(char letter) { this(letter,null); }
+	private Base(char letter, Base[] compound) {
+		this.letter = letter; this.compound = compound; }
+	
+	public boolean isCompound() { return compound!=null&&compound.length!=0; }
 	
 	public boolean inDNA() { return Arrays.asList(DNA.bases).contains(this); }
 	public boolean inRNA() { return Arrays.asList(RNA.bases).contains(this); }
 	
 	public static Base valueOf(char letter) {
-		switch(letter) {
-		case 'A': return ADENINE;
-		case 'G': return GUANINE;
-		case 'C': return CYTOSINE;
-		case 'T': return THYMINE;
-		case 'U': return URACIL;
-		case 'H': return HYPOXANTHINE;
-		case 'X': return XANTHINE;
-		default: throw new IllegalArgumentException("'"+letter+"' is not a valid base."); }
+		return Optional.ofNullable(letterMap.get(letter)).orElseThrow(()->
+			new IllegalArgumentException("'"+letter+"' is not a valid base."));
 	}
 	
 	@Override public String toString() { return Character.toString(letter); }

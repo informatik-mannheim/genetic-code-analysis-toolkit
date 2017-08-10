@@ -8,8 +8,10 @@
     <icon href="images/icon.png"/>
     <icon kind="splash" href="images/splash.png"/>
     <offline-allowed/>
-    <association mime-type="text/gcat" extensions="gen"/> 
-    <association mime-type="text/gcatbatch" extensions="genb"/>
+    <association mime-type="text/gcat" extensions="gcat"/>
+    <association mime-type="text/gcatscript" extensions="gcats"/> 
+    <association mime-type="text/gcatlist" extensions="gcatl"/>
+    <association mime-type="text/gcatbda" extensions="gcatb"/>
     <shortcut online="false">
       <desktop/>
       <menu submenu="Genetic Code Analysis Toolkit (GCAT)"/>

@@ -14,13 +14,12 @@ import bio.gcat.operation.transformation.Transformation;
 @Documented(title="Invariant To", category={OPERATIONS,TESTS}, resource="help/operation/test/invariant_to.html")
 public class InvariantTo implements Test {
 	private static final Transformation
-		COMMON = new CommonSubstitution();
+		COMMON_SUBSTITUTION = new CommonSubstitution();
 	
 	public static Parameter[] getParameters() { return CommonSubstitution.getParameters(); }
 	
-	@Override public boolean test(Collection<Tuple> tuples,Object... values) { return test(tuples,(String)values[0]); }
-	public boolean test(Collection<Tuple> tuples,String name) {
-		Collection<Tuple> transformed = COMMON.transform(tuples,name);
+	@Override public boolean test(Collection<Tuple> tuples,Object... values) {
+		Collection<Tuple> transformed = COMMON_SUBSTITUTION.transform(tuples, (String)values[0]);
 		return tuples.containsAll(transformed)&&transformed.containsAll(tuples);
 	}
 }

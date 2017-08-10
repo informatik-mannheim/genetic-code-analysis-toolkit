@@ -1,5 +1,5 @@
 /*
- * Copyright [2014] [Mannheim University of Applied Sciences]
+ * Copyright [2016] [Mannheim University of Applied Sciences]
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,11 +26,13 @@ public interface Analysis extends Operation {
 		private Analysis analysis;
 		public Result(Analysis analysis) { this.analysis = analysis; }
 		public Analysis getAnalysis() { return analysis; }
+		
 		@Override public String toString() { return analysis!=null?analysis.getName():null; }
 	}
 	public class SimpleResult extends Result {
 		private String result;
 		public SimpleResult(Analysis analysis, String result) { super(analysis); this.result = result; }
+		
 		@Override public String toString() { return result; }
 	}
 	

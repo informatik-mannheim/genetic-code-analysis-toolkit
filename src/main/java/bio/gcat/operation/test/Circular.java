@@ -1,5 +1,5 @@
 /*
- * Copyright [2014] [Mannheim University of Applied Sciences]
+ * Copyright [2016] [Mannheim University of Applied Sciences]
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ public class Circular implements Test {
 		Logger logger = getLogger();
 		
 		if(tuples.isEmpty())
-			return true; //an empty set of tuples is comma-free
+			return true; //an empty set of tuples is circular
 		
 		int length;
 		if((length=Tuple.tuplesLength(tuples))==0) {
@@ -88,6 +88,9 @@ public class Circular implements Test {
 	public static class CommonCircular extends Circular {
 		@Override public boolean test(Collection<Tuple> tuples,Object... values) {
 			Logger logger = getLogger();
+			
+			if(tuples.isEmpty())
+				return true; //an empty set of tuples is circular
 			
 			int length;
 			if((length=Tuple.tuplesLength(tuples))==0) {

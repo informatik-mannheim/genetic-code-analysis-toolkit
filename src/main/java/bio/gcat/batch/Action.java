@@ -1,5 +1,5 @@
 /*
- * Copyright [2014] [Mannheim University of Applied Sciences]
+ * Copyright [2016] [Mannheim University of Applied Sciences]
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,13 @@
  */
 package bio.gcat.batch;
 
-import static bio.gcat.batch.Action.TaskAttribute.*;
+import static bio.gcat.batch.Action.TaskAttribute.ANALYSIS_HANDLER;
+import static bio.gcat.batch.Action.TaskAttribute.DEFAULT_ATTRIBUTES;
+import static bio.gcat.batch.Action.TaskAttribute.SPLIT_PICK;
+import static bio.gcat.batch.Action.TaskAttribute.TEST_CRITERIA;
+import static bio.gcat.batch.Action.TaskAttribute.TEST_HANDLER;
+import static bio.gcat.batch.Action.TaskAttribute.valueOrDefault;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -25,6 +31,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
+
 import bio.gcat.Parameter;
 import bio.gcat.log.InjectionLogger;
 import bio.gcat.nucleic.Tuple;
@@ -41,8 +48,8 @@ import bio.gcat.operation.transformation.Transformation;
  */
 public class Action {
 	private final Class<? extends Operation> operation;
-	public Map<TaskAttribute,Object> attributes;
-	public Object[] values;
+	private Map<TaskAttribute,Object> attributes;
+	private Object[] values;
 	
 	public Action(Class<? extends Operation> operation) { this(operation, Parameter.getValues(Operation.getParameters(operation))); }
 	public Action(Class<? extends Operation> operation, Object... values) {
@@ -50,11 +57,19 @@ public class Action {
 	}
 	public Action(Class<? extends Operation> operation, Map<TaskAttribute,Object> attributes, Object... values) {
 		this.operation = operation;
-		this.values = values;
 		this.attributes = attributes;
+		this.values = values;
 	}
 	
 	public Class<? extends Operation> getOperation() { return operation; }
+	
+	public Map<TaskAttribute,Object> getAttributes() { return Collections.unmodifiableMap(attributes); }
+	public Object getAttribute(TaskAttribute attribute) { return attributes.get(attribute); }
+	public void putAttribute(TaskAttribute attribute,Object value) { attributes.put(attribute,value); }
+	public void removeAttribute(TaskAttribute attribute) { attributes.remove(attribute); }
+	
+	public Object[] getValues() { return values; }
+	public void setValues(Object[] values) { this.values = values; }
 	
 	public class Task implements Callable<Collection<Tuple>>, InjectionLogger.Injectable {
 		private Collection<Tuple> tuples;
@@ -74,17 +89,27 @@ public class Action {
 			if(instance instanceof Transformation)
 				return ((Transformation)instance).transform(tuples,values);
 			else if(instance instanceof Test) {
-				if(Boolean.valueOf(((Test)instance).test(tuples,values)).equals(valueOrDefault(attributes,TEST_CRITERIA)))
-					throw new Test.Failed((Test)instance);
+				try {
+					valueOrDefault(attributes, TEST_HANDLER, (Test.Handler)new Test.Handler() { //explicit cast is important, otherwise it'll requre to be a subclass of Batch$Test.Handler
+						/* default test handler, throws default exception */
+					}).handle((Test)instance, ((Test)instance).test(tuples, values));
+				} catch(Test.Default e) {
+					if(Boolean.valueOf(e.getResult()).equals(valueOrDefault(attributes, TEST_CRITERIA)))
+						throw new Test.Failed(e.getTest());
+				}
 			} else if(instance instanceof Analysis)
-				((Analysis.Handler)valueOrDefault(attributes,ANALYSIS_HANDLER)).handle(((Analysis)instance).analyse(tuples,values));
+				((Analysis.Handler)valueOrDefault(attributes, ANALYSIS_HANDLER)).handle(((Analysis)instance).analyse(tuples, values));
 			else if(instance instanceof Split)
-				return Optional.ofNullable(valueOrDefault(attributes,SPLIT_PICK,Split.Pick.class).pick(((Split)instance).split(tuples,values))).orElseThrow(()->new Operation.Exception(instance,"Split failed"));
+				return Optional.ofNullable(valueOrDefault(attributes, SPLIT_PICK, Split.Pick.class).pick(((Split)instance).split(tuples, values))).orElseThrow(()->new Operation.Exception(instance,"Split failed"));
 			return tuples;
 		}
 	}
 	
 	public static final class TaskAttribute {
+		public static final TaskAttribute TEST_HANDLER = new TaskAttribute("Test Handler");
+		public static final Test.Handler
+			TEST_HANDLER_DEFAULT = null;
+		
 		public static final TaskAttribute TEST_CRITERIA = new TaskAttribute("Test Creteria");
 		public static final Boolean
 			TEST_CRITERIA_NEVER_BREAK = null,
@@ -93,7 +118,12 @@ public class Action {
 		
 		public static final TaskAttribute ANALYSIS_HANDLER = new TaskAttribute("Analysis Handler");
 		public static final Analysis.Handler
-			ANALYSIS_HANDLER_DEFAULT = new Analysis.Handler() { @Override public void handle(Result result) {} };
+			ANALYSIS_HANDLER_DEFAULT = new Analysis.Handler() {
+				@Override public void handle(Result result) {
+					result.getAnalysis().getLogger()
+						.log(result.toString());
+				}
+			};
 		
 		public static final TaskAttribute SPLIT_PICK = new TaskAttribute("Split Pick");
 		public static final Split.Pick
@@ -104,6 +134,7 @@ public class Action {
 		public static final Map<TaskAttribute,Object> DEFAULT_ATTRIBUTES;
 		static {
 			Map<TaskAttribute,Object> defaultAttributes = new HashMap<>();
+			defaultAttributes.put(TEST_HANDLER, TEST_HANDLER_DEFAULT);
 			defaultAttributes.put(TEST_CRITERIA,TEST_CRITERIA_BREAK_IF_FALSE);
 			defaultAttributes.put(ANALYSIS_HANDLER,ANALYSIS_HANDLER_DEFAULT);
 			defaultAttributes.put(SPLIT_PICK,SPLIT_PICK_FIRST);
@@ -115,12 +146,15 @@ public class Action {
 		public String getName() { return name; }
 		public String toString() { return getClass().getName() + "(" + name + ")"; }
 		
-		public static Object valueOrDefault(Map<TaskAttribute,Object> attributes,TaskAttribute attribute) {
+		public static Object valueOrDefault(Map<TaskAttribute,Object> attributes, TaskAttribute attribute) {
 			if(attributes==null||!attributes.containsKey(attribute))
 				return DEFAULT_ATTRIBUTES.get(attribute);
 			return attributes.get(attribute);
 		}
-		@SuppressWarnings("unchecked") static <T> T valueOrDefault(Map<TaskAttribute,Object> attributes,TaskAttribute attribute,Class<T> type) {
+		@SuppressWarnings("unchecked") public static <T> T valueOrDefault(Map<TaskAttribute,Object> attributes, TaskAttribute attribute, T defaultAttribute) {
+			return attributes!=null&&attributes.containsKey(attribute)?(T)attributes.get(attribute):defaultAttribute;
+		}
+		@SuppressWarnings("unchecked") static <T> T valueOrDefault(Map<TaskAttribute,Object> attributes, TaskAttribute attribute, Class<T> type) {
 			Object value = valueOrDefault(attributes,attribute);
 			if(type==null||!type.isInstance(value))
 				return (T)DEFAULT_ATTRIBUTES.get(attribute);
