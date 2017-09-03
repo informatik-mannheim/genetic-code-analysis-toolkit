@@ -46,6 +46,7 @@ public class ConsolePane extends JTextPane implements Logger {
 	
 	private HTMLDocument document;
 	private HTMLEditorKit editorKit;
+	private boolean skipNext;
 	
 	public ConsolePane() {
 		setBorder(new EmptyBorder(5,5,5,5));
@@ -89,6 +90,7 @@ public class ConsolePane extends JTextPane implements Logger {
 	}
 	
 	public void insertText(String text) {
+		if(skipNext) { if(!NEW_LINE.equals(text)) skipNext = false; return; }
 		try { editorKit.insertHTML(document,document.getLength(),text,0,0,null); }
 		catch(BadLocationException|IOException e) { e.printStackTrace();  /* nothing to do here */ }
 	}
@@ -108,6 +110,7 @@ public class ConsolePane extends JTextPane implements Logger {
 	}
 	
 	public void clearText() { setText(null); }
+	public void skipNext() { skipNext = true; }
 	
 	@Override public void log(String format,Object... arguments) {
 		appendText(String.format(format,arguments));

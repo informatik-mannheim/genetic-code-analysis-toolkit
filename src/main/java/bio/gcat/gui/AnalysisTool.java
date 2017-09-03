@@ -433,7 +433,10 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 						}
 					});
 					cancel.addActionListener(new ActionListener() {
-						@Override public void actionPerformed(ActionEvent e) { dialog.dispose(); }
+						@Override public void actionPerformed(ActionEvent e) {
+							AnalysisTool.this.consolePane.skipNext(); //skip next console output (so no error message is displayed, that split failed)
+							dialog.dispose();
+						}
 					});
 					
 					layout.setHorizontalGroup(
