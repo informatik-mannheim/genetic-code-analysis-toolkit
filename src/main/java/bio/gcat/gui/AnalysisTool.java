@@ -156,10 +156,10 @@ import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
 import javax.swing.text.NumberFormatter;
 
-import org.biojava3.core.sequence.AccessionID;
-import org.biojava3.core.sequence.DNASequence;
-import org.biojava3.core.sequence.io.FastaReaderHelper;
-import org.biojava3.core.sequence.io.FastaWriterHelper;
+import org.biojava.nbio.core.sequence.AccessionID;
+import org.biojava.nbio.core.sequence.DNASequence;
+import org.biojava.nbio.core.sequence.io.FastaReaderHelper;
+import org.biojava.nbio.core.sequence.io.FastaWriterHelper;
 import org.reflections.Reflections;
 import org.reflections.scanners.SubTypesScanner;
 import org.reflections.util.ClasspathHelper;
@@ -1028,7 +1028,7 @@ public class AnalysisTool extends JFrame implements ActionListener, NucleicListe
 			currentFile(null);
 		} catch(Error | Exception e) {
 			JOptionPane.showMessageDialog(this,"Could not import "+accessionId+" from GenBank:\n\n"+e.getMessage(),
-				"Import FASTA",JOptionPane.WARNING_MESSAGE);
+				"Import Genbank",JOptionPane.WARNING_MESSAGE);
 		}
 	}
 	

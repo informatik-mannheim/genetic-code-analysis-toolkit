@@ -15,7 +15,7 @@
  */
 package bio.gcat.geneticcode.core
 
-import org.biojava3.core.sequence.compound.AminoAcidCompoundSet
+import org.biojava.nbio.core.sequence.compound.AminoAcidCompoundSet
 
 /**
  * (c) 2012 by Markus Gumbel (m.gumbel@hs-mannheim.de)
@@ -23,7 +23,7 @@ import org.biojava3.core.sequence.compound.AminoAcidCompoundSet
  */
 
 object ProteinSequence {
-  def apply(s: String) = new org.biojava3.core.sequence.ProteinSequence(s)
+  def apply(s: String) = new org.biojava.nbio.core.sequence.ProteinSequence(s)
 
   // def apply(seq: List[AminoAcid]) = new Peptide(seq)
 }

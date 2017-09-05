@@ -15,7 +15,7 @@
  */
 package bio.gcat.geneticcode.core
 
-import org.biojava3.core.sequence.compound.{AminoAcidCompound, AminoAcidCompoundSet}
+import org.biojava.nbio.core.sequence.compound.{AminoAcidCompound, AminoAcidCompoundSet}
 
 /**
  * (c) 2012 by Markus Gumbel (m.gumbel@hs-mannheim.de)

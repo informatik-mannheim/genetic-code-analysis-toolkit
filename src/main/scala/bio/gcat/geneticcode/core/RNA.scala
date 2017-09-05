@@ -15,23 +15,23 @@
  */
 package bio.gcat.geneticcode.core
 
-import org.biojava3.core.sequence.compound.RNACompoundSet
+import org.biojava.nbio.core.sequence.compound.RNACompoundSet
 
 /**
  * tRNA with some required properties.
  * (c) 2012 by Markus Gumbel (m.gumbel@hs-mannheim.de)
  * @author Markus Gumbel
  */
-case class tRNASequence(s: String) extends org.biojava3.core.sequence.RNASequence(s) {
+case class tRNASequence(s: String) extends org.biojava.nbio.core.sequence.RNASequence(s) {
   def antiCodon = Codon(toString.take(3).toString)
 }
 
 object DNASequence {
-  def apply(s: String) = new org.biojava3.core.sequence.DNASequence(s)
+  def apply(s: String) = new org.biojava.nbio.core.sequence.DNASequence(s)
 }
 
 object RNASequence {
-  def apply(s: String) = new org.biojava3.core.sequence.RNASequence(s)
+  def apply(s: String) = new org.biojava.nbio.core.sequence.RNASequence(s)
 }
 
 object RNA4CompoundSet extends RNACompoundSet {

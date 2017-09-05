@@ -15,7 +15,7 @@
  */
 package bio.gcat.geneticcode.core
 
-import org.biojava3.core.sequence.RNASequence
+import org.biojava.nbio.core.sequence.RNASequence
 
 /**
  * A codon (triplet or RNA bases).

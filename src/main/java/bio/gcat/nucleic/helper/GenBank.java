@@ -11,10 +11,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.apache.http.client.utils.URIBuilder;
-import org.biojava3.core.sequence.DNASequence;
-import org.biojava3.core.sequence.compound.DNACompoundSet;
-import org.biojava3.core.sequence.compound.NucleotideCompound;
-import org.biojava3.core.sequence.loader.GenbankProxySequenceReader;
+import org.biojava.nbio.core.sequence.DNASequence;
+import org.biojava.nbio.core.sequence.compound.DNACompoundSet;
+import org.biojava.nbio.core.sequence.compound.NucleotideCompound;
+import org.biojava.nbio.core.sequence.loader.GenbankProxySequenceReader;
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonObject;
 

@@ -16,7 +16,7 @@
 package bio.gcat.geneticcode.dich
 
 import bio.gcat.geneticcode.core.{StopCodon, AminoAcidMapping}
-import org.biojava3.core.sequence.transcription.TranscriptionEngine
+import org.biojava.nbio.core.sequence.transcription.TranscriptionEngine
 import bio.gcat.geneticcode.core.DNASequence
 import scala.language.implicitConversions
 
