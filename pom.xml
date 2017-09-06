@@ -259,6 +259,7 @@
 				</executions>
 			</plugin>
 
+			<!--
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jarsigner-plugin</artifactId>
@@ -280,6 +281,7 @@
 					<tsa>${signing.tsa}</tsa>
 				</configuration>
 			</plugin>
+			-->
 
 			<plugin>
 				<groupId>com.akathist.maven.plugins.launch4j</groupId>
